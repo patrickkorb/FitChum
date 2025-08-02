@@ -22,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${robotoCondensed.className} antialiased max-w-7xl mx-auto mt-8`}
+        className={`${robotoCondensed.className} antialiased max-w-7xl mx-auto mt-8 grid grid-cols-5 gap-4`}
       >
         <Navigation />
         {children}
