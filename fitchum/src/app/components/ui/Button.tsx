@@ -1,0 +1,43 @@
+interface ButtonProps {
+  children: React.ReactNode;
+  onClick?: () => void;
+  variant?: 'primary' | 'secondary' | 'outline';
+  size?: 'sm' | 'md' | 'lg';
+  className?: string;
+  disabled?: boolean;
+}
+
+export default function Button({
+  children,
+  onClick,
+  variant = 'primary',
+  size = 'md',
+  className = '',
+  disabled = false
+}: ButtonProps) {
+  const baseClasses = 'font-medium rounded-xl transition-all duration-200 flex items-center justify-center gap-2 hover:cursor-pointer';
+  
+  const variantClasses = {
+    primary: 'bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl',
+    secondary: 'bg-secondary hover:bg-secondary/90 text-white shadow-lg hover:shadow-xl',
+    outline: 'border-2 border-neutral-dark/20 dark:border-neutral-light/20 text-neutral-dark dark:text-neutral-light hover:bg-neutral-dark/5 dark:hover:bg-neutral-light/5'
+  };
+
+  const sizeClasses = {
+    sm: 'px-4 py-2 text-sm',
+    md: 'px-6 py-3 text-base',
+    lg: 'px-8 py-4 text-lg'
+  };
+
+  const disabledClasses = disabled ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105';
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${disabledClasses} ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
