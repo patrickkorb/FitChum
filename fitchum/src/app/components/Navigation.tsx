@@ -5,11 +5,11 @@ import NavElement, {NavElementProps} from "@/app/components/NavElement";
 export default function Navigation() {
 
     const navElements: NavElementProps[] = [
-        {name: "Journal", link: "/journal" },
-        {name: "Plan", link: "/about" },
-        {name: "Dashboard", link: "/dashboard" },
-        {name: "Social", link: "/social" },
-        {name: "Profile", link: "/profile" },
+        {name: "Journal", link: "/journal", icon: "BookOpen" },
+        {name: "Plan", link: "/plan", icon: "Calendar" },
+        {name: "Dashboard", link: "/dashboard", icon: "LayoutDashboard" },
+        {name: "Social", link: "/social", icon: "Users" },
+        {name: "Profile", link: "/profile", icon: "User" },
     ]
 
     return (
@@ -21,6 +21,7 @@ export default function Navigation() {
                         key={index}
                         name={navElement.name}
                         link={navElement.link}
+                        icon={navElement.icon}
                     />
                 ))}
             </div>
