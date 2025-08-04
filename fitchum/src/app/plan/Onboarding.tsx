@@ -12,7 +12,11 @@ interface OnboardingData {
   schedule?: SelectedDays;
 }
 
-export default function Onboarding() {
+interface OnboardingProps {
+  onComplete: (data: OnboardingData) => void;
+}
+
+export default function Onboarding({ onComplete }: OnboardingProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({});
   const totalSteps = 3;
@@ -58,8 +62,7 @@ export default function Onboarding() {
 
   const handleComplete = () => {
     console.log('Onboarding completed:', onboardingData);
-    // Hier würde normalerweise die Daten gespeichert werden
-    alert('Onboarding abgeschlossen! Daten wurden gespeichert.');
+    onComplete(onboardingData);
   };
 
   const renderCurrentStep = () => {
