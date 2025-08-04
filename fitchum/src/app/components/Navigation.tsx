@@ -6,9 +6,9 @@ export default function Navigation() {
 
     const navElements: NavElementProps[] = [
         {name: "Journal", link: "/journal", icon: "BookOpen" },
-        {name: "Plan", link: "/plan", icon: "Calendar" },
+        {name: "Plan", link: "/plan", icon: "Dumbbell" },
         {name: "Dashboard", link: "/dashboard", icon: "LayoutDashboard" },
-        {name: "Social", link: "/social", icon: "Users" },
+        {name: "Social", link: "/social", icon: "Medal" },
         {name: "Profile", link: "/profile", icon: "User" },
     ]
 

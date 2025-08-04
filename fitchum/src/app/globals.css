@@ -1,12 +1,7 @@
 @import "tailwindcss";
 
-:root {
-  --color-primary: #4CAF50;
-  --color-secondary: #FF9800;
-  --color-accent: #2196F3;
-  --color-neutral-dark: #2C3E50;
-  --color-neutral-light: #ECF0F1;
-}
+/* Custom variant for class-based dark mode in Tailwind v4 */
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --color-primary: #4CAF50;
@@ -16,23 +11,29 @@
   --color-neutral-light: #ECF0F1;
 }
 
-/* Light mode (default) */
-body {
-  background-color: var(--color-neutral-light);
-  color: var(--color-neutral-dark);
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
+/* Base styles */
+@layer base {
+  html {
+    background-color: var(--color-neutral-light);
+    color: var(--color-neutral-dark);
+    transition: background-color 0.1s ease, color 0.1s ease;
+    min-height: 100%;
+  }
 
-/* Dark mode */
-@media (prefers-color-scheme: dark) {
   body {
+    background-color: var(--color-neutral-light);
+    color: var(--color-neutral-dark);
+    transition: background-color 0.1s ease, color 0.1s ease;
+  }
+
+  /* Dark mode overrides */
+  html.dark {
     background-color: var(--color-neutral-dark);
     color: var(--color-neutral-light);
   }
-}
 
-/* Manual dark mode class (if using class-based dark mode) */
-.dark body {
-  background-color: var(--color-neutral-dark);
-  color: var(--color-neutral-light);
+  html.dark body {
+    background-color: var(--color-neutral-dark);
+    color: var(--color-neutral-light);
+  }
 }

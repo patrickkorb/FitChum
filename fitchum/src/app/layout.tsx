@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
-import Navigation from "@/app/components/Navigation";
+import ConditionalLayout from "@/app/components/ConditionalLayout";
+import { ThemeProvider } from '@/app/components/ThemeProvider';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 const robotoCondensed = Roboto({
   subsets: ["latin"],
@@ -20,12 +22,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${robotoCondensed.className} antialiased max-w-7xl mx-auto mt-8 grid grid-cols-5 gap-4`}
+        className={`${robotoCondensed.className} antialiased max-w-7xl mx-auto mt-8`}
       >
-        <Navigation />
-        {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+          disableTransitionOnChange={true}
+        >
+          <AuthProvider>
+            <ConditionalLayout>
+              {children}
+            </ConditionalLayout>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

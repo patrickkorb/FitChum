@@ -1,6 +1,7 @@
 interface ButtonProps {
   children: React.ReactNode;
   onClick?: () => void;
+  type?: 'submit' | 'button';
   variant?: 'primary' | 'secondary' | 'outline';
   size?: 'sm' | 'md' | 'lg';
   className?: string;
@@ -10,6 +11,7 @@ interface ButtonProps {
 export default function Button({
   children,
   onClick,
+  type,
   variant = 'primary',
   size = 'md',
   className = '',
@@ -29,11 +31,12 @@ export default function Button({
     lg: 'px-8 py-4 text-lg'
   };
 
-  const disabledClasses = disabled ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105';
+  const disabledClasses = disabled ? 'opacity-50 cursor-not-allowed' : 'hover:scale-100';
 
   return (
     <button
       onClick={onClick}
+      type={type}
       disabled={disabled}
       className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${disabledClasses} ${className}`}
     >
