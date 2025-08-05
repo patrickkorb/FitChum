@@ -2,7 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import {usePathname} from "next/navigation";
-import { BookOpen, Dumbbell, LayoutDashboard, Medal, User, LucideIcon } from "lucide-react";
+import { BookOpen, Dumbbell, LayoutDashboard, Medal, User, Crown, LucideIcon } from "lucide-react";
 
 export interface NavElementProps {
     name: string;
@@ -16,6 +16,7 @@ const iconMap: Record<string, LucideIcon> = {
     LayoutDashboard,
     Medal,
     User,
+    Crown,
 };
 
 export default function NavElement( {name, link, icon}: NavElementProps ) {

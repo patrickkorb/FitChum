@@ -6,7 +6,9 @@ export type Profile = {
   email: string | null
   profile_pic_url: string | null
   theme_preference: 'light' | 'dark'
-  subscription_plan: 'basic' | 'pro' | 'elite'
+  subscription_plan: 'free' | 'pro'
+  subscription_status: string | null
+  stripe_payment_id: string | null
   created_at: string
   updated_at: string
 }

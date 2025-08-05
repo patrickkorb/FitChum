@@ -34,48 +34,6 @@ FitChum is a social accountability platform for fitness enthusiasts who struggle
 5. **Basic Goal Setting** - Set and track fitness goals
 6. **User Profiles** - Basic profile with workout history
 
-## Database Schema
-
-### Users Table
-```sql
-- id (uuid, primary key)
-- clerk_user_id (text, unique)
-- username (text)
-- email (text)
-- fitness_goals (text)
-- created_at (timestamp)
-- updated_at (timestamp)
-```
-
-### Journal Entries Table
-```sql
-- id (uuid, primary key)
-- user_id (uuid, foreign key)
-- date (date)
-- workout_type (text)
-- duration (integer) -- in minutes
-- notes (text)
-- is_public (boolean, default true)
-- created_at (timestamp)
-- updated_at (timestamp)
-```
-
-### Likes Table
-```sql
-- id (uuid, primary key)  
-- user_id (uuid, foreign key)
-- entry_id (uuid, foreign key)
-- created_at (timestamp)
-```
-
-### Comments Table
-```sql
-- id (uuid, primary key)
-- user_id (uuid, foreign key)
-- entry_id (uuid, foreign key)
-- content (text)
-- created_at (timestamp)
-```
 
 ## Page Structure
 - `/` - Landing page (later)
@@ -106,22 +64,26 @@ components/
 └── user/
     ├── UserProfile.tsx
     └── UserStats.tsx
+    .
+    .
+    .
 ```
 
 ## Pricing Strategy
-- **Basic:** $5/month - Personal journals, community forums
-- **Pro:** $10/month - Challenges, goals, coaching support
-- **Elite:** $15/month - 1-on-1 coaching, premium content
+- **Basic:** Free - Daily Journals, Gym Plan, Leaderboard
+- **Pro:** 10€ - Add Friends, Custom Friends Leaderboards, Custom Challenges
 
 ## Development Phases
 
 ### Phase 1: MVP Dashboard (Week 1)
 - [ ] Set up Next.js project with Tailwind
-- [ ] Implement Clerk authentication
+- [ ] Implement supabase authentication
 - [ ] Set up Supabase database
 - [ ] Create basic dashboard layout
 - [ ] Build journal entry form
 - [ ] Display user's own entries
+- [ ] Integrate Payment with Stripe
+- [ ] Leaderboard and add Friends + Friends Leaderboard
 
 ### Phase 2: Social Features (Week 2)
 - [ ] Community feed
@@ -174,6 +136,7 @@ npm run dev
 - **Social First:** Community aspect should be prominent
 - **Motivational:** Use encouraging language and positive reinforcement
 - **Fast & Responsive:** Quick loading, smooth interactions
+- **Dark and White Mode:** Always design for dark and white mode. Respect already designed pages and components.
 
 ## Success Metrics
 - Daily Active Users (DAU)

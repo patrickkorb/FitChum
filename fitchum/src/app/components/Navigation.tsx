@@ -10,6 +10,7 @@ export default function Navigation() {
         {name: "Dashboard", link: "/dashboard", icon: "LayoutDashboard" },
         {name: "Social", link: "/social", icon: "Medal" },
         {name: "Profile", link: "/profile", icon: "User" },
+        {name: "Pricing", link: "/pricing", icon: "Crown" },
     ]
 
     return (
