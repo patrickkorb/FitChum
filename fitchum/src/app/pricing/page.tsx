@@ -8,7 +8,7 @@ import { Check } from 'lucide-react';
 
 const plans = [
   {
-    name: 'Free',
+    name: 'Free Chumm',
     price: 0,
     priceId: null,
     features: [
@@ -21,7 +21,7 @@ const plans = [
     isFree: true
   },
   {
-    name: 'Pro',
+    name: 'Pro Chumm',
     price: 10,
     priceId: 'price_1RsrusHjVDpsMb5NV1b3CiYA',
     features: [
@@ -86,54 +86,53 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="min-h-screen col-span-4 bg-gradient-to-br from-green-50 to-blue-50 py-12 px-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Choose Your FitChum Plan
-          </h1>
-          <p className="text-xl text-gray-600">
-            Achieve your fitness goals with the power of social accountability
-          </p>
-        </div>
+    <div className="col-span-4 space-y-6">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-neutral-dark dark:text-neutral-light mb-2">
+          Choose Your FitChum Plan
+        </h1>
+        <p className="text-neutral-dark/70 dark:text-neutral-light/70">
+          Achieve your fitness goals with the power of social accountability
+        </p>
+      </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-6">
           {plans.map((plan) => (
             <Card 
               key={plan.name}
-              className={`relative p-8 ${
+              className={`relative space-y-6 ${
                 plan.popular 
-                  ? 'border-2 border-green-500 shadow-xl' 
-                  : 'border border-gray-200'
+                  ? 'border-2 border-primary shadow-lg' 
+                  : ''
               }`}
             >
               {plan.popular && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-green-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                  <span className="bg-primary text-white px-4 py-1 rounded-full text-sm font-medium">
                     Most Popular
                   </span>
                 </div>
               )}
 
-              <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+              <div className="text-center">
+                <h3 className="text-2xl font-bold text-neutral-dark dark:text-neutral-light mb-2">
                   {plan.name}
                 </h3>
                 <div className="mb-4">
-                  <span className="text-4xl font-bold text-gray-900">
+                  <span className="text-4xl font-bold text-neutral-dark dark:text-neutral-light">
                     {plan.price === 0 ? 'Free' : `€${plan.price}`}
                   </span>
                   {plan.price > 0 && (
-                    <span className="text-gray-600"> one-time</span>
+                    <span className="text-neutral-dark/70 dark:text-neutral-light/70"> one-time</span>
                   )}
                 </div>
               </div>
 
-              <ul className="space-y-4 mb-8">
+              <ul className="space-y-4">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-center">
-                    <Check className="w-5 h-5 text-green-500 mr-3 flex-shrink-0" />
-                    <span className="text-gray-700">{feature}</span>
+                    <Check className="w-5 h-5 text-primary mr-3 flex-shrink-0" />
+                    <span className="text-neutral-dark/80 dark:text-neutral-light/80">{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -141,13 +140,8 @@ export default function PricingPage() {
               <Button
                 onClick={() => handlePlanSelect(plan)}
                 disabled={loading === plan.priceId}
-                className={`w-full ${
-                  plan.popular
-                    ? 'bg-green-500 hover:bg-green-600'
-                    : plan.isFree 
-                      ? 'bg-blue-500 hover:bg-blue-600'
-                      : 'bg-gray-900 hover:bg-gray-800'
-                } text-white`}
+                variant={plan.popular ? "primary" : plan.isFree ? "outline" : "primary"}
+                className="w-full"
               >
                 {loading === plan.priceId 
                   ? 'Loading...' 
@@ -160,15 +154,14 @@ export default function PricingPage() {
           ))}
         </div>
 
-        <div className="text-center mt-12">
-          <p className="text-gray-600 mb-4">
+        <div className="text-center space-y-4 mt-8 pt-8 border-t border-neutral-dark/20 dark:border-neutral-light/20">
+          <p className="text-neutral-dark/70 dark:text-neutral-light/70">
             Start free, upgrade when you're ready. No recurring charges.
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-neutral-dark/50 dark:text-neutral-light/50">
             Secure payments powered by Stripe
           </p>
         </div>
-      </div>
     </div>
   );
 }
