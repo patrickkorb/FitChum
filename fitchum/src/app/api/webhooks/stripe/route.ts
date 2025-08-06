@@ -3,11 +3,21 @@ import { stripe } from '@/lib/stripe';
 import { createClient } from '@/lib/supabase/server';
 import Stripe from 'stripe';
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 export async function POST(req: NextRequest) {
+  if (!webhookSecret) {
+    console.error('STRIPE_WEBHOOK_SECRET is not set');
+    return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
+  }
+
   const body = await req.text();
-  const signature = req.headers.get('stripe-signature')!;
+  const signature = req.headers.get('stripe-signature');
+
+  if (!signature) {
+    console.error('No signature provided');
+    return NextResponse.json({ error: 'No signature provided' }, { status: 400 });
+  };
 
   let event: Stripe.Event;
 
@@ -26,11 +36,13 @@ export async function POST(req: NextRequest) {
         const session = event.data.object as Stripe.Checkout.Session;
         
         if (session.mode === 'payment' && session.payment_status === 'paid') {
-          const userId = session.metadata?.userId;
+          const userId = session.client_reference_id || session.metadata?.userId;
 
           if (userId) {
+            console.log(`Processing payment for user ${userId}`);
+            
             // Update user to Pro plan after successful payment
-            await supabase
+            const { error } = await supabase
               .from('profiles')
               .update({
                 subscription_plan: 'pro',
@@ -40,7 +52,14 @@ export async function POST(req: NextRequest) {
               })
               .eq('user_id', userId);
 
+            if (error) {
+              console.error('Error updating user profile:', error);
+              return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
+            }
+
             console.log(`User ${userId} upgraded to Pro plan`);
+          } else {
+            console.error('No user ID found in session');
           }
         }
         break;
