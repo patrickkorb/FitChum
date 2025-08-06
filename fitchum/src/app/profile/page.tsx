@@ -36,15 +36,15 @@ export default function Profile() {
         setMounted(true);
     }, []);
 
-    // Load profile data when available
+    // Load profile data when available (including fallbacks for missing profile)
     useEffect(() => {
-        if (profile && user) {
+        if (user) {
             setFormData({
-                username: profile.username || '',
+                username: profile?.username || '',
                 email: user.email || '',
-                profile_pic_url: profile.profile_pic_url || '',
-                theme_preference: profile.theme_preference || 'light',
-                subscription_plan: profile.subscription_plan || 'basic'
+                profile_pic_url: profile?.profile_pic_url || '',
+                theme_preference: profile?.theme_preference || 'light',
+                subscription_plan: profile?.subscription_plan || 'basic'
             });
         }
     }, [profile, user]);
@@ -173,7 +173,7 @@ export default function Profile() {
     });
 
     // Show loading while auth is loading or not mounted
-    if (authLoading || !mounted || !user) {
+    if (authLoading || !mounted) {
         console.log('Profile page showing loading state');
         return (
             <div className="col-span-4 space-y-6">
@@ -184,6 +184,12 @@ export default function Profile() {
                 </div>
             </div>
         );
+    }
+
+    // Redirect to login if no user
+    if (!user) {
+        router.push('/auth/login');
+        return null;
     }
 
     return (
