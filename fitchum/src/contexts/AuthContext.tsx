@@ -24,6 +24,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient()
 
   const loadProfile = useCallback(async (userId: string) => {
+    console.log('=== LOADING PROFILE DEBUG ===')
+    console.log('Loading profile for user ID:', userId)
+    
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -31,15 +34,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('user_id', userId)
         .single()
 
+      console.log('Profile query result:', { data, error: error?.message, errorCode: error?.code })
+
       if (error) {
         console.error('Error loading profile:', error)
+        if (error.code === 'PGRST116') {
+          console.log('No profile found for user, this might be expected for new users')
+        }
         return
       }
 
+      console.log('Profile loaded successfully:', data)
       setProfile(data)
     } catch (error) {
-      console.error('Error loading profile:', error)
+      console.error('Profile loading exception:', error)
     }
+    console.log('=== END PROFILE LOADING DEBUG ===')
   }, [supabase])
 
   const handleUserSignIn = useCallback(async (user: User) => {

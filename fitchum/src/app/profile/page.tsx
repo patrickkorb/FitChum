@@ -163,8 +163,18 @@ export default function Profile() {
         }
     };
 
+    // Debug logging
+    console.log('Profile page state:', { 
+        authLoading, 
+        mounted, 
+        hasUser: !!user, 
+        hasProfile: !!profile,
+        userId: user?.id 
+    });
+
     // Show loading while auth is loading or not mounted
     if (authLoading || !mounted || !user) {
+        console.log('Profile page showing loading state');
         return (
             <div className="col-span-4 space-y-6">
                 <div className="animate-pulse space-y-6">
