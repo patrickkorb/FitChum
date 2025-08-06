@@ -6,25 +6,46 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/dashboard'
 
+  console.log('Auth callback called with:', { code: !!code, origin, next })
+
   if (code) {
     const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     
-    if (!error) {
-      const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
+    console.log('Code exchange result:', { error: error?.message, user: !!data.user })
+    
+    if (!error && data.user) {
+      const forwardedHost = request.headers.get('x-forwarded-host')
       const isLocalEnv = process.env.NODE_ENV === 'development'
       
+      console.log('Redirect info:', { forwardedHost, isLocalEnv, origin })
+      
+      let redirectUrl;
       if (isLocalEnv) {
-        // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
-        return NextResponse.redirect(`${origin}${next}`)
+        redirectUrl = `${origin}${next}`
       } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`)
+        redirectUrl = `https://${forwardedHost}${next}`
       } else {
-        return NextResponse.redirect(`${origin}${next}`)
+        redirectUrl = `${origin}${next}`
       }
+      
+      console.log('Redirecting to:', redirectUrl)
+      
+      const response = NextResponse.redirect(redirectUrl)
+      
+      // Ensure cookies are set properly
+      response.headers.set('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
+      
+      return response
+    } else {
+      console.log('Auth exchange failed:', error?.message)
     }
+  } else {
+    console.log('No code parameter found')
   }
 
   // return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+  const errorUrl = `${origin}/auth/auth-code-error`
+  console.log('Redirecting to error page:', errorUrl)
+  return NextResponse.redirect(errorUrl)
 }

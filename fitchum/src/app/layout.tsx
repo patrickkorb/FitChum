@@ -4,6 +4,7 @@ import "./globals.css";
 import ConditionalLayout from "@/app/components/ConditionalLayout";
 import { ThemeProvider } from '@/app/components/ThemeProvider';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { Analytics } from "@vercel/analytics/next"
 
 const robotoCondensed = Roboto({
   subsets: ["latin"],
