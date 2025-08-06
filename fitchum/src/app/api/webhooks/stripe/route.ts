@@ -6,6 +6,7 @@ import Stripe from 'stripe';
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 export async function POST(req: NextRequest) {
+  alert(("HI"))
   if (!webhookSecret) {
     console.error('STRIPE_WEBHOOK_SECRET is not set');
     return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
@@ -35,10 +36,8 @@ export async function POST(req: NextRequest) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
 
-        console.log('COMP');
         if (session.mode === 'payment' && session.payment_status === 'paid') {
           const userId = session.client_reference_id || session.metadata?.userId;
-          console.log('userId ', userId);
 
           if (userId) {
             console.log(`Processing payment for user ${userId}`);
