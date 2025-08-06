@@ -40,6 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error('Error loading profile:', error)
         if (error.code === 'PGRST116') {
           console.log('No profile found for user, this might be expected for new users')
+          setProfile(null) // Explicitly set profile to null for missing profiles
         }
         return
       }
@@ -85,12 +86,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       console.log('Auth session loaded:', { user: !!session?.user, userId: session?.user?.id })
       setUser(session?.user ?? null)
       if (session?.user) {
-        loadProfile(session.user.id)
+        await loadProfile(session.user.id)
       }
+      console.log('Setting auth loading to false')
       setLoading(false)
     })
 
