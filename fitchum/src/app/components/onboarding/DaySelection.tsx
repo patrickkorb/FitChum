@@ -13,7 +13,7 @@ interface DaySelectionProps {
   selectedDays?: SelectedDays;
 }
 
-const weekDays = [
+const weekDays: Array<{id: string; name: string; short: string}> = [
   { id: 'monday', name: 'Montag', short: 'Mo' },
   { id: 'tuesday', name: 'Dienstag', short: 'Di' },
   { id: 'wednesday', name: 'Mittwoch', short: 'Mi' },
@@ -27,7 +27,7 @@ export default function DaySelection({ frequency, onSelect, selectedDays }: DayS
   const [selectedPattern, setSelectedPattern] = useState<'specific' | 'interval'>('specific');
   const [selectedDaysList, setSelectedDaysList] = useState<string[]>(selectedDays?.days || []);
 
-  const handleDayToggle = (dayId: string) => {
+  const handleDayToggle = (dayId: string): void => {
     let newDays: string[];
     
     if (selectedDaysList.includes(dayId)) {
@@ -44,12 +44,12 @@ export default function DaySelection({ frequency, onSelect, selectedDays }: DayS
     onSelect({ days: newDays, pattern: selectedPattern });
   };
 
-  const handleIntervalSelect = () => {
+  const handleIntervalSelect = (): void => {
     setSelectedPattern('interval');
     onSelect({ days: [], pattern: 'interval' });
   };
 
-  const handleSpecificSelect = () => {
+  const handleSpecificSelect = (): void => {
     setSelectedPattern('specific');
     onSelect({ days: selectedDaysList, pattern: 'specific' });
   };

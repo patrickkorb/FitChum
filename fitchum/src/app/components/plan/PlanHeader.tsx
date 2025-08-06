@@ -1,6 +1,6 @@
 "use client"
 import Button from '../ui/Button';
-import { Settings, Edit3, Target } from 'lucide-react';
+import { Edit3, Target } from 'lucide-react';
 
 interface PlanHeaderProps {
   planData: {

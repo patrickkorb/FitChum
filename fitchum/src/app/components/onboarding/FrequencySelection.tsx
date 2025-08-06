@@ -1,5 +1,4 @@
 "use client"
-import { useState } from 'react';
 import Card from '../ui/Card';
 import { Calendar, Clock, Flame } from 'lucide-react';
 
@@ -79,9 +78,9 @@ export default function FrequencySelection({ onSelect, selectedFrequency }: Freq
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {frequencies.map((frequency) => {
-          const Icon = iconMap[frequency.icon as keyof typeof iconMap];
-          const isSelected = selectedFrequency?.id === frequency.id;
+        {frequencies.map((frequency: WorkoutFrequency) => {
+          const Icon: React.ComponentType<any> = iconMap[frequency.icon as keyof typeof iconMap];
+          const isSelected: boolean = selectedFrequency?.id === frequency.id;
           
           return (
             <Card

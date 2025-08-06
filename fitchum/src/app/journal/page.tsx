@@ -4,8 +4,8 @@ import {CirclePlus, Zap} from "lucide-react"
 import { useState, useEffect } from "react"
 
 export default function Journal() {
-    const motivationalMessages = [
-        "Ready to crush today's workout?",
+    const motivationalMessages: string[] = [
+        "Ready to crush todays workout?",
         "How did your workout go today?",
         "Time to turn up the heat!",
         "Your future self will thank you!",
@@ -13,11 +13,11 @@ export default function Journal() {
         "Let's make today legendary!"
     ]
 
-    const [currentMessage, setCurrentMessage] = useState(0)
-    const [isVisible, setIsVisible] = useState(true)
+    const [currentMessage, setCurrentMessage] = useState<number>(0)
+    const [isVisible, setIsVisible] = useState<boolean>(true)
 
     useEffect(() => {
-        const interval = setInterval(() => {
+        const interval: NodeJS.Timeout = setInterval(() => {
             setIsVisible(false)
             setTimeout(() => {
                 setCurrentMessage((prev) => (prev + 1) % motivationalMessages.length)
@@ -56,7 +56,7 @@ export default function Journal() {
                         
                         <button className={"bg-primary hover:cursor-pointer hover:bg-primary/90 text-white font-bold py-6 px-12 rounded-2xl text-2xl shadow-2xl hover:shadow-3xl transform hover:scale-110 transition-all duration-300 flex items-center gap-4 group"}>
                             <CirclePlus size={32} className={"group-hover:rotate-90 transition-transform duration-300"} />
-                            Log Today's Workout
+                            Log Todays Workout
                         </button>
                         
                         <div className={"flex items-center gap-2 text-lg text-neutral-dark/80 dark:text-neutral-light/80"}>
@@ -76,7 +76,7 @@ export default function Journal() {
                             <Zap className={"text-neutral-dark dark:text-neutral-light"} size={24} />
                         </div>
                         <p className={"text-neutral-dark/80 dark:text-neutral-light/80 text-lg"}>
-                            Don't let today be the day you break your momentum. Every workout counts!
+                            Dont let today be the day you break your momentum. Every workout counts!
                         </p>
                     </div>
                 </div>

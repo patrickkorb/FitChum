@@ -17,23 +17,23 @@ interface OnboardingProps {
 }
 
 export default function Onboarding({ onComplete }: OnboardingProps) {
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState<number>(1);
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({});
-  const totalSteps = 3;
+  const totalSteps: number = 3;
 
-  const handleSplitSelect = (split: WorkoutSplit) => {
+  const handleSplitSelect = (split: WorkoutSplit): void => {
     setOnboardingData(prev => ({ ...prev, workoutSplit: split }));
   };
 
-  const handleFrequencySelect = (frequency: WorkoutFrequency) => {
+  const handleFrequencySelect = (frequency: WorkoutFrequency): void => {
     setOnboardingData(prev => ({ ...prev, frequency }));
   };
 
-  const handleScheduleSelect = (schedule: SelectedDays) => {
+  const handleScheduleSelect = (schedule: SelectedDays): void => {
     setOnboardingData(prev => ({ ...prev, schedule }));
   };
 
-  const canProceed = () => {
+  const canProceed = (): boolean => {
     switch (currentStep) {
       case 1:
         return !!onboardingData.workoutSplit;
@@ -48,19 +48,19 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
     }
   };
 
-  const handleNext = () => {
+  const handleNext = (): void => {
     if (currentStep < totalSteps && canProceed()) {
       setCurrentStep(prev => prev + 1);
     }
   };
 
-  const handlePrevious = () => {
+  const handlePrevious = (): void => {
     if (currentStep > 1) {
       setCurrentStep(prev => prev - 1);
     }
   };
 
-  const handleComplete = () => {
+  const handleComplete = (): void => {
     console.log('Onboarding completed:', onboardingData);
     onComplete(onboardingData);
   };

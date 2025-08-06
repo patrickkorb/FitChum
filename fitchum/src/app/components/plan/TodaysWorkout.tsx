@@ -65,7 +65,7 @@ export default function TodaysWorkout({ workout, onStartWorkout, onCompleteWorko
         {/* Workout Description */}
         <div className="bg-neutral-dark/5 dark:bg-neutral-light/5 p-4 rounded-xl">
           <p className="text-neutral-dark/80 dark:text-neutral-light/80">
-            Bereit für dein {workout.type} Training? Los geht's! 💪
+            Bereit für dein {workout.type} Training? Los geht es! 💪
           </p>
         </div>
 

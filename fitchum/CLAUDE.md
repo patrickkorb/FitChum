@@ -6,7 +6,7 @@ FitChum is a social accountability platform for fitness enthusiasts who struggle
 **Core Value Proposition:** Achieve your fitness goals with the power of social accountability.
 
 ## Tech Stack
-- **Framework:** Next.js 14 (App Router)
+- **Framework:** Next.js 14 (App Router) with TypeScript
 - **Styling:** Tailwind CSS
 - **Authentication:** Clerk
 - **Database:** Supabase

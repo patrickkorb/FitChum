@@ -17,7 +17,7 @@ interface WeeklyScheduleProps {
   onDayClick: (day: WorkoutDay) => void;
 }
 
-const weekDays = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+const weekDays: string[] = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 
 export default function WeeklySchedule({ schedule, onDayClick }: WeeklyScheduleProps) {
   return (

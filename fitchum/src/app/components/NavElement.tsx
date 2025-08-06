@@ -1,5 +1,4 @@
 "use client"
-import Image from "next/image";
 import Link from "next/link";
 import {usePathname} from "next/navigation";
 import { BookOpen, Dumbbell, LayoutDashboard, Medal, User, Crown, LucideIcon } from "lucide-react";
@@ -21,9 +20,9 @@ const iconMap: Record<string, LucideIcon> = {
 
 export default function NavElement( {name, link, icon}: NavElementProps ) {
 
-    const filepath = usePathname()
-    const isActive = filepath.includes(link)
-    const Icon = iconMap[icon]
+    const filepath: string = usePathname()
+    const isActive: boolean = filepath.includes(link)
+    const Icon: LucideIcon = iconMap[icon]
 
     return (
         <>

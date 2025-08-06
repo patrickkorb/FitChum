@@ -13,13 +13,13 @@ export default function Profile() {
     const { theme, setTheme } = useTheme();
     const { user, profile, updateProfile, signOut, loading: authLoading } = useAuth();
     const router = useRouter();
-    const [mounted, setMounted] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [saving, setSaving] = useState(false);
-    const [deleting, setDeleting] = useState(false);
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [message, setMessage] = useState('');
-    const [error, setError] = useState('');
+    const [mounted, setMounted] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [saving, setSaving] = useState<boolean>(false);
+    const [deleting, setDeleting] = useState<boolean>(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
+    const [message, setMessage] = useState<string>('');
+    const [error, setError] = useState<string>('');
     
     const [formData, setFormData] = useState({
         username: '',
@@ -48,8 +48,8 @@ export default function Profile() {
         }
     }, [profile, user]);
 
-    const handleThemeToggle = async () => {
-        const newTheme = theme === 'dark' ? 'light' : 'dark';
+    const handleThemeToggle = async (): Promise<void> => {
+        const newTheme: string = theme === 'dark' ? 'light' : 'dark';
         setTheme(newTheme);
         
         // Update theme preference in database
@@ -58,8 +58,8 @@ export default function Profile() {
         }
     };
 
-    const handleProfilePicChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
+    const handleProfilePicChange = async (event: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
+        const file: File | undefined = event.target.files?.[0];
         if (!file || !user) return;
 
         setLoading(true);
@@ -93,11 +93,11 @@ export default function Profile() {
         }
     };
 
-    const handleInputChange = (field: string, value: string) => {
+    const handleInputChange = (field: string, value: string): void => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
-    const handleSave = async () => {
+    const handleSave = async (): Promise<void> => {
         if (!profile) return;
 
         setSaving(true);
@@ -125,7 +125,7 @@ export default function Profile() {
         }
     };
 
-    const handleLogout = async () => {
+    const handleLogout = async (): Promise<void> => {
         try {
             await signOut();
             router.push('/auth/login');
@@ -134,7 +134,7 @@ export default function Profile() {
         }
     };
 
-    const handleDeleteAccount = async () => {
+    const handleDeleteAccount = async (): Promise<void> => {
         if (!user) return;
 
         setDeleting(true);

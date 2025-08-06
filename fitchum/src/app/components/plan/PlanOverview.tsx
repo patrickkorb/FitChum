@@ -29,7 +29,15 @@ const mockWeeklySchedule = [
   { day: 'sunday', name: 'Ruhetag', type: '', duration: 0, completed: false, isToday: false, isRestDay: true }
 ];
 
-const mockStats = {
+interface MockStats {
+  weeklyGoal: number;
+  completedThisWeek: number;
+  currentStreak: number;
+  totalWorkouts: number;
+  averageDuration: number;
+}
+
+const mockStats: MockStats = {
   weeklyGoal: 3,
   completedThisWeek: 1,
   currentStreak: 5,
@@ -46,13 +54,13 @@ export default function PlanOverview({ onEditPlan }: PlanOverviewProps) {
   const [weeklySchedule, setWeeklySchedule] = useState(mockWeeklySchedule);
   const [stats, setStats] = useState(mockStats);
 
-  const handleStartWorkout = () => {
+  const handleStartWorkout = (): void => {
     console.log('Starting workout:', todaysWorkout.name);
     // In real app: navigate to workout tracking view
     alert('Workout gestartet! (Noch nicht implementiert)');
   };
 
-  const handleCompleteWorkout = () => {
+  const handleCompleteWorkout = (): void => {
     setTodaysWorkout(prev => ({ ...prev, completed: true }));
     setWeeklySchedule(prev => 
       prev.map(day => 
@@ -68,7 +76,7 @@ export default function PlanOverview({ onEditPlan }: PlanOverviewProps) {
     alert('Workout als abgeschlossen markiert! 💪');
   };
 
-  const handleDayClick = (day: any) => {
+  const handleDayClick = (day: any): void => {
     console.log('Clicked on day:', day);
     // In real app: show workout details for that day
     alert(`${day.name} Details (Noch nicht implementiert)`);

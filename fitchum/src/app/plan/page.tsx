@@ -4,13 +4,13 @@ import Onboarding from "@/app/plan/Onboarding";
 import PlanOverview from "@/app/components/plan/PlanOverview";
 
 export default function Plan() {
-    const [hasPlan, setHasPlan] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
+    const [hasPlan, setHasPlan] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
 
     useEffect(() => {
         // Simulate checking if user has a plan (in real app: check localStorage/API)
-        const checkForExistingPlan = () => {
-            const existingPlan = localStorage.getItem('fitchum-plan');
+        const checkForExistingPlan = (): void => {
+            const existingPlan: string | null = localStorage.getItem('fitchum-plan');
             setHasPlan(!!existingPlan);
             setIsLoading(false);
         };
@@ -19,13 +19,13 @@ export default function Plan() {
         setTimeout(checkForExistingPlan, 500);
     }, []);
 
-    const handlePlanCompleted = (planData: any) => {
+    const handlePlanCompleted = (planData: any): void => {
         // Save plan data (in real app: save to API)
         localStorage.setItem('fitchum-plan', JSON.stringify(planData));
         setHasPlan(true);
     };
 
-    const handleEditPlan = () => {
+    const handleEditPlan = (): void => {
         // Allow user to edit their plan
         setHasPlan(false);
     };

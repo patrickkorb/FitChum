@@ -1,5 +1,6 @@
 import Card from '@/app/components/ui/Card'
 import Button from '@/app/components/ui/Button'
+import Link from "next/link";
 
 export default function AuthCodeError() {
   return (
@@ -15,11 +16,11 @@ export default function AuthCodeError() {
 
       <div className="space-y-3">
         <Button variant="primary" className="w-full">
-          <a href="/auth/login">Erneut versuchen</a>
+          <Link href="/auth/login">Erneut versuchen</Link>
         </Button>
         
         <Button variant="outline" className="w-full">
-          <a href="/">Zur Startseite</a>
+          <Link href="/">Zur Startseite</Link>
         </Button>
       </div>
     </Card>

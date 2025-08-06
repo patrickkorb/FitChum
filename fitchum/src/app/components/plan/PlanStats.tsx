@@ -13,7 +13,7 @@ interface PlanStatsProps {
 }
 
 export default function PlanStats({ stats }: PlanStatsProps) {
-  const progressPercentage = Math.round((stats.completedThisWeek / stats.weeklyGoal) * 100);
+  const progressPercentage: number = Math.round((stats.completedThisWeek / stats.weeklyGoal) * 100);
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

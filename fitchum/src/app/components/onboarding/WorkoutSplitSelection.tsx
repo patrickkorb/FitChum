@@ -1,5 +1,4 @@
 "use client"
-import { useState } from 'react';
 import Card from '../ui/Card';
 import { Dumbbell, Target, Zap } from 'lucide-react';
 
@@ -66,9 +65,9 @@ export default function WorkoutSplitSelection({ onSelect, selectedSplit }: Worko
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {workoutSplits.map((split) => {
-          const Icon = iconMap[split.icon as keyof typeof iconMap];
-          const isSelected = selectedSplit?.id === split.id;
+        {workoutSplits.map((split: WorkoutSplit) => {
+          const Icon: React.ComponentType<any> = iconMap[split.icon as keyof typeof iconMap];
+          const isSelected: boolean = selectedSplit?.id === split.id;
           
           return (
             <Card
