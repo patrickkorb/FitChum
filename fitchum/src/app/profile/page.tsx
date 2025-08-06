@@ -110,7 +110,7 @@ export default function Profile() {
                 username: formData.username,
                 profile_pic_url: formData.profile_pic_url,
                 theme_preference: formData.theme_preference as 'light' | 'dark',
-                subscription_plan: formData.subscription_plan as 'basic' | 'pro' | 'elite'
+                subscription_plan: formData.subscription_plan as 'free' | 'pro' | undefined
             });
 
             if (error) {
