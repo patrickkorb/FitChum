@@ -34,9 +34,11 @@ export async function POST(req: NextRequest) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        
+
+        console.log('COMP');
         if (session.mode === 'payment' && session.payment_status === 'paid') {
           const userId = session.client_reference_id || session.metadata?.userId;
+          console.log('userId ', userId);
 
           if (userId) {
             console.log(`Processing payment for user ${userId}`);
