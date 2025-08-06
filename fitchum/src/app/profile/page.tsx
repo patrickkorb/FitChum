@@ -6,6 +6,7 @@ import { useTheme } from 'next-themes';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import Card from '@/app/components/ui/Card';
 import Button from '@/app/components/ui/Button';
 
@@ -86,8 +87,8 @@ export default function Profile() {
             // Update form data
             setFormData(prev => ({ ...prev, profile_pic_url: publicUrl }));
             
-        } catch (err: any) {
-            setError('Fehler beim Upload des Profilbildes: ' + err.message);
+        } catch (err) {
+            setError('Fehler beim Upload des Profilbildes: ' + (err instanceof Error ? err.message : String(err)));
         } finally {
             setLoading(false);
         }
@@ -118,8 +119,8 @@ export default function Profile() {
                 setMessage('Profil erfolgreich aktualisiert! ✅');
                 setTimeout(() => setMessage(''), 3000);
             }
-        } catch (err: any) {
-            setError('Ein Fehler ist aufgetreten: ' + err.message);
+        } catch (err) {
+            setError('Ein Fehler ist aufgetreten: ' + (err instanceof Error ? err.message : String(err)));
         } finally {
             setSaving(false);
         }
@@ -129,8 +130,8 @@ export default function Profile() {
         try {
             await signOut();
             router.push('/auth/login');
-        } catch (err: any) {
-            setError('Fehler beim Abmelden: ' + err.message);
+        } catch (err) {
+            setError('Fehler beim Abmelden: ' + (err instanceof Error ? err.message : String(err)));
         }
     };
 
@@ -156,8 +157,8 @@ export default function Profile() {
             // Redirect to login
             router.push('/auth/login');
             
-        } catch (err: any) {
-            setError('Fehler beim Löschen des Accounts: ' + err.message);
+        } catch (err) {
+            setError('Fehler beim Löschen des Accounts: ' + (err instanceof Error ? err.message : String(err)));
             setDeleting(false);
         }
     };
@@ -237,7 +238,7 @@ export default function Profile() {
                 <div className="flex items-center space-x-6">
                     <div className="w-24 h-24 rounded-full bg-neutral-dark/10 dark:bg-neutral-light/10 flex items-center justify-center overflow-hidden">
                         {formData.profile_pic_url ? (
-                            <img src={formData.profile_pic_url} alt="Profile" className="w-full h-full object-cover" />
+                            <Image src={formData.profile_pic_url} alt="Profile" width={96} height={96} className="w-full h-full object-cover" />
                         ) : (
                             <svg className="w-12 h-12 text-neutral-dark/50 dark:text-neutral-light/50" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>

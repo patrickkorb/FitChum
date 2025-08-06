@@ -38,7 +38,7 @@ export default function AuthForm() {
       } else {
         setMessage('Magic Link wurde an deine E-Mail gesendet!')
       }
-    } catch (err) {
+    } catch {
       setError('Ein Fehler ist aufgetreten. Bitte versuche es erneut.')
     } finally {
       setLoading(false)
@@ -62,7 +62,7 @@ export default function AuthForm() {
         setLoading(false)
       }
       // Note: Loading state will be maintained during redirect
-    } catch (err) {
+    } catch {
       setError('Ein Fehler ist aufgetreten. Bitte versuche es erneut.')
       setLoading(false)
     }

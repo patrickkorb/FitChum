@@ -79,7 +79,7 @@ export default function FrequencySelection({ onSelect, selectedFrequency }: Freq
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {frequencies.map((frequency: WorkoutFrequency) => {
-          const Icon: React.ComponentType<any> = iconMap[frequency.icon as keyof typeof iconMap];
+          const Icon: React.ComponentType<{ size?: number }> = iconMap[frequency.icon as keyof typeof iconMap];
           const isSelected: boolean = selectedFrequency?.id === frequency.id;
           
           return (

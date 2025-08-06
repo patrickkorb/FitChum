@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import { Profile } from '@/lib/supabase'
@@ -9,10 +9,10 @@ interface AuthContextType {
   user: User | null
   profile: Profile | null
   loading: boolean
-  signUp: (email: string, password: string, username: string) => Promise<{ error: any }>
-  signIn: (email: string, password: string) => Promise<{ error: any }>
+  signUp: (email: string, password: string, username: string) => Promise<{ error: unknown }>
+  signIn: (email: string, password: string) => Promise<{ error: unknown }>
   signOut: () => Promise<void>
-  updateProfile: (updates: Partial<Profile>) => Promise<{ error: any }>
+  updateProfile: (updates: Partial<Profile>) => Promise<{ error: unknown }>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -22,6 +22,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
+
+  const loadProfile = useCallback(async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single()
+
+      if (error) {
+        console.error('Error loading profile:', error)
+        return
+      }
+
+      setProfile(data)
+    } catch (error) {
+      console.error('Error loading profile:', error)
+    }
+  }, [supabase])
+
+  const handleUserSignIn = useCallback(async (user: User) => {
+    try {
+      // Check if profile already exists
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+
+      // If profile exists and already has a profile picture, don't update
+      if (existingProfile && existingProfile.profile_pic_url) {
+        return
+      }
+
+      // Get Google profile picture if available
+      const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture
+      
+      if (avatarUrl && (!existingProfile || !existingProfile.profile_pic_url)) {
+        await supabase
+          .from('profiles')
+          .update({ 
+            profile_pic_url: avatarUrl,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id)
+      }
+    } catch (error) {
+      console.error('Error handling user sign in:', error)
+    }
+  }, [supabase])
 
   useEffect(() => {
     // Get initial session
@@ -52,57 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
 
     return () => subscription.unsubscribe()
-  }, [])
-
-  const loadProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single()
-
-      if (error) {
-        console.error('Error loading profile:', error)
-        return
-      }
-
-      setProfile(data)
-    } catch (error) {
-      console.error('Error loading profile:', error)
-    }
-  }
-
-  const handleUserSignIn = async (user: any) => {
-    try {
-      // Check if profile already exists
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .single()
-
-      // If profile exists and already has a profile picture, don't update
-      if (existingProfile && existingProfile.profile_pic_url) {
-        return
-      }
-
-      // Get Google profile picture if available
-      const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture
-      
-      if (avatarUrl && (!existingProfile || !existingProfile.profile_pic_url)) {
-        await supabase
-          .from('profiles')
-          .update({ 
-            profile_pic_url: avatarUrl,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', user.id)
-      }
-    } catch (error) {
-      console.error('Error handling user sign in:', error)
-    }
-  }
+  }, [handleUserSignIn, loadProfile, supabase.auth])
 
   const signUp = async (email: string, password: string, username: string) => {
     try {

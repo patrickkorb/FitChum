@@ -76,7 +76,7 @@ export default function PlanOverview({ onEditPlan }: PlanOverviewProps) {
     alert('Workout als abgeschlossen markiert! 💪');
   };
 
-  const handleDayClick = (day: any): void => {
+  const handleDayClick = (day: { day: string; name: string; type: string; duration: number; completed: boolean; isToday: boolean; isRestDay: boolean }): void => {
     console.log('Clicked on day:', day);
     // In real app: show workout details for that day
     alert(`${day.name} Details (Noch nicht implementiert)`);

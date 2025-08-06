@@ -66,7 +66,7 @@ export default function WorkoutSplitSelection({ onSelect, selectedSplit }: Worko
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {workoutSplits.map((split: WorkoutSplit) => {
-          const Icon: React.ComponentType<any> = iconMap[split.icon as keyof typeof iconMap];
+          const Icon: React.ComponentType<{ size?: number }> = iconMap[split.icon as keyof typeof iconMap];
           const isSelected: boolean = selectedSplit?.id === split.id;
           
           return (

@@ -1,5 +1,4 @@
 "use client"
-import Image from "next/image";
 import {CirclePlus, Zap} from "lucide-react"
 import { useState, useEffect } from "react"
 
@@ -26,7 +25,7 @@ export default function Journal() {
         }, 4000)
 
         return () => clearInterval(interval)
-    }, [])
+    }, [motivationalMessages.length])
 
     return (
         <>
@@ -37,7 +36,7 @@ export default function Journal() {
                     <div className={"space-y-4"}>
                         <div className={"inline-flex items-center gap-3 bg-neutral-dark/5 dark:bg-neutral-light/10 px-6 py-3 rounded-full border border-neutral-dark/10 dark:border-neutral-light/20"}>
                             <div className={"w-3 h-3 bg-secondary rounded-full animate-pulse"}></div>
-                            <span className={"text-neutral-dark dark:text-neutral-light font-semibold text-lg"}>Today's Entry</span>
+                            <span className={"text-neutral-dark dark:text-neutral-light font-semibold text-lg"}>Today&apos;s Entry</span>
                             <span className={"text-neutral-dark/70 dark:text-neutral-light/70 font-medium"}>• Not logged yet</span>
                         </div>
                     </div>
@@ -76,7 +75,7 @@ export default function Journal() {
                             <Zap className={"text-neutral-dark dark:text-neutral-light"} size={24} />
                         </div>
                         <p className={"text-neutral-dark/80 dark:text-neutral-light/80 text-lg"}>
-                            Dont let today be the day you break your momentum. Every workout counts!
+                            Don&apos;t let today be the day you break your momentum. Every workout counts!
                         </p>
                     </div>
                 </div>

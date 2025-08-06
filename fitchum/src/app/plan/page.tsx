@@ -2,6 +2,9 @@
 import { useState, useEffect } from 'react';
 import Onboarding from "@/app/plan/Onboarding";
 import PlanOverview from "@/app/components/plan/PlanOverview";
+import { WorkoutSplit } from "@/app/components/onboarding/WorkoutSplitSelection";
+import { WorkoutFrequency } from "@/app/components/onboarding/FrequencySelection";
+import { SelectedDays } from "@/app/components/onboarding/DaySelection";
 
 export default function Plan() {
     const [hasPlan, setHasPlan] = useState<boolean>(false);
@@ -19,7 +22,7 @@ export default function Plan() {
         setTimeout(checkForExistingPlan, 500);
     }, []);
 
-    const handlePlanCompleted = (planData: any): void => {
+    const handlePlanCompleted = (planData: { workoutSplit?: WorkoutSplit; frequency?: WorkoutFrequency; schedule?: SelectedDays }): void => {
         // Save plan data (in real app: save to API)
         localStorage.setItem('fitchum-plan', JSON.stringify(planData));
         setHasPlan(true);

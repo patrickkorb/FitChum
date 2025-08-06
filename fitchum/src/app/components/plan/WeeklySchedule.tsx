@@ -1,6 +1,6 @@
 "use client"
 import Card from '../ui/Card';
-import { Calendar, Clock, Dumbbell, CheckCircle } from 'lucide-react';
+import { Calendar, Clock, CheckCircle } from 'lucide-react';
 
 interface WorkoutDay {
   day: string;

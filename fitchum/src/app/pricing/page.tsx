@@ -40,7 +40,7 @@ export default function PricingPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState<string | null>(null);
 
-  const handlePlanSelect = async (plan: any) => {
+  const handlePlanSelect = async (plan: { name: string; price: number; priceId: string | null; features: string[]; popular: boolean; isFree: boolean }) => {
     if (!user) {
       // Redirect to sign in
       window.location.href = '/auth/login';
@@ -156,7 +156,7 @@ export default function PricingPage() {
 
         <div className="text-center space-y-4 mt-8 pt-8 border-t border-neutral-dark/20 dark:border-neutral-light/20">
           <p className="text-neutral-dark/70 dark:text-neutral-light/70">
-            Start free, upgrade when you're ready. No recurring charges.
+            Start free, upgrade when you&apos;re ready. No recurring charges.
           </p>
           <p className="text-sm text-neutral-dark/50 dark:text-neutral-light/50">
             Secure payments powered by Stripe
