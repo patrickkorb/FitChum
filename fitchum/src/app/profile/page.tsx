@@ -21,11 +21,13 @@ export default function Profile() {
         username: '',
         email: '',
         profile_pic_url: '',
-        theme_preference: (theme as 'light' | 'dark') || 'light',
-        subscription_plan: 'free' as 'free' | 'pro'
+        theme_preference: 'light' as 'light' | 'dark',
+        subscription_plan: 'free' as 'free' | 'pro',
     });
 
     const supabase = createClient();
+
+    // ⏬ Daten laden
     useEffect(() => {
         async function fetchProfile() {
             setLoading(true);
@@ -45,8 +47,8 @@ export default function Profile() {
 
             const { data: profile, error: profileError } = await supabase
                 .from('profiles')
-                .select('username, email, profile_pic_url, theme_preference, subscription_plan')
-                .eq('id', user.id)
+                .select('*')
+                .eq('user_id', user.id)
                 .single();
 
             if (profileError) {
@@ -60,7 +62,7 @@ export default function Profile() {
                     theme_preference: (profile.theme_preference || 'light') as 'light' | 'dark',
                     subscription_plan: (profile.subscription_plan || 'free') as 'free' | 'pro',
                 });
-                setTheme(profile.theme_preference || 'light'); // Theme synchronisieren
+                setTheme(profile.theme_preference || 'light');
             }
 
             setLoading(false);
@@ -69,7 +71,7 @@ export default function Profile() {
         fetchProfile();
     }, []);
 
-
+    // 📤 Profilbild ändern
     const handleProfilePicChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
@@ -92,12 +94,9 @@ export default function Profile() {
         const fileExt = file.name.split('.').pop();
         const filePath = `${user.id}/avatar.${fileExt}`;
 
-        // Upload zum Bucket
         const { error: uploadError } = await supabase.storage
             .from('avatars')
-            .upload(filePath, file, {
-                upsert: true,
-            });
+            .upload(filePath, file, { upsert: true });
 
         if (uploadError) {
             setError('Fehler beim Hochladen des Bilds.');
@@ -106,16 +105,14 @@ export default function Profile() {
             return;
         }
 
-        // Öffentliche URL holen
         const {
-            data: { publicUrl },
+            data: { publicUrl }
         } = supabase.storage.from('avatars').getPublicUrl(filePath);
 
-        // Profil aktualisieren
         const { error: updateError } = await supabase
             .from('profiles')
             .update({ profile_pic_url: publicUrl })
-            .eq('id', user.id);
+            .eq('user_id', user.id);
 
         if (updateError) {
             setError('Bild konnte nicht im Profil gespeichert werden.');
@@ -123,7 +120,7 @@ export default function Profile() {
         } else {
             setFormData((prev) => ({
                 ...prev,
-                profile_pic_url: publicUrl,
+                profile_pic_url: publicUrl
             }));
             setMessage('Profilbild aktualisiert!');
         }
@@ -131,15 +128,12 @@ export default function Profile() {
         setLoading(false);
     };
 
-
+    // 🧑‍💼 Formularfeld ändern
     function handleInputChange(field: keyof typeof formData, value: string) {
-        setFormData((prev) => ({
-            ...prev,
-            [field]: value
-        }));
+        setFormData((prev) => ({ ...prev, [field]: value }));
     }
 
-
+    // 🌗 Theme wechseln
     function handleThemeToggle() {
         const newTheme = theme === 'dark' ? 'light' : 'dark';
         setTheme(newTheme);
@@ -149,7 +143,7 @@ export default function Profile() {
         }));
     }
 
-
+    // 💾 Speichern
     async function handleSave() {
         setSaving(true);
         setError('');
@@ -167,7 +161,7 @@ export default function Profile() {
         }
 
         const updates = {
-            id: user.id,
+            user_id: user.id,
             username: formData.username,
             profile_pic_url: formData.profile_pic_url,
             theme_preference: formData.theme_preference,
@@ -176,7 +170,7 @@ export default function Profile() {
 
         const { error } = await supabase
             .from('profiles')
-            .upsert(updates, { onConflict: 'id' });
+            .upsert(updates, { onConflict: 'user_id' });
 
         if (error) {
             setError('Fehler beim Speichern.');
@@ -188,7 +182,7 @@ export default function Profile() {
         setSaving(false);
     }
 
-
+    // 🚪 Logout
     async function handleLogout() {
         setLoading(true);
         const { error } = await supabase.auth.signOut();
@@ -201,7 +195,7 @@ export default function Profile() {
         }
     }
 
-
+    // ❌ Account löschen
     async function handleDeleteAccount() {
         if (!showDeleteConfirm) {
             setShowDeleteConfirm(true);
@@ -223,11 +217,10 @@ export default function Profile() {
             return;
         }
 
-        // 1. Optional: Profil aus eigener Tabelle löschen
         const { error: profileError } = await supabase
             .from('profiles')
             .delete()
-            .eq('id', user.id);
+            .eq('user_id', user.id);
 
         if (profileError) {
             setError('Profil konnte nicht gelöscht werden.');
@@ -236,12 +229,9 @@ export default function Profile() {
             return;
         }
 
-        // 2. Benutzerkonto löschen (nur über Server oder Admin API möglich)
-        // Alternativ: User ausloggen und Nachricht anzeigen
         await supabase.auth.signOut();
-        router.push('/account-deleted'); // optional: eigene Seite
+        router.push('/account-deleted'); // Optional
     }
-
 
     return (
         <div className="max-w-2xl mx-auto space-y-6">
@@ -357,9 +347,7 @@ export default function Profile() {
                             }}
                         >
                             <span
-                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                    theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
-                                }`}
+                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${theme === 'dark' ? 'translate-x-6' : 'translate-x-1'}`}
                             />
                         </button>
                     </div>
@@ -370,7 +358,6 @@ export default function Profile() {
                             {message}
                         </div>
                     )}
-
                     {error && (
                         <div className="p-4 rounded-xl bg-red-500/10 text-red-500 text-sm text-center">
                             {error}
