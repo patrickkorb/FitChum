@@ -53,14 +53,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const handleUserSignIn = useCallback(async (user: User) => {
     console.log('handleUserSignIn for:', user.id);
+    
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Profile query timeout')), 10000);
+    });
+    
     try {
-      const { data: existingProfile } = await supabase
+      console.log('Starting profile check query...');
+      const profilePromise = supabase
         .from('profiles')
-        .select('*')
+        .select('profile_pic_url')
         .eq('user_id', user.id)
         .single();
+      
+      const { data: existingProfile, error } = await Promise.race([
+        profilePromise,
+        timeoutPromise
+      ]) as any;
+      
+      console.log('Profile query completed:', { data: existingProfile, error: error?.message });
 
-      console.log('Existing profile check:', existingProfile);
+      if (error) {
+        if (error.code === 'PGRST116') {
+          console.log('No profile found - this is normal for new users');
+        } else {
+          console.error('Profile query error:', error);
+        }
+        return;
+      }
 
       if (existingProfile?.profile_pic_url) {
         console.log('Profile already has picture, skipping update');
@@ -70,19 +91,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture;
       console.log('Avatar URL from metadata:', avatarUrl);
       
-      if (avatarUrl && (!existingProfile || !existingProfile.profile_pic_url)) {
+      if (avatarUrl) {
         console.log('Updating profile with avatar URL');
-        await supabase
+        const { error: updateError } = await supabase
           .from('profiles')
           .update({ 
             profile_pic_url: avatarUrl,
             updated_at: new Date().toISOString()
           })
           .eq('user_id', user.id);
+          
+        if (updateError) {
+          console.error('Profile update error:', updateError);
+        } else {
+          console.log('Profile updated successfully');
+        }
       }
     } catch (error) {
-      console.error('Error handling user sign in:', error);
+      console.error('handleUserSignIn error:', error);
     }
+    console.log('handleUserSignIn completed');
   }, [supabase]);
 
   useEffect(() => {
@@ -112,13 +140,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        // Only run handleUserSignIn for actual sign-in events
+        // Skip handleUserSignIn for now - it might be causing issues
         if (event === 'SIGNED_IN') {
-          console.log('Handling user sign in...');
-          await handleUserSignIn(session.user);
+          console.log('Sign in detected - skipping handleUserSignIn for now');
+          // await handleUserSignIn(session.user); // Temporarily disabled
         }
         
         // Always load profile when user exists
+        console.log('Loading profile for user:', session.user.id);
         await loadProfile(session.user.id);
       } else {
         console.log('No user - clearing profile');
