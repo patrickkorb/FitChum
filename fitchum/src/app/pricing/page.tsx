@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import Button from '@/app/components/ui/Button';
 import Card from '@/app/components/ui/Card';
 import { Check } from 'lucide-react';
+import {createClient} from "@/lib/supabase/client";
 
 const plans = [
   {
@@ -37,10 +37,13 @@ const plans = [
 ];
 
 export default function PricingPage() {
-  const { user } = useAuth();
   const [loading, setLoading] = useState<string | null>(null);
 
   const handlePlanSelect = async (plan: typeof plans[0]) => {
+    const supabase = createClient()
+    const {data: userData} = await supabase.auth.getUser();
+    const user = userData?.user;
+
     if (!user) {
       // Redirect to sign in
       window.location.href = '/auth/login';
@@ -68,11 +71,11 @@ export default function PricingPage() {
       });
 
       const { sessionId } = await response.json();
-      
-      const stripe = await import('@stripe/stripe-js').then(m => 
+
+      const stripe = await import('@stripe/stripe-js').then(m =>
         m.loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
       );
-      
+
       if (stripe) {
         await stripe.redirectToCheckout({ sessionId });
       }

@@ -3,7 +3,6 @@ import { Roboto } from "next/font/google";
 import "./globals.css";
 import ConditionalLayout from "@/app/components/ConditionalLayout";
 import { ThemeProvider } from '@/app/components/ThemeProvider';
-import { AuthProvider } from '@/contexts/AuthContext';
 import { Analytics } from "@vercel/analytics/next"
 
 const robotoCondensed = Roboto({
@@ -33,11 +32,9 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange={true}
         >
-          <AuthProvider >
             <ConditionalLayout>
               {children}
             </ConditionalLayout>
-          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

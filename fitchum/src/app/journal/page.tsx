@@ -31,14 +31,9 @@ export default function Journal() {
     }, []);
 
     const handleIt = async () => {
-        console.log('=== BUTTON TEST START ===');
-        const supabase = createClient(); // Remove await - createClient is sync
-        const {data: user} = await supabase
-            .from("profiles")
-            .select('*')
-            .eq("user_id", "905775e5-e6ea-40a0-a824-cc95c13ec554")
-            .single()
-        console.log(user)
+        const supabase = createClient();
+        const {data: user} = await supabase.auth.getUser();
+        console.log(user.user)
     }
 
     return (

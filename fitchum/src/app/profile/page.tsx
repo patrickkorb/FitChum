@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
-import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Image from 'next/image';
@@ -11,7 +10,6 @@ import Button from '@/app/components/ui/Button';
 
 export default function Profile() {
     const { theme, setTheme } = useTheme();
-    const { user, profile, updateProfile, signOut, loading: authLoading } = useAuth();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -28,157 +26,222 @@ export default function Profile() {
     });
 
     const supabase = createClient();
-    const [mounted, setMounted] = useState(false);
-
     useEffect(() => {
-        setMounted(true);
+        async function fetchProfile() {
+            setLoading(true);
+            setMessage('');
+            setError('');
+
+            const {
+                data: { user },
+                error: userError
+            } = await supabase.auth.getUser();
+
+            if (userError || !user) {
+                setError('Benutzer nicht gefunden.');
+                setLoading(false);
+                return;
+            }
+
+            const { data: profile, error: profileError } = await supabase
+                .from('profiles')
+                .select('username, email, profile_pic_url, theme_preference, subscription_plan')
+                .eq('id', user.id)
+                .single();
+
+            if (profileError) {
+                setError('Profil konnte nicht geladen werden.');
+                console.error(profileError);
+            } else {
+                setFormData({
+                    username: profile.username || '',
+                    email: profile.email || user.email || '',
+                    profile_pic_url: profile.profile_pic_url || '',
+                    theme_preference: (profile.theme_preference || 'light') as 'light' | 'dark',
+                    subscription_plan: (profile.subscription_plan || 'free') as 'free' | 'pro',
+                });
+                setTheme(profile.theme_preference || 'light'); // Theme synchronisieren
+            }
+
+            setLoading(false);
+        }
+
+        fetchProfile();
     }, []);
 
-    useEffect(() => {
-        if (user && profile) {
-            setFormData({
-                username: profile.username || '',
-                email: user.email || '',
-                profile_pic_url: profile.profile_pic_url || '',
-                theme_preference: profile.theme_preference || 'light',
-                subscription_plan: profile.subscription_plan || 'free'
-            });
-        }
-    }, [user, profile]);
-
-    // Show loading state while auth is initializing
-    if (authLoading) {
-        return (
-            <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="text-center space-y-4">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-                    <p className="text-neutral-dark/70 dark:text-neutral-light/70">Loading profile...</p>
-                </div>
-            </div>
-        );
-    }
-
-    // Redirect if no user
-    if (!user) {
-        router.push('/auth/login');
-        return null;
-    }
-
-    const handleThemeToggle = async () => {
-        const newTheme = theme === 'dark' ? 'light' : 'dark';
-        setTheme(newTheme);
-
-        if (profile) {
-            await updateProfile({ theme_preference: newTheme as 'light' | 'dark' });
-        }
-    };
 
     const handleProfilePicChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        if (!file || !user) return;
+        if (!file) return;
 
         setLoading(true);
         setError('');
+        setMessage('');
 
-        try {
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${user.id}/profile.${fileExt}`;
+        const {
+            data: { user },
+            error: userError
+        } = await supabase.auth.getUser();
 
-            const { error: uploadError } = await supabase.storage
-                .from('profile-pictures')
-                .upload(fileName, file, { upsert: true });
-
-            if (uploadError) throw uploadError;
-
-            const { data: { publicUrl } } = supabase.storage
-                .from('profile-pictures')
-                .getPublicUrl(fileName);
-
-            setFormData(prev => ({ ...prev, profile_pic_url: publicUrl }));
-        } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : String(err);
-            setError(`Fehler beim Upload des Profilbildes: ${errorMessage}`);
-        } finally {
+        if (userError || !user) {
+            setError('Benutzer nicht gefunden.');
             setLoading(false);
+            return;
         }
+
+        const fileExt = file.name.split('.').pop();
+        const filePath = `${user.id}/avatar.${fileExt}`;
+
+        // Upload zum Bucket
+        const { error: uploadError } = await supabase.storage
+            .from('avatars')
+            .upload(filePath, file, {
+                upsert: true,
+            });
+
+        if (uploadError) {
+            setError('Fehler beim Hochladen des Bilds.');
+            console.error(uploadError);
+            setLoading(false);
+            return;
+        }
+
+        // Öffentliche URL holen
+        const {
+            data: { publicUrl },
+        } = supabase.storage.from('avatars').getPublicUrl(filePath);
+
+        // Profil aktualisieren
+        const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ profile_pic_url: publicUrl })
+            .eq('id', user.id);
+
+        if (updateError) {
+            setError('Bild konnte nicht im Profil gespeichert werden.');
+            console.error(updateError);
+        } else {
+            setFormData((prev) => ({
+                ...prev,
+                profile_pic_url: publicUrl,
+            }));
+            setMessage('Profilbild aktualisiert!');
+        }
+
+        setLoading(false);
     };
 
-    const handleInputChange = (field: string, value: string) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
-    };
 
-    const handleSave = async () => {
-        if (!profile) return;
+    function handleInputChange(field: keyof typeof formData, value: string) {
+        setFormData((prev) => ({
+            ...prev,
+            [field]: value
+        }));
+    }
 
+
+    function handleThemeToggle() {
+        const newTheme = theme === 'dark' ? 'light' : 'dark';
+        setTheme(newTheme);
+        setFormData((prev) => ({
+            ...prev,
+            theme_preference: newTheme as 'light' | 'dark'
+        }));
+    }
+
+
+    async function handleSave() {
         setSaving(true);
         setError('');
         setMessage('');
 
-        try {
-            const { error } = await updateProfile({
-                username: formData.username,
-                profile_pic_url: formData.profile_pic_url,
-                theme_preference: formData.theme_preference
-            });
+        const {
+            data: { user },
+            error: userError
+        } = await supabase.auth.getUser();
 
-            if (error) {
-                setError('Fehler beim Speichern des Profils');
-            } else {
-                setMessage('Profil erfolgreich gespeichert!');
-                setTimeout(() => setMessage(''), 3000);
-            }
-        } catch (err) {
-            setError('Ein unerwarteter Fehler ist aufgetreten');
-        } finally {
+        if (userError || !user) {
+            setError('Benutzer nicht gefunden.');
             setSaving(false);
+            return;
         }
-    };
 
-    const handleLogout = async () => {
+        const updates = {
+            id: user.id,
+            username: formData.username,
+            profile_pic_url: formData.profile_pic_url,
+            theme_preference: formData.theme_preference,
+            subscription_plan: formData.subscription_plan
+        };
+
+        const { error } = await supabase
+            .from('profiles')
+            .upsert(updates, { onConflict: 'id' });
+
+        if (error) {
+            setError('Fehler beim Speichern.');
+            console.error(error);
+        } else {
+            setMessage('Profil gespeichert!');
+        }
+
+        setSaving(false);
+    }
+
+
+    async function handleLogout() {
         setLoading(true);
-        try {
-            await signOut();
-            router.push('/auth/login');
-        } catch (error) {
-            console.error('Logout error:', error);
-            setError('Fehler beim Abmelden');
-        } finally {
-            setLoading(false);
-        }
-    };
+        const { error } = await supabase.auth.signOut();
 
-    const handleDeleteAccount = async () => {
+        if (error) {
+            setError('Abmeldung fehlgeschlagen.');
+            setLoading(false);
+        } else {
+            router.push('/login');
+        }
+    }
+
+
+    async function handleDeleteAccount() {
         if (!showDeleteConfirm) {
             setShowDeleteConfirm(true);
             return;
         }
 
         setDeleting(true);
-        try {
-            // Delete profile first
-            if (profile) {
-                await supabase
-                    .from('profiles')
-                    .delete()
-                    .eq('user_id', user.id);
-            }
+        setError('');
+        setMessage('');
 
-            // Delete user account
-            await supabase.auth.admin.deleteUser(user.id);
+        const {
+            data: { user },
+            error: userError
+        } = await supabase.auth.getUser();
 
-            router.push('/auth/login');
-        } catch (error) {
-            console.error('Delete account error:', error);
-            setError('Fehler beim Löschen des Kontos');
-            setShowDeleteConfirm(false);
-        } finally {
+        if (userError || !user) {
+            setError('Benutzer nicht gefunden.');
             setDeleting(false);
+            return;
         }
-    };
 
-    if (!mounted) {
-        return null;
+        // 1. Optional: Profil aus eigener Tabelle löschen
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .delete()
+            .eq('id', user.id);
+
+        if (profileError) {
+            setError('Profil konnte nicht gelöscht werden.');
+            console.error(profileError);
+            setDeleting(false);
+            return;
+        }
+
+        // 2. Benutzerkonto löschen (nur über Server oder Admin API möglich)
+        // Alternativ: User ausloggen und Nachricht anzeigen
+        await supabase.auth.signOut();
+        router.push('/account-deleted'); // optional: eigene Seite
     }
+
 
     return (
         <div className="max-w-2xl mx-auto space-y-6">
