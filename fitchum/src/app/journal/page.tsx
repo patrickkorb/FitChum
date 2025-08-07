@@ -2,6 +2,7 @@
 
 import { CirclePlus, Zap } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import {createClient} from "@/lib/supabase/client";
 
 const MOTIVATIONAL_MESSAGES = [
     'Ready to crush todays workout?',
@@ -29,6 +30,22 @@ export default function Journal() {
         return () => clearInterval(interval);
     }, []);
 
+    const handleIt = async () => {
+        const supabase = await createClient();
+        const {data:user} = await supabase.auth.getUser();
+        if (user) {
+            console.log(user);
+            const {data: profile} = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('user_id', user.user?.id)
+                .single();
+            if (profile) {
+                console.log(profile);
+            }
+        }
+    }
+
     return (
         <>
             <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 sm:px-8 py-8">
@@ -54,7 +71,8 @@ export default function Journal() {
                     
                     {/* CTA Section */}
                     <div className="flex flex-col items-center gap-6 sm:gap-8 w-full">
-                        <button className="bg-primary hover:cursor-pointer hover:bg-primary/90 text-white font-bold py-4 sm:py-6 px-8 sm:px-12 rounded-2xl text-lg sm:text-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 flex items-center gap-3 sm:gap-4 group w-full sm:w-auto max-w-sm">
+                        <button className="bg-primary hover:cursor-pointer hover:bg-primary/90 text-white font-bold py-4 sm:py-6 px-8 sm:px-12 rounded-2xl text-lg sm:text-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 flex items-center gap-3 sm:gap-4 group w-full sm:w-auto max-w-sm"
+                                onClick={handleIt}>
                             <CirclePlus size={24} className="sm:size-8 group-hover:rotate-90 transition-transform duration-300" />
                             <span className="truncate">Log Todays Workout</span>
                         </button>
