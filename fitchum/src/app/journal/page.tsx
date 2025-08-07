@@ -31,19 +31,36 @@ export default function Journal() {
     }, []);
 
     const handleIt = async () => {
-        const supabase = await createClient();
-        const {data:user} = await supabase.auth.getUser();
-        if (user) {
-            console.log(user);
-            const {data: profile} = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('user_id', user.user?.id)
-                .single();
-            if (profile) {
-                console.log(profile);
+        console.log('=== BUTTON TEST START ===');
+        const supabase = createClient(); // Remove await - createClient is sync
+        console.log('Supabase client created');
+        
+        try {
+            const {data: user, error: userError} = await supabase.auth.getUser();
+            console.log('User query result:', {user: user?.user?.id, error: userError});
+            
+            if (user?.user) {
+                console.log('User found:', user.user.id);
+                const {data: profile, error: profileError} = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('user_id', user.user.id) // Fix: user.user.id not user.user?.id
+                    .single();
+                    
+                console.log('Profile query result:', {profile, error: profileError});
+                
+                if (profile) {
+                    console.log('Profile found:', profile);
+                } else {
+                    console.log('No profile found or error:', profileError);
+                }
+            } else {
+                console.log('No user logged in');
             }
+        } catch (error) {
+            console.error('Button test error:', error);
         }
+        console.log('=== BUTTON TEST END ===');
     }
 
     return (

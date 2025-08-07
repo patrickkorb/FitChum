@@ -27,10 +27,10 @@ export default function NavElement({ name, link, icon }: NavElementProps) {
     return (
         <Link 
             href={link} 
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
+            className={`flex items-center gap-3 p-4 rounded-xl transition-all duration-200 group ${
                 isActive 
                     ? 'bg-primary text-white shadow-lg' 
-                    : 'hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:text-primary dark:hover:text-primary'
+                    : 'hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:text-primary dark:hover:text-primary'
             }`}
         >
             <Icon 

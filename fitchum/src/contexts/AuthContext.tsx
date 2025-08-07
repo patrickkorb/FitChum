@@ -24,6 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
 
   const loadProfile = useCallback(async (userId: string) => {
+    console.log('Loading profile for:', userId);
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -31,21 +32,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('user_id', userId)
         .single();
 
+      console.log('Profile query result:', { data, error });
+
       if (error) {
+        console.log('Profile error:', error.code, error.message);
         if (error.code === 'PGRST116') {
+          console.log('No profile found - setting to null');
           setProfile(null);
         }
         return;
       }
 
+      console.log('Profile loaded successfully:', data);
       setProfile(data);
     } catch (error) {
-      console.error('Profile loading error:', error);
+      console.error('Profile loading exception:', error);
       setProfile(null);
     }
   }, [supabase]);
 
   const handleUserSignIn = useCallback(async (user: User) => {
+    console.log('handleUserSignIn for:', user.id);
     try {
       const { data: existingProfile } = await supabase
         .from('profiles')
@@ -53,13 +60,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('user_id', user.id)
         .single();
 
+      console.log('Existing profile check:', existingProfile);
+
       if (existingProfile?.profile_pic_url) {
+        console.log('Profile already has picture, skipping update');
         return;
       }
 
       const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture;
+      console.log('Avatar URL from metadata:', avatarUrl);
       
       if (avatarUrl && (!existingProfile || !existingProfile.profile_pic_url)) {
+        console.log('Updating profile with avatar URL');
         await supabase
           .from('profiles')
           .update({ 
@@ -74,32 +86,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase]);
 
   useEffect(() => {
+    console.log('AuthContext initializing...');
+    
+    // Get initial session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        await loadProfile(session.user.id);
-      }
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Initial session:', session?.user?.id || 'No user');
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        if (event === 'SIGNED_IN') {
-          await handleUserSignIn(session.user);
-        }
         await loadProfile(session.user.id);
       } else {
         setProfile(null);
       }
+      
+      console.log('Setting initial loading to false');
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
-  }, [handleUserSignIn, loadProfile, supabase.auth]);
+    // Listen for auth state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.id || 'No user');
+      
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        // Only run handleUserSignIn for actual sign-in events
+        if (event === 'SIGNED_IN') {
+          console.log('Handling user sign in...');
+          await handleUserSignIn(session.user);
+        }
+        
+        // Always load profile when user exists
+        await loadProfile(session.user.id);
+      } else {
+        console.log('No user - clearing profile');
+        setProfile(null);
+      }
+      
+      setLoading(false);
+    });
+
+    return () => {
+      console.log('AuthContext cleanup');
+      subscription.unsubscribe();
+    };
+  }, []); // Remove dependencies to avoid infinite loops
 
   const signUp = async (email: string, password: string, username: string) => {
     try {
