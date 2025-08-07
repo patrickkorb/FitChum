@@ -54,23 +54,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const handleUserSignIn = useCallback(async (user: User) => {
     console.log('handleUserSignIn for:', user.id);
     
-    // Add timeout to prevent hanging
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Profile query timeout')), 10000);
-    });
-    
     try {
       console.log('Starting profile check query...');
-      const profilePromise = supabase
+      
+      // Simple query without Promise.race for now
+      const { data: existingProfile, error } = await supabase
         .from('profiles')
         .select('profile_pic_url')
         .eq('user_id', user.id)
         .single();
-      
-      const { data: existingProfile, error } = await Promise.race([
-        profilePromise,
-        timeoutPromise
-      ]) as any;
       
       console.log('Profile query completed:', { data: existingProfile, error: error?.message });
 
