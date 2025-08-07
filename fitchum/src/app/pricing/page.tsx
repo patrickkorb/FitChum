@@ -40,7 +40,7 @@ export default function PricingPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState<string | null>(null);
 
-  const handlePlanSelect = async (plan: { name: string; price: number; priceId: string | null; features: string[]; popular: boolean; isFree: boolean }) => {
+  const handlePlanSelect = async (plan: typeof plans[0]) => {
     if (!user) {
       // Redirect to sign in
       window.location.href = '/auth/login';
@@ -60,9 +60,7 @@ export default function PricingPage() {
     try {
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           priceId: plan.priceId,
           userId: user.id,

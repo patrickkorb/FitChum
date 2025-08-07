@@ -1,6 +1,6 @@
-import Card from '@/app/components/ui/Card'
-import Button from '@/app/components/ui/Button'
-import Link from "next/link";
+import Card from '@/app/components/ui/Card';
+import Button from '@/app/components/ui/Button';
+import Link from 'next/link';
 
 export default function AuthCodeError() {
   return (
@@ -15,14 +15,18 @@ export default function AuthCodeError() {
       </div>
 
       <div className="space-y-3">
-        <Button variant="primary" className="w-full">
-          <Link href="/auth/login">Erneut versuchen</Link>
-        </Button>
+        <Link href="/auth/login">
+          <Button variant="primary" className="w-full">
+            Erneut versuchen
+          </Button>
+        </Link>
         
-        <Button variant="outline" className="w-full">
-          <Link href="/">Zur Startseite</Link>
-        </Button>
+        <Link href="/">
+          <Button variant="outline" className="w-full">
+            Zur Startseite
+          </Button>
+        </Link>
       </div>
     </Card>
-  )
+  );
 }

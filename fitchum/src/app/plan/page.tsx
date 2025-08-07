@@ -1,35 +1,38 @@
-"use client"
+'use client';
+
 import { useState, useEffect } from 'react';
-import Onboarding from "@/app/plan/Onboarding";
-import PlanOverview from "@/app/components/plan/PlanOverview";
-import { WorkoutSplit } from "@/app/components/onboarding/WorkoutSplitSelection";
-import { WorkoutFrequency } from "@/app/components/onboarding/FrequencySelection";
-import { SelectedDays } from "@/app/components/onboarding/DaySelection";
+import Onboarding from '@/app/plan/Onboarding';
+import PlanOverview from '@/app/components/plan/PlanOverview';
+import { WorkoutSplit } from '@/app/components/onboarding/WorkoutSplitSelection';
+import { WorkoutFrequency } from '@/app/components/onboarding/FrequencySelection';
+import { SelectedDays } from '@/app/components/onboarding/DaySelection';
+
+type PlanData = {
+    workoutSplit?: WorkoutSplit;
+    frequency?: WorkoutFrequency;
+    schedule?: SelectedDays;
+};
 
 export default function Plan() {
-    const [hasPlan, setHasPlan] = useState<boolean>(false);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [hasPlan, setHasPlan] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Simulate checking if user has a plan (in real app: check localStorage/API)
-        const checkForExistingPlan = (): void => {
-            const existingPlan: string | null = localStorage.getItem('fitchum-plan');
+        const checkForExistingPlan = () => {
+            const existingPlan = localStorage.getItem('fitchum-plan');
             setHasPlan(!!existingPlan);
             setIsLoading(false);
         };
 
-        // Small delay to simulate loading
         setTimeout(checkForExistingPlan, 500);
     }, []);
 
-    const handlePlanCompleted = (planData: { workoutSplit?: WorkoutSplit; frequency?: WorkoutFrequency; schedule?: SelectedDays }): void => {
-        // Save plan data (in real app: save to API)
+    const handlePlanCompleted = (planData: PlanData) => {
         localStorage.setItem('fitchum-plan', JSON.stringify(planData));
         setHasPlan(true);
     };
 
-    const handleEditPlan = (): void => {
-        // Allow user to edit their plan
+    const handleEditPlan = () => {
         setHasPlan(false);
     };
 

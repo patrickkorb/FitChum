@@ -1,74 +1,63 @@
-'use client'
+'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { User } from '@supabase/supabase-js'
-import { createClient } from '@/lib/supabase/client'
-import { Profile } from '@/lib/supabase'
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { User } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/client';
+import { Profile } from '@/lib/supabase';
 
 interface AuthContextType {
-  user: User | null
-  profile: Profile | null
-  loading: boolean
-  signUp: (email: string, password: string, username: string) => Promise<{ error: unknown }>
-  signIn: (email: string, password: string) => Promise<{ error: unknown }>
-  signOut: () => Promise<void>
-  updateProfile: (updates: Partial<Profile>) => Promise<{ error: unknown }>
+  user: User | null;
+  profile: Profile | null;
+  loading: boolean;
+  signUp: (email: string, password: string, username: string) => Promise<{ error: unknown }>;
+  signIn: (email: string, password: string) => Promise<{ error: unknown }>;
+  signOut: () => Promise<void>;
+  updateProfile: (updates: Partial<Profile>) => Promise<{ error: unknown }>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [loading, setLoading] = useState(true)
-  const supabase = createClient()
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
 
   const loadProfile = useCallback(async (userId: string) => {
-    console.log('=== LOADING PROFILE DEBUG ===')
-    console.log('Loading profile for user ID:', userId)
-    
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
-        .single()
-
-      console.log('Profile query result:', { data, error: error?.message, errorCode: error?.code })
+        .single();
 
       if (error) {
-        console.error('Error loading profile:', error)
         if (error.code === 'PGRST116') {
-          console.log('No profile found for user, this might be expected for new users')
-          setProfile(null) // Explicitly set profile to null for missing profiles
+          setProfile(null);
         }
-        return
+        return;
       }
 
-      console.log('Profile loaded successfully:', data)
-      setProfile(data)
+      setProfile(data);
     } catch (error) {
-      console.error('Profile loading exception:', error)
+      console.error('Profile loading error:', error);
+      setProfile(null);
     }
-    console.log('=== END PROFILE LOADING DEBUG ===')
-  }, [supabase])
+  }, [supabase]);
 
   const handleUserSignIn = useCallback(async (user: User) => {
     try {
-      // Check if profile already exists
       const { data: existingProfile } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', user.id)
-        .single()
+        .single();
 
-      // If profile exists and already has a profile picture, don't update
-      if (existingProfile && existingProfile.profile_pic_url) {
-        return
+      if (existingProfile?.profile_pic_url) {
+        return;
       }
 
-      // Get Google profile picture if available
-      const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture
+      const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture;
       
       if (avatarUrl && (!existingProfile || !existingProfile.profile_pic_url)) {
         await supabase
@@ -77,46 +66,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             profile_pic_url: avatarUrl,
             updated_at: new Date().toISOString()
           })
-          .eq('user_id', user.id)
+          .eq('user_id', user.id);
       }
     } catch (error) {
-      console.error('Error handling user sign in:', error)
+      console.error('Error handling user sign in:', error);
     }
-  }, [supabase])
+  }, [supabase]);
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log('Auth session loaded:', { user: !!session?.user, userId: session?.user?.id })
-      setUser(session?.user ?? null)
+      setUser(session?.user ?? null);
       if (session?.user) {
-        await loadProfile(session.user.id)
+        await loadProfile(session.user.id);
       }
-      console.log('Setting auth loading to false')
-      setLoading(false)
-    })
+      setLoading(false);
+    });
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', { event, user: !!session?.user, userId: session?.user?.id })
-      setUser(session?.user ?? null)
+      setUser(session?.user ?? null);
       
       if (session?.user) {
-        // Check if this is a new user (first sign in)
         if (event === 'SIGNED_IN') {
-          await handleUserSignIn(session.user)
+          await handleUserSignIn(session.user);
         }
-        await loadProfile(session.user.id)
+        await loadProfile(session.user.id);
       } else {
-        setProfile(null)
+        setProfile(null);
       }
-      setLoading(false)
-    })
+      setLoading(false);
+    });
 
-    return () => subscription.unsubscribe()
-  }, [handleUserSignIn, loadProfile, supabase.auth])
+    return () => subscription.unsubscribe();
+  }, [handleUserSignIn, loadProfile, supabase.auth]);
 
   const signUp = async (email: string, password: string, username: string) => {
     try {
@@ -124,35 +107,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email,
         password,
         options: {
-          data: {
-            username
-          }
+          data: { username }
         }
-      })
-      return { error }
+      });
+      return { error };
     } catch (error) {
-      return { error }
+      return { error };
     }
-  }
+  };
 
   const signIn = async (email: string, password: string) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password
-      })
-      return { error }
+      });
+      return { error };
     } catch (error) {
-      return { error }
+      return { error };
     }
-  }
+  };
 
   const signOut = async () => {
-    await supabase.auth.signOut()
-  }
+    await supabase.auth.signOut();
+  };
 
   const updateProfile = async (updates: Partial<Profile>) => {
-    if (!user) return { error: 'No user logged in' }
+    if (!user) return { error: 'No user logged in' };
 
     try {
       const { error } = await supabase
@@ -161,18 +142,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ...updates,
           updated_at: new Date().toISOString()
         })
-        .eq('user_id', user.id)
+        .eq('user_id', user.id);
 
       if (!error) {
-        // Reload profile after update
-        await loadProfile(user.id)
+        await loadProfile(user.id);
       }
 
-      return { error }
+      return { error };
     } catch (error) {
-      return { error }
+      return { error };
     }
-  }
+  };
 
   const value: AuthContextType = {
     user,
@@ -182,19 +162,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signIn,
     signOut,
     updateProfile
-  }
+  };
 
   return (
     <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
+    throw new Error('useAuth must be used within an AuthProvider');
   }
-  return context
+  return context;
 }

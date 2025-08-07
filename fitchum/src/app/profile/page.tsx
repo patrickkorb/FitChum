@@ -1,11 +1,10 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/contexts/AuthContext';
-import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 import Image from 'next/image';
 import Card from '@/app/components/ui/Card';
 import Button from '@/app/components/ui/Button';
@@ -14,91 +13,83 @@ export default function Profile() {
     const { theme, setTheme } = useTheme();
     const { user, profile, updateProfile, signOut, loading: authLoading } = useAuth();
     const router = useRouter();
-    const [mounted, setMounted] = useState<boolean>(false);
-    const [loading, setLoading] = useState<boolean>(false);
-    const [saving, setSaving] = useState<boolean>(false);
-    const [deleting, setDeleting] = useState<boolean>(false);
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
-    const [message, setMessage] = useState<string>('');
-    const [error, setError] = useState<string>('');
-    
+    const [loading, setLoading] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [message, setMessage] = useState('');
+    const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         username: '',
         email: '',
         profile_pic_url: '',
-        theme_preference: theme || 'light',
-        subscription_plan: 'basic'
+        theme_preference: (theme as 'light' | 'dark') || 'light',
+        subscription_plan: 'free' as 'free' | 'pro'
     });
 
     const supabase = createClient();
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
         setMounted(true);
     }, []);
 
-    // Load profile data when available (including fallbacks for missing profile)
     useEffect(() => {
-        if (user) {
+        if (user && profile) {
             setFormData({
-                username: profile?.username || '',
+                username: profile.username || '',
                 email: user.email || '',
-                profile_pic_url: profile?.profile_pic_url || '',
-                theme_preference: profile?.theme_preference || 'light',
-                subscription_plan: profile?.subscription_plan || 'basic'
+                profile_pic_url: profile.profile_pic_url || '',
+                theme_preference: profile.theme_preference || 'light',
+                subscription_plan: profile.subscription_plan || 'free'
             });
         }
-    }, [profile, user]);
+    }, [user, profile]);
 
-    const handleThemeToggle = async (): Promise<void> => {
-        const newTheme: string = theme === 'dark' ? 'light' : 'dark';
+    const handleThemeToggle = async () => {
+        const newTheme = theme === 'dark' ? 'light' : 'dark';
         setTheme(newTheme);
         
-        // Update theme preference in database
         if (profile) {
             await updateProfile({ theme_preference: newTheme as 'light' | 'dark' });
         }
     };
 
-    const handleProfilePicChange = async (event: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
-        const file: File | undefined = event.target.files?.[0];
+    const handleProfilePicChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
         if (!file || !user) return;
 
         setLoading(true);
         setError('');
 
         try {
-            // Upload to Supabase Storage
             const fileExt = file.name.split('.').pop();
             const fileName = `${user.id}/profile.${fileExt}`;
             
             const { error: uploadError } = await supabase.storage
                 .from('profile-pictures')
-                .upload(fileName, file, { 
-                    upsert: true 
-                });
+                .upload(fileName, file, { upsert: true });
 
             if (uploadError) throw uploadError;
 
-            // Get public URL
             const { data: { publicUrl } } = supabase.storage
                 .from('profile-pictures')
                 .getPublicUrl(fileName);
 
-            // Update form data
             setFormData(prev => ({ ...prev, profile_pic_url: publicUrl }));
-            
         } catch (err) {
-            setError('Fehler beim Upload des Profilbildes: ' + (err instanceof Error ? err.message : String(err)));
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            setError(`Fehler beim Upload des Profilbildes: ${errorMessage}`);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleInputChange = (field: string, value: string): void => {
+    const handleInputChange = (field: string, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
-    const handleSave = async (): Promise<void> => {
+    const handleSave = async () => {
         if (!profile) return;
 
         setSaving(true);
@@ -110,71 +101,58 @@ export default function Profile() {
                 username: formData.username,
                 profile_pic_url: formData.profile_pic_url,
                 theme_preference: formData.theme_preference as 'light' | 'dark',
-                subscription_plan: formData.subscription_plan as 'free' | 'pro' | undefined
+                subscription_plan: formData.subscription_plan as 'free' | 'pro'
             });
 
             if (error) {
-                setError('Fehler beim Speichern: ' + error);
+                setError(`Fehler beim Speichern: ${error}`);
             } else {
                 setMessage('Profil erfolgreich aktualisiert! ✅');
                 setTimeout(() => setMessage(''), 3000);
             }
         } catch (err) {
-            setError('Ein Fehler ist aufgetreten: ' + (err instanceof Error ? err.message : String(err)));
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            setError(`Ein Fehler ist aufgetreten: ${errorMessage}`);
         } finally {
             setSaving(false);
         }
     };
 
-    const handleLogout = async (): Promise<void> => {
+    const handleLogout = async () => {
         try {
             await signOut();
             router.push('/auth/login');
         } catch (err) {
-            setError('Fehler beim Abmelden: ' + (err instanceof Error ? err.message : String(err)));
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            setError(`Fehler beim Abmelden: ${errorMessage}`);
         }
     };
 
-    const handleDeleteAccount = async (): Promise<void> => {
+    const handleDeleteAccount = async () => {
         if (!user) return;
 
         setDeleting(true);
         setError('');
 
         try {
-            // Delete profile picture from storage
             if (formData.profile_pic_url) {
                 await supabase.storage
                     .from('profile-pictures')
                     .remove([`${user.id}/profile.jpg`, `${user.id}/profile.png`, `${user.id}/profile.jpeg`]);
             }
 
-            // Delete user account (this will cascade delete profile due to foreign key)
             const { error } = await supabase.auth.admin.deleteUser(user.id);
-            
             if (error) throw error;
 
-            // Redirect to login
             router.push('/auth/login');
-            
         } catch (err) {
-            setError('Fehler beim Löschen des Accounts: ' + (err instanceof Error ? err.message : String(err)));
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            setError(`Fehler beim Löschen des Accounts: ${errorMessage}`);
             setDeleting(false);
         }
     };
 
-    // Debug logging
-    console.log('Profile page state:', { 
-        authLoading, 
-        mounted, 
-        hasUser: !!user, 
-        hasProfile: !!profile,
-        userId: user?.id 
-    });
-
-    // Show loading while auth is loading or not mounted
     if (authLoading || !mounted) {
-        console.log('Profile page showing loading state');
         return (
             <div className="col-span-4 space-y-6">
                 <div className="animate-pulse space-y-6">
@@ -186,7 +164,6 @@ export default function Profile() {
         );
     }
 
-    // Redirect to login if no user
     if (!user) {
         router.push('/auth/login');
         return null;

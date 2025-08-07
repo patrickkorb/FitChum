@@ -33,11 +33,9 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange={true}
         >
-          <AuthProvider>
-            <ConditionalLayout>
-              {children}
-            </ConditionalLayout>
-          </AuthProvider>
+          <ConditionalLayout>
+            {children}
+          </ConditionalLayout>
         </ThemeProvider>
       </body>
     </html>

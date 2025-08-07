@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   if (!signature) {
     console.error('No signature provided');
     return NextResponse.json({ error: 'No signature provided' }, { status: 400 });
-  };
+  }
 
   let event: Stripe.Event;
 

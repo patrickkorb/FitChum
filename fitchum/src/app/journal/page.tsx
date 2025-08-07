@@ -1,31 +1,33 @@
-"use client"
-import {CirclePlus, Zap} from "lucide-react"
-import { useState, useEffect } from "react"
+'use client';
+
+import { CirclePlus, Zap } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+const MOTIVATIONAL_MESSAGES = [
+    'Ready to crush todays workout?',
+    'How did your workout go today?',
+    'Time to turn up the heat!',
+    'Your future self will thank you!',
+    'Every rep counts towards your goal!',
+    "Let's make today legendary!"
+];
 
 export default function Journal() {
-    const motivationalMessages: string[] = [
-        "Ready to crush todays workout?",
-        "How did your workout go today?",
-        "Time to turn up the heat!",
-        "Your future self will thank you!",
-        "Every rep counts towards your goal!",
-        "Let's make today legendary!"
-    ]
 
-    const [currentMessage, setCurrentMessage] = useState<number>(0)
-    const [isVisible, setIsVisible] = useState<boolean>(true)
+    const [currentMessage, setCurrentMessage] = useState(0);
+    const [isVisible, setIsVisible] = useState(true);
 
     useEffect(() => {
-        const interval: NodeJS.Timeout = setInterval(() => {
-            setIsVisible(false)
+        const interval = setInterval(() => {
+            setIsVisible(false);
             setTimeout(() => {
-                setCurrentMessage((prev) => (prev + 1) % motivationalMessages.length)
-                setIsVisible(true)
-            }, 300)
-        }, 4000)
+                setCurrentMessage((prev) => (prev + 1) % MOTIVATIONAL_MESSAGES.length);
+                setIsVisible(true);
+            }, 300);
+        }, 4000);
 
-        return () => clearInterval(interval)
-    }, [motivationalMessages.length])
+        return () => clearInterval(interval);
+    }, []);
 
     return (
         <>
@@ -46,7 +48,7 @@ export default function Journal() {
                         <h1 className={`text-5xl font-bold text-neutral-dark dark:text-neutral-light transition-all duration-300 ${
                             isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform -translate-y-4'
                         }`}>
-                            {motivationalMessages[currentMessage]}
+                            {MOTIVATIONAL_MESSAGES[currentMessage]}
                         </h1>
                     </div>
                     
