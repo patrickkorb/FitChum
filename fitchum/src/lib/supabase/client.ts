@@ -8,15 +8,13 @@ let supabaseClient: ReturnType<typeof createBrowserClient> | null = null;
 
 export const createClient = () => {
   if (supabaseClient) {
-    console.log('🔄 Reusing existing Supabase client');
     return supabaseClient;
   }
-  
-  console.log('🆕 Creating new Supabase client');
+
   supabaseClient = createBrowserClient(
-    supabaseUrl!,
-    supabaseKey!,
+      supabaseUrl!,
+      supabaseKey!,
   );
-  
+
   return supabaseClient;
 };

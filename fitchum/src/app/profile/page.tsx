@@ -46,10 +46,28 @@ export default function Profile() {
         }
     }, [user, profile]);
 
+    // Show loading state while auth is initializing
+    if (authLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="text-center space-y-4">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                    <p className="text-neutral-dark/70 dark:text-neutral-light/70">Loading profile...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Redirect if no user
+    if (!user) {
+        router.push('/auth/login');
+        return null;
+    }
+
     const handleThemeToggle = async () => {
         const newTheme = theme === 'dark' ? 'light' : 'dark';
         setTheme(newTheme);
-        
+
         if (profile) {
             await updateProfile({ theme_preference: newTheme as 'light' | 'dark' });
         }
@@ -65,7 +83,7 @@ export default function Profile() {
         try {
             const fileExt = file.name.split('.').pop();
             const fileName = `${user.id}/profile.${fileExt}`;
-            
+
             const { error: uploadError } = await supabase.storage
                 .from('profile-pictures')
                 .upload(fileName, file, { upsert: true });
@@ -100,181 +118,180 @@ export default function Profile() {
             const { error } = await updateProfile({
                 username: formData.username,
                 profile_pic_url: formData.profile_pic_url,
-                theme_preference: formData.theme_preference as 'light' | 'dark',
-                subscription_plan: formData.subscription_plan as 'free' | 'pro'
+                theme_preference: formData.theme_preference
             });
 
             if (error) {
-                setError(`Fehler beim Speichern: ${error}`);
+                setError('Fehler beim Speichern des Profils');
             } else {
-                setMessage('Profil erfolgreich aktualisiert! ✅');
+                setMessage('Profil erfolgreich gespeichert!');
                 setTimeout(() => setMessage(''), 3000);
             }
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : String(err);
-            setError(`Ein Fehler ist aufgetreten: ${errorMessage}`);
+            setError('Ein unerwarteter Fehler ist aufgetreten');
         } finally {
             setSaving(false);
         }
     };
 
     const handleLogout = async () => {
+        setLoading(true);
         try {
             await signOut();
             router.push('/auth/login');
-        } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : String(err);
-            setError(`Fehler beim Abmelden: ${errorMessage}`);
+        } catch (error) {
+            console.error('Logout error:', error);
+            setError('Fehler beim Abmelden');
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleDeleteAccount = async () => {
-        if (!user) return;
+        if (!showDeleteConfirm) {
+            setShowDeleteConfirm(true);
+            return;
+        }
 
         setDeleting(true);
-        setError('');
-
         try {
-            if (formData.profile_pic_url) {
-                await supabase.storage
-                    .from('profile-pictures')
-                    .remove([`${user.id}/profile.jpg`, `${user.id}/profile.png`, `${user.id}/profile.jpeg`]);
+            // Delete profile first
+            if (profile) {
+                await supabase
+                    .from('profiles')
+                    .delete()
+                    .eq('user_id', user.id);
             }
 
-            const { error } = await supabase.auth.admin.deleteUser(user.id);
-            if (error) throw error;
+            // Delete user account
+            await supabase.auth.admin.deleteUser(user.id);
 
             router.push('/auth/login');
-        } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : String(err);
-            setError(`Fehler beim Löschen des Accounts: ${errorMessage}`);
+        } catch (error) {
+            console.error('Delete account error:', error);
+            setError('Fehler beim Löschen des Kontos');
+            setShowDeleteConfirm(false);
+        } finally {
             setDeleting(false);
         }
     };
 
-    if (authLoading || !mounted) {
-        return (
-            <div className="col-span-4 space-y-6">
-                <div className="animate-pulse space-y-6">
-                    <div className="h-8 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded"></div>
-                    <div className="h-64 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded-2xl"></div>
-                    <div className="h-48 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded-2xl"></div>
-                </div>
-            </div>
-        );
-    }
-
-    if (!user) {
-        router.push('/auth/login');
+    if (!mounted) {
         return null;
     }
 
     return (
-        <div className="space-y-6 max-w-4xl mx-auto py-4">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-neutral-dark dark:text-neutral-light mb-2">Profile Settings</h1>
-                <p className="text-neutral-dark/70 dark:text-neutral-light/70">Manage your account settings and preferences</p>
+        <div className="max-w-2xl mx-auto space-y-6">
+            <div className="text-center mb-8">
+                <h1 className="text-3xl font-bold text-neutral-dark dark:text-neutral-light mb-2">
+                    Profil
+                </h1>
+                <p className="text-neutral-dark/70 dark:text-neutral-light/70">
+                    Verwalte deine persönlichen Einstellungen
+                </p>
             </div>
 
-            <Card className="space-y-6">
-                <h2 className="text-xl font-semibold text-neutral-dark dark:text-neutral-light mb-4">Account Information</h2>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                    <div>
-                        <label className="block text-sm font-medium text-neutral-dark dark:text-neutral-light mb-2">
-                            Email
-                        </label>
-                        <input
-                            type="email"
-                            value={formData.email}
-                            disabled
-                            className="w-full px-4 py-3 rounded-xl border-2 border-neutral-dark/20 dark:border-neutral-light/20 bg-neutral-dark/5 dark:bg-neutral-light/5 text-neutral-dark dark:text-neutral-light cursor-not-allowed"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-neutral-dark dark:text-neutral-light mb-2">
-                            Username
-                        </label>
-                        <input
-                            type="text"
-                            value={formData.username}
-                            onChange={(e) => handleInputChange('username', e.target.value)}
-                            placeholder="Dein Benutzername"
-                            className="w-full px-4 py-3 rounded-xl border-2 border-neutral-dark/20 dark:border-neutral-light/20 bg-transparent text-neutral-dark dark:text-neutral-light focus:border-primary focus:outline-none transition-colors"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-neutral-dark dark:text-neutral-light mb-2">
-                            Passwort
-                        </label>
-                        <div className="px-4 py-3 rounded-xl border-2 border-neutral-dark/20 dark:border-neutral-light/20 bg-neutral-dark/5 dark:bg-neutral-light/5 text-neutral-dark/70 dark:text-neutral-light/70">
-                            Passwort wird über Google/Magic Link verwaltet
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-neutral-dark dark:text-neutral-light mb-2">
-                            Subscription Plan
-                        </label>
-                        <div className="px-4 py-3 rounded-xl border-2 border-neutral-dark/20 dark:border-neutral-light/20 bg-neutral-dark/5 dark:bg-neutral-light/5 text-neutral-dark dark:text-neutral-light capitalize">
-                            {formData.subscription_plan} Plan
-                        </div>
-                    </div>
-                </div>
-            </Card>
-
-            <Card className="space-y-6">
-                <h2 className="text-xl font-semibold text-neutral-dark dark:text-neutral-light mb-4">Profile Picture</h2>
-
-                <div className="flex flex-col sm:flex-row items-center sm:space-x-6 space-y-4 sm:space-y-0">
-                    <div className="w-24 h-24 rounded-full bg-neutral-dark/10 dark:bg-neutral-light/10 flex items-center justify-center overflow-hidden">
-                        {formData.profile_pic_url ? (
-                            <Image src={formData.profile_pic_url} alt="Profile" width={96} height={96} className="w-full h-full object-cover" />
-                        ) : (
-                            <svg className="w-12 h-12 text-neutral-dark/50 dark:text-neutral-light/50" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                            </svg>
-                        )}
-                    </div>
-
-                    <div>
-                        <input
-                            type="file"
-                            id="profilePic"
-                            accept="image/*"
-                            onChange={handleProfilePicChange}
-                            className="hidden"
-                        />
-                        <label htmlFor="profilePic" className="cursor-pointer">
-                            <div className={`inline-block font-medium rounded-xl transition-all duration-200 flex items-center justify-center gap-2 px-6 py-3 text-base border-2 border-neutral-dark/20 dark:border-neutral-light/20 text-neutral-dark dark:text-neutral-light hover:bg-neutral-dark/5 dark:hover:bg-neutral-light/5 ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}>
-                                {loading ? 'Lädt...' : 'Foto ändern'}
+            <Card>
+                <div className="space-y-6">
+                    {/* Profile Picture */}
+                    <div className="text-center">
+                        <div className="relative inline-block">
+                            <div className="w-24 h-24 rounded-full overflow-hidden bg-neutral-dark/10 dark:bg-neutral-light/10">
+                                {formData.profile_pic_url ? (
+                                    <Image
+                                        src={formData.profile_pic_url}
+                                        alt="Profile"
+                                        width={96}
+                                        height={96}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-neutral-dark/50 dark:text-neutral-light/50">
+                                        <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                                        </svg>
+                                    </div>
+                                )}
                             </div>
-                        </label>
+                            <label className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full cursor-pointer hover:bg-primary/90 transition-colors">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleProfilePicChange}
+                                    className="hidden"
+                                    disabled={loading}
+                                />
+                            </label>
+                        </div>
                     </div>
-                </div>
-            </Card>
 
-            <Card className="space-y-6">
-                <h2 className="text-xl font-semibold text-neutral-dark dark:text-neutral-light mb-4">Preferences</h2>
+                    {/* Form Fields */}
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-neutral-dark dark:text-neutral-light mb-2">
+                                Benutzername
+                            </label>
+                            <input
+                                type="text"
+                                value={formData.username}
+                                onChange={(e) => handleInputChange('username', e.target.value)}
+                                className="w-full px-4 py-3 rounded-xl border-2 border-neutral-dark/20 dark:border-neutral-light/20 bg-transparent text-neutral-dark dark:text-neutral-light focus:border-primary focus:outline-none transition-colors"
+                                placeholder="Dein Benutzername"
+                            />
+                        </div>
 
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h3 className="font-medium text-neutral-dark dark:text-neutral-light">Theme</h3>
-                        <p className="text-sm text-neutral-dark/70 dark:text-neutral-light/70">
-                            Choose between light and dark mode
-                        </p>
+                        <div>
+                            <label className="block text-sm font-medium text-neutral-dark dark:text-neutral-light mb-2">
+                                E-Mail
+                            </label>
+                            <input
+                                type="email"
+                                value={formData.email}
+                                disabled
+                                className="w-full px-4 py-3 rounded-xl border-2 border-neutral-dark/20 dark:border-neutral-light/20 bg-neutral-dark/5 dark:bg-neutral-light/5 text-neutral-dark/50 dark:text-neutral-light/50 cursor-not-allowed"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-neutral-dark dark:text-neutral-light mb-2">
+                                Abonnement
+                            </label>
+                            <div className="flex items-center gap-2">
+                                <span className="px-3 py-2 rounded-lg bg-primary/10 text-primary font-medium">
+                                    {formData.subscription_plan === 'pro' ? 'Pro' : 'Free'}
+                                </span>
+                                {formData.subscription_plan === 'free' && (
+                                    <Button
+                                        onClick={() => router.push('/pricing')}
+                                        variant="outline"
+                                        size="sm"
+                                    >
+                                        Upgrade
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
                     </div>
 
-                    {!mounted ? (
-                        <div className="w-11 h-6 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded-full animate-pulse"></div>
-                    ) : (
+                    {/* Theme Toggle */}
+                    <div className="flex items-center justify-between p-4 bg-neutral-dark/5 dark:bg-neutral-light/5 rounded-xl">
+                        <div>
+                            <h3 className="font-medium text-neutral-dark dark:text-neutral-light">
+                                Dark Mode
+                            </h3>
+                            <p className="text-sm text-neutral-dark/70 dark:text-neutral-light/70">
+                                Wechsle zwischen hellem und dunklem Design
+                            </p>
+                        </div>
                         <button
                             onClick={handleThemeToggle}
-                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                                theme === 'dark' ? 'bg-primary' : 'bg-neutral-dark/20 dark:bg-neutral-light/20'
-                            }`}
+                            className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                            style={{
+                                backgroundColor: theme === 'dark' ? '#4CAF50' : '#e5e7eb'
+                            }}
                         >
                             <span
                                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -282,85 +299,60 @@ export default function Profile() {
                                 }`}
                             />
                         </button>
+                    </div>
+
+                    {/* Messages */}
+                    {message && (
+                        <div className="p-4 rounded-xl bg-primary/10 text-primary text-sm text-center">
+                            {message}
+                        </div>
                     )}
-                </div>
-            </Card>
 
-            {/* Messages */}
-            {message && (
-                <div className="p-4 rounded-xl bg-primary/10 text-primary text-sm text-center">
-                    {message}
-                </div>
-            )}
+                    {error && (
+                        <div className="p-4 rounded-xl bg-red-500/10 text-red-500 text-sm text-center">
+                            {error}
+                        </div>
+                    )}
 
-            {error && (
-                <div className="p-4 rounded-xl bg-red-500/10 text-red-500 text-sm text-center">
-                    {error}
-                </div>
-            )}
-
-            <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
-                <Button 
-                    variant="outline"
-                    onClick={() => window.location.reload()}
-                    disabled={saving}
-                >
-                    Zurücksetzen
-                </Button>
-                <Button 
-                    variant="primary"
-                    onClick={handleSave}
-                    disabled={saving}
-                >
-                    {saving ? 'Wird gespeichert...' : 'Änderungen speichern'}
-                </Button>
-            </div>
-
-            {/* Divider */}
-            <div className="border-t border-neutral-dark/20 dark:border-neutral-light/20"></div>
-
-            {/* Account Actions */}
-            {showDeleteConfirm ? (
-                <div className="space-y-4 mb-8">
-                    <p className="text-sm text-red-500 text-start">
-                        Account wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden!
-                    </p>
-                    <div className="flex justify-start space-x-4">
-                        <Button 
-                            variant="outline"
-                            onClick={() => setShowDeleteConfirm(false)}
-                            disabled={deleting}
+                    {/* Action Buttons */}
+                    <div className="flex gap-3">
+                        <Button
+                            onClick={handleSave}
+                            disabled={saving}
+                            className="flex-1"
                         >
-                            Abbrechen
+                            {saving ? 'Speichern...' : 'Speichern'}
                         </Button>
-                        <Button 
-                            variant="primary"
-                            onClick={handleDeleteAccount}
-                            className="bg-red-500 hover:bg-red-600"
-                            disabled={deleting}
+                        <Button
+                            onClick={handleLogout}
+                            variant="outline"
+                            disabled={loading}
                         >
-                            {deleting ? 'Wird gelöscht...' : 'Ja, löschen'}
+                            {loading ? 'Abmelden...' : 'Abmelden'}
                         </Button>
                     </div>
+
+                    {/* Delete Account */}
+                    <div className="border-t border-neutral-dark/10 dark:border-neutral-light/10 pt-6">
+                        <div className="text-center space-y-3">
+                            <h3 className="text-lg font-medium text-neutral-dark dark:text-neutral-light">
+                                Gefährliche Zone
+                            </h3>
+                            <p className="text-sm text-neutral-dark/70 dark:text-neutral-light/70">
+                                Diese Aktion kann nicht rückgängig gemacht werden
+                            </p>
+                            <Button
+                                onClick={handleDeleteAccount}
+                                variant="outline"
+                                className="text-red-500 border-red-500 hover:bg-red-500 hover:text-white"
+                                disabled={deleting}
+                            >
+                                {showDeleteConfirm ? 'Konto wirklich löschen?' : 'Konto löschen'}
+                            </Button>
+                        </div>
+                    </div>
                 </div>
-            ) : (
-                <div className="flex flex-col sm:flex-row justify-start gap-3 sm:gap-4 mb-8">
-                    <Button 
-                        variant="outline"
-                        onClick={handleLogout}
-                        className="text-neutral-dark/70 dark:text-neutral-light/70"
-                    >
-                        Abmelden
-                    </Button>
-                    <Button 
-                        variant="outline"
-                        onClick={() => setShowDeleteConfirm(true)}
-                        className="text-red-500 border-red-500/20 hover:bg-red-500/5"
-                    >
-                        Account löschen
-                    </Button>
-                </div>
-            )}
+            </Card>
         </div>
-    )
+    );
 }

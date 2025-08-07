@@ -1,8 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import {Session, User} from '@supabase/supabase-js';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { User, Session } from '@supabase/supabase-js';
 import { Profile } from '@/lib/supabase';
 
 interface AuthContextType {
@@ -17,28 +17,23 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-let authProviderInstances = 0;
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  authProviderInstances++;
-  const instanceId = authProviderInstances;
-  console.log(`🔍 AuthProvider #${instanceId} mounting`); 
-  
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [instanceId] = useState(() => Math.random().toString(36).substr(2, 9));
+
   const supabase = createClient();
-  
-  console.log(`📡 AuthProvider #${instanceId} - Supabase client created`);
 
   const loadProfile = useCallback(async (userId: string) => {
-    console.log(`📊 AuthProvider #${instanceId} - Loading profile for:`, userId);
+    console.log('Loading profile for user:', userId);
+
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
+          .from('profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
 
       console.log('Profile query result:', { data, error });
 
@@ -46,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('Profile error:', error.code, error.message);
         if (error.code === 'PGRST116') {
           console.log('No profile found - creating new profile');
-          
+
           // Create profile if it doesn't exist
           const { data: userData } = await supabase.auth.getUser();
           if (userData.user) {
@@ -60,14 +55,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             };
-            
+
             console.log('Creating new profile:', newProfile);
             const { data: createdProfile, error: createError } = await supabase
-              .from('profiles')
-              .insert(newProfile)
-              .select()
-              .single();
-              
+                .from('profiles')
+                .insert(newProfile)
+                .select()
+                .single();
+
             if (createError) {
               console.error('Error creating profile:', createError);
               setProfile(null);
@@ -91,21 +86,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Profile loading exception:', error);
       setProfile(null);
     }
-  }, [supabase]);
+  }, []); // Remove supabase dependency
 
   const handleUserSignIn = useCallback(async (user: User) => {
     console.log('handleUserSignIn for:', user.id);
-    
+
     try {
       console.log('Starting profile check query...');
-      
+
       // Simple query without Promise.race for now
       const { data: existingProfile, error } = await supabase
-        .from('profiles')
-        .select('profile_pic_url')
-        .eq('user_id', user.id)
-        .single();
-      
+          .from('profiles')
+          .select('profile_pic_url')
+          .eq('user_id', user.id)
+          .single();
+
       console.log('Profile query completed:', { data: existingProfile, error: error?.message });
 
       if (error) {
@@ -124,17 +119,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture;
       console.log('Avatar URL from metadata:', avatarUrl);
-      
+
       if (avatarUrl) {
         console.log('Updating profile with avatar URL');
         const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ 
-            profile_pic_url: avatarUrl,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', user.id);
-          
+            .from('profiles')
+            .update({
+              profile_pic_url: avatarUrl,
+              updated_at: new Date().toISOString()
+            })
+            .eq('user_id', user.id);
+
         if (updateError) {
           console.error('Profile update error:', updateError);
         } else {
@@ -145,30 +140,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('handleUserSignIn error:', error);
     }
     console.log('handleUserSignIn completed');
-  }, [supabase]);
+  }, []); // Remove supabase dependency
 
   useEffect(() => {
     console.log(`🚀 AuthContext #${instanceId} initializing...`);
-    
+
     let isActive = true; // Prevent state updates after cleanup
-    
+
     // Get initial session  
     const initializeAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         console.log(`📋 AuthProvider #${instanceId} - Initial session:`, session?.user?.id || 'No user');
-        
+
         if (!isActive) return; // Component was unmounted
-        
+
         setUser(session?.user ?? null);
-        
+
         if (session?.user) {
           console.log(`👤 AuthProvider #${instanceId} - Loading profile for:`, session.user.id);
           await loadProfile(session.user.id);
         } else {
           if (isActive) setProfile(null);
         }
-        
+
         if (isActive) {
           console.log(`✅ AuthProvider #${instanceId} - Setting initial loading to false`);
           setLoading(false);
@@ -178,7 +173,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (isActive) setLoading(false);
       }
     };
-    
+
     initializeAuth();
 
     // Listen for auth state changes
@@ -186,18 +181,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event: string, session: Session) => {
       if (!isActive) return; // Ignore if component unmounted
-      
+
       console.log(`🔄 AuthProvider #${instanceId} - Auth state changed:`, event, session?.user?.id || 'No user');
-      
+
       setUser(session?.user ?? null);
-      
+
       if (session?.user) {
         // Skip handleUserSignIn for now - it might be causing issues
         if (event === 'SIGNED_IN') {
           console.log(`🔐 AuthProvider #${instanceId} - Sign in detected - skipping handleUserSignIn for now`);
           // await handleUserSignIn(session.user); // Temporarily disabled
         }
-        
+
         // Always load profile when user exists
         console.log(`👤 AuthProvider #${instanceId} - Loading profile for user:`, session.user.id);
         await loadProfile(session.user.id);
@@ -205,7 +200,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log(`❌ AuthProvider #${instanceId} - No user - clearing profile`);
         if (isActive) setProfile(null);
       }
-      
+
       if (isActive) setLoading(false);
     });
 
@@ -214,7 +209,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isActive = false;
       subscription.unsubscribe();
     };
-  }, []); // Remove dependencies to avoid infinite loops
+  }, [loadProfile]); // Only depend on loadProfile
 
   const signUp = async (email: string, password: string, username: string) => {
     try {
@@ -248,19 +243,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
-    if (!user) return { error: 'No user logged in' };
+    if (!user) return { error: 'No user' };
 
     try {
       const { error } = await supabase
-        .from('profiles')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
+          .from('profiles')
+          .update({
+            ...updates,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id);
 
       if (!error) {
-        await loadProfile(user.id);
+        // Update local profile state
+        setProfile(prev => prev ? { ...prev, ...updates } : null);
       }
 
       return { error };
@@ -269,20 +265,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const value: AuthContextType = {
+  const value = {
     user,
     profile,
     loading,
     signUp,
     signIn,
     signOut,
-    updateProfile
+    updateProfile,
   };
 
   return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
+      <AuthContext.Provider value={value}>
+        {children}
+      </AuthContext.Provider>
   );
 }
 
