@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { User } from '@supabase/supabase-js';
+import {Session, User} from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import { Profile } from '@/lib/supabase';
 
@@ -17,14 +17,22 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+let authProviderInstances = 0;
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  authProviderInstances++;
+  const instanceId = authProviderInstances;
+  console.log(`🔍 AuthProvider #${instanceId} mounting`); 
+  
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
+  
+  console.log(`📡 AuthProvider #${instanceId} - Supabase client created`);
 
   const loadProfile = useCallback(async (userId: string) => {
-    console.log('Loading profile for:', userId);
+    console.log(`📊 AuthProvider #${instanceId} - Loading profile for:`, userId);
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -37,7 +45,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         console.log('Profile error:', error.code, error.message);
         if (error.code === 'PGRST116') {
-          console.log('No profile found - setting to null');
+          console.log('No profile found - creating new profile');
+          
+          // Create profile if it doesn't exist
+          const { data: userData } = await supabase.auth.getUser();
+          if (userData.user) {
+            const newProfile = {
+              user_id: userId,
+              username: userData.user.user_metadata?.username || userData.user.email?.split('@')[0] || 'User',
+              email: userData.user.email,
+              profile_pic_url: userData.user.user_metadata?.avatar_url || null,
+              theme_preference: 'dark' as const,
+              subscription_plan: 'free' as const,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            };
+            
+            console.log('Creating new profile:', newProfile);
+            const { data: createdProfile, error: createError } = await supabase
+              .from('profiles')
+              .insert(newProfile)
+              .select()
+              .single();
+              
+            if (createError) {
+              console.error('Error creating profile:', createError);
+              setProfile(null);
+            } else {
+              console.log('Profile created successfully:', createdProfile);
+              setProfile(createdProfile);
+            }
+          } else {
+            setProfile(null);
+          }
+        } else {
+          console.error('Other profile error:', error);
           setProfile(null);
         }
         return;
@@ -106,51 +148,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase]);
 
   useEffect(() => {
-    console.log('AuthContext initializing...');
+    console.log(`🚀 AuthContext #${instanceId} initializing...`);
     
-    // Get initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log('Initial session:', session?.user?.id || 'No user');
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        await loadProfile(session.user.id);
-      } else {
-        setProfile(null);
+    let isActive = true; // Prevent state updates after cleanup
+    
+    // Get initial session  
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log(`📋 AuthProvider #${instanceId} - Initial session:`, session?.user?.id || 'No user');
+        
+        if (!isActive) return; // Component was unmounted
+        
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          console.log(`👤 AuthProvider #${instanceId} - Loading profile for:`, session.user.id);
+          await loadProfile(session.user.id);
+        } else {
+          if (isActive) setProfile(null);
+        }
+        
+        if (isActive) {
+          console.log(`✅ AuthProvider #${instanceId} - Setting initial loading to false`);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error(`❌ AuthProvider #${instanceId} - Init error:`, error);
+        if (isActive) setLoading(false);
       }
-      
-      console.log('Setting initial loading to false');
-      setLoading(false);
-    });
+    };
+    
+    initializeAuth();
 
     // Listen for auth state changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.id || 'No user');
+    } = supabase.auth.onAuthStateChange(async (event: string, session: Session) => {
+      if (!isActive) return; // Ignore if component unmounted
+      
+      console.log(`🔄 AuthProvider #${instanceId} - Auth state changed:`, event, session?.user?.id || 'No user');
       
       setUser(session?.user ?? null);
       
       if (session?.user) {
         // Skip handleUserSignIn for now - it might be causing issues
         if (event === 'SIGNED_IN') {
-          console.log('Sign in detected - skipping handleUserSignIn for now');
+          console.log(`🔐 AuthProvider #${instanceId} - Sign in detected - skipping handleUserSignIn for now`);
           // await handleUserSignIn(session.user); // Temporarily disabled
         }
         
         // Always load profile when user exists
-        console.log('Loading profile for user:', session.user.id);
+        console.log(`👤 AuthProvider #${instanceId} - Loading profile for user:`, session.user.id);
         await loadProfile(session.user.id);
       } else {
-        console.log('No user - clearing profile');
-        setProfile(null);
+        console.log(`❌ AuthProvider #${instanceId} - No user - clearing profile`);
+        if (isActive) setProfile(null);
       }
       
-      setLoading(false);
+      if (isActive) setLoading(false);
     });
 
     return () => {
-      console.log('AuthContext cleanup');
+      console.log(`🧹 AuthProvider #${instanceId} - Cleanup`);
+      isActive = false;
       subscription.unsubscribe();
     };
   }, []); // Remove dependencies to avoid infinite loops
