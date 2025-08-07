@@ -83,8 +83,8 @@ export default function PlanOverview({ onEditPlan }: PlanOverviewProps) {
   };
 
   return (
-    <div className="col-span-3 p-8">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="px-4 sm:px-8 py-4 sm:py-8">
+      <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
         {/* Header */}
         <PlanHeader 
           planData={mockPlanData}
@@ -95,8 +95,8 @@ export default function PlanOverview({ onEditPlan }: PlanOverviewProps) {
         <PlanStats stats={stats} />
 
         {/* Today's Workout */}
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-neutral-dark dark:text-neutral-light">
+        <div className="space-y-3 sm:space-y-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-neutral-dark dark:text-neutral-light">
             Heute dran
           </h2>
           <TodaysWorkout
@@ -107,8 +107,8 @@ export default function PlanOverview({ onEditPlan }: PlanOverviewProps) {
         </div>
 
         {/* Weekly Schedule */}
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-neutral-dark dark:text-neutral-light">
+        <div className="space-y-3 sm:space-y-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-neutral-dark dark:text-neutral-light">
             Diese Woche
           </h2>
           <WeeklySchedule

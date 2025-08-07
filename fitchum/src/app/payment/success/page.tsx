@@ -31,7 +31,7 @@ export default function PaymentSuccessPage() {
   }
 
   return (
-    <div className="col-span-4 flex items-center justify-center min-h-[60vh]">
+    <div className="flex items-center justify-center min-h-[60vh] px-4">
       <Card className="max-w-md w-full space-y-6 text-center">
         <div className="flex justify-center">
           <div className="relative">

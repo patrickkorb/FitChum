@@ -84,7 +84,7 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="col-span-4 space-y-6">
+    <div className="space-y-6 max-w-6xl mx-auto py-4">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-neutral-dark dark:text-neutral-light mb-2">
           Choose Your FitChum Plan
@@ -94,7 +94,7 @@ export default function PricingPage() {
         </p>
       </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {plans.map((plan) => (
             <Card 
               key={plan.name}

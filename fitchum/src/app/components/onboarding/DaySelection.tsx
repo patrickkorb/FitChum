@@ -56,17 +56,17 @@ export default function DaySelection({ frequency, onSelect, selectedDays }: DayS
 
   return (
     <div className="space-y-6">
-      <div className="text-center space-y-2">
-        <h2 className="text-3xl font-bold text-neutral-dark dark:text-neutral-light">
+      <div className="text-center space-y-2 px-4">
+        <h2 className="text-2xl sm:text-3xl font-bold text-neutral-dark dark:text-neutral-light">
           Wann möchtest du trainieren?
         </h2>
-        <p className="text-neutral-dark/70 dark:text-neutral-light/70 text-lg">
+        <p className="text-neutral-dark/70 dark:text-neutral-light/70 text-base sm:text-lg">
           Wähle deine Trainingstage ({frequency}x pro Woche)
         </p>
       </div>
 
       {/* Pattern Selection */}
-      <div className="flex gap-4 justify-center">
+      <div className="flex flex-col sm:flex-row gap-4 justify-center px-4">
         <Card
           selected={selectedPattern === 'specific'}
           onClick={handleSpecificSelect}
@@ -97,7 +97,7 @@ export default function DaySelection({ frequency, onSelect, selectedDays }: DayS
       {/* Day Selection (only if specific pattern is selected) */}
       {selectedPattern === 'specific' && (
         <div className="space-y-4">
-          <div className="grid grid-cols-7 gap-2">
+          <div className="grid grid-cols-7 gap-1 sm:gap-2">
             {weekDays.map((day) => {
               const isSelected = selectedDaysList.includes(day.id);
               const isDisabled = !isSelected && selectedDaysList.length >= frequency;
@@ -107,7 +107,7 @@ export default function DaySelection({ frequency, onSelect, selectedDays }: DayS
                   key={day.id}
                   onClick={() => handleDayToggle(day.id)}
                   disabled={isDisabled}
-                  className={`p-4 rounded-xl text-center transition-all duration-200 ${
+                  className={`p-2 sm:p-4 rounded-lg sm:rounded-xl text-center transition-all duration-200 min-h-[60px] sm:min-h-[80px] ${
                     isSelected
                       ? 'bg-primary text-white shadow-lg hover:cursor-pointer'
                       : isDisabled
@@ -115,8 +115,8 @@ export default function DaySelection({ frequency, onSelect, selectedDays }: DayS
                       : 'bg-neutral-dark/10 dark:bg-neutral-light/10 text-neutral-dark dark:text-neutral-light hover:bg-neutral-dark/20 dark:hover:bg-neutral-light/20 hover:scale-105 hover:cursor-pointer'
                   }`}
                 >
-                  <div className="font-bold text-lg">{day.short}</div>
-                  <div className="text-xs">{day.name}</div>
+                  <div className="font-bold text-sm sm:text-lg">{day.short}</div>
+                  <div className="text-xs hidden sm:block">{day.name}</div>
                 </button>
               );
             })}

@@ -170,7 +170,7 @@ export default function Profile() {
     }
 
     return (
-        <div className="col-span-4 space-y-6">
+        <div className="space-y-6 max-w-4xl mx-auto py-4">
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-neutral-dark dark:text-neutral-light mb-2">Profile Settings</h1>
                 <p className="text-neutral-dark/70 dark:text-neutral-light/70">Manage your account settings and preferences</p>
@@ -179,7 +179,7 @@ export default function Profile() {
             <Card className="space-y-6">
                 <h2 className="text-xl font-semibold text-neutral-dark dark:text-neutral-light mb-4">Account Information</h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <div>
                         <label className="block text-sm font-medium text-neutral-dark dark:text-neutral-light mb-2">
                             Email
@@ -228,7 +228,7 @@ export default function Profile() {
             <Card className="space-y-6">
                 <h2 className="text-xl font-semibold text-neutral-dark dark:text-neutral-light mb-4">Profile Picture</h2>
 
-                <div className="flex items-center space-x-6">
+                <div className="flex flex-col sm:flex-row items-center sm:space-x-6 space-y-4 sm:space-y-0">
                     <div className="w-24 h-24 rounded-full bg-neutral-dark/10 dark:bg-neutral-light/10 flex items-center justify-center overflow-hidden">
                         {formData.profile_pic_url ? (
                             <Image src={formData.profile_pic_url} alt="Profile" width={96} height={96} className="w-full h-full object-cover" />
@@ -299,7 +299,7 @@ export default function Profile() {
                 </div>
             )}
 
-            <div className="flex justify-end space-x-4">
+            <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
                 <Button 
                     variant="outline"
                     onClick={() => window.location.reload()}
@@ -344,7 +344,7 @@ export default function Profile() {
                     </div>
                 </div>
             ) : (
-                <div className="flex justify-start space-x-4 mb-8">
+                <div className="flex flex-col sm:flex-row justify-start gap-3 sm:gap-4 mb-8">
                     <Button 
                         variant="outline"
                         onClick={handleLogout}

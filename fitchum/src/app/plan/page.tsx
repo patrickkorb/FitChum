@@ -38,7 +38,7 @@ export default function Plan() {
 
     if (isLoading) {
         return (
-            <div className="col-span-3 flex items-center justify-center min-h-[60vh]">
+            <div className="flex items-center justify-center min-h-[60vh] px-4">
                 <div className="text-center space-y-4">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
                     <p className="text-neutral-dark/70 dark:text-neutral-light/70">

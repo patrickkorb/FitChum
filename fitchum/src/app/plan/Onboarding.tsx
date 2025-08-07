@@ -95,57 +95,48 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   };
 
   return (
-    <div className="col-span-3 p-8">
+    <div className="px-4 sm:px-8 py-4 sm:py-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Target className="text-primary" size={32} />
-            <h1 className="text-4xl font-bold text-neutral-dark dark:text-neutral-light">
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+            <Target className="text-primary" size={24} />
+            <h1 className="text-2xl sm:text-4xl font-bold text-neutral-dark dark:text-neutral-light">
               Trainingsplan Setup
             </h1>
           </div>
-          <p className="text-neutral-dark/70 dark:text-neutral-light/70 text-lg">
+          <p className="text-neutral-dark/70 dark:text-neutral-light/70 text-base sm:text-lg px-4">
             Lass uns deinen perfekten Trainingsplan erstellen
           </p>
         </div>
 
         {/* Progress Bar */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-sm font-medium text-neutral-dark dark:text-neutral-light">
+        <div className="mb-6 sm:mb-8 px-2">
+          <div className="flex justify-between items-center mb-3 sm:mb-4">
+            <span className="text-xs sm:text-sm font-medium text-neutral-dark dark:text-neutral-light">
               Schritt {currentStep} von {totalSteps}
             </span>
-            <span className="text-sm text-neutral-dark/60 dark:text-neutral-light/60">
-              {Math.round((currentStep / totalSteps) * 100)}% abgeschlossen
+            <span className="text-xs sm:text-sm text-neutral-dark/60 dark:text-neutral-light/60">
+              {Math.round((currentStep / totalSteps) * 100)}%
             </span>
           </div>
-          <div className="w-full bg-neutral-dark/10 dark:bg-neutral-light/10 rounded-full h-3">
+          <div className="w-full bg-neutral-dark/10 dark:bg-neutral-light/10 rounded-full h-2 sm:h-3">
             <div
-              className="bg-primary h-3 rounded-full transition-all duration-500"
+              className="bg-primary h-2 sm:h-3 rounded-full transition-all duration-500"
               style={{ width: `${(currentStep / totalSteps) * 100}%` }}
             />
           </div>
         </div>
 
         {/* Step Content */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           {renderCurrentStep()}
         </div>
 
         {/* Navigation */}
-        <div className="flex justify-between items-center">
-          <Button
-            variant="outline"
-            onClick={handlePrevious}
-            disabled={currentStep === 1}
-            className={currentStep === 1 ? 'invisible' : ''}
-          >
-            <ChevronLeft size={20} />
-            Zurück
-          </Button>
-
-          <div className="flex gap-2">
+        <div className="space-y-4">
+          {/* Progress Dots - Mobile */}
+          <div className="flex justify-center gap-2 sm:hidden">
             {Array.from({ length: totalSteps }, (_, i) => (
               <div
                 key={i}
@@ -159,34 +150,69 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
               />
             ))}
           </div>
+          
+          {/* Navigation Buttons */}
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={handlePrevious}
+              disabled={currentStep === 1}
+              className={`w-full sm:w-auto ${currentStep === 1 ? 'invisible' : ''}`}
+              size="md"
+            >
+              <ChevronLeft size={18} />
+              <span className="hidden sm:inline">Zurück</span>
+              <span className="sm:hidden">Zurück</span>
+            </Button>
 
-          {currentStep === totalSteps ? (
-            <Button
-              onClick={handleComplete}
-              disabled={!canProceed()}
-              className="bg-secondary hover:bg-secondary/90"
-            >
-              <Check size={20} />
-              Abschließen
-            </Button>
-          ) : (
-            <Button
-              onClick={handleNext}
-              disabled={!canProceed()}
-            >
-              Weiter
-              <ChevronRight size={20} />
-            </Button>
-          )}
+            {/* Progress Dots - Desktop */}
+            <div className="hidden sm:flex gap-2">
+              {Array.from({ length: totalSteps }, (_, i) => (
+                <div
+                  key={i}
+                  className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                    i + 1 === currentStep
+                      ? 'bg-primary scale-125'
+                      : i + 1 < currentStep
+                      ? 'bg-primary/70'
+                      : 'bg-neutral-dark/20 dark:bg-neutral-light/20'
+                  }`}
+                />
+              ))}
+            </div>
+
+            {currentStep === totalSteps ? (
+              <Button
+                onClick={handleComplete}
+                disabled={!canProceed()}
+                className="bg-secondary hover:bg-secondary/90 w-full sm:w-auto"
+                size="md"
+              >
+                <Check size={18} />
+                Abschließen
+              </Button>
+            ) : (
+              <Button
+                onClick={handleNext}
+                disabled={!canProceed()}
+                className="w-full sm:w-auto"
+                size="md"
+              >
+                <span className="hidden sm:inline">Weiter</span>
+                <span className="sm:hidden">Weiter</span>
+                <ChevronRight size={18} />
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Summary (only on last step) */}
         {currentStep === totalSteps && onboardingData.workoutSplit && onboardingData.frequency && (
-          <div className="mt-8 p-6 bg-neutral-dark/5 dark:bg-neutral-light/5 rounded-2xl">
-            <h3 className="font-bold text-lg text-neutral-dark dark:text-neutral-light mb-4">
+          <div className="mt-6 sm:mt-8 p-4 sm:p-6 bg-neutral-dark/5 dark:bg-neutral-light/5 rounded-xl sm:rounded-2xl">
+            <h3 className="font-bold text-base sm:text-lg text-neutral-dark dark:text-neutral-light mb-3 sm:mb-4">
               Dein Trainingsplan im Überblick:
             </h3>
-            <div className="space-y-2 text-neutral-dark/80 dark:text-neutral-light/80">
+            <div className="space-y-2 text-sm sm:text-base text-neutral-dark/80 dark:text-neutral-light/80">
               <p><strong>Split:</strong> {onboardingData.workoutSplit.name}</p>
               <p><strong>Frequenz:</strong> {onboardingData.frequency.title}</p>
               <p>

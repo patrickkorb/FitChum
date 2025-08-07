@@ -6,7 +6,7 @@ interface CardProps {
 }
 
 export default function Card({ children, className = '', onClick, selected = false }: CardProps) {
-  const baseClasses = 'p-6 rounded-2xl border-2 transition-all duration-200 hover:cursor-pointer';
+  const baseClasses = 'p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 transition-all duration-200';
   const interactiveClasses = onClick ? 'cursor-pointer hover:shadow-lg hover:scale-105' : '';
   const selectedClasses = selected 
     ? 'border-primary bg-primary/10 shadow-lg' 
