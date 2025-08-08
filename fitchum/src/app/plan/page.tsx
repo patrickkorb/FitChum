@@ -1,34 +1,36 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { getUserWorkoutPlan } from '@/lib/workoutPlan';
 import Onboarding from '@/app/plan/Onboarding';
 import PlanOverview from '@/app/components/plan/PlanOverview';
-import { WorkoutSplit } from '@/app/components/onboarding/WorkoutSplitSelection';
-import { WorkoutFrequency } from '@/app/components/onboarding/FrequencySelection';
-import { SelectedDays } from '@/app/components/onboarding/DaySelection';
-
-type PlanData = {
-    workoutSplit?: WorkoutSplit;
-    frequency?: WorkoutFrequency;
-    schedule?: SelectedDays;
-};
 
 export default function Plan() {
     const [hasPlan, setHasPlan] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    
+    const supabase = createClient();
 
     useEffect(() => {
-        const checkForExistingPlan = () => {
-            const existingPlan = localStorage.getItem('fitchum-plan');
-            setHasPlan(!!existingPlan);
-            setIsLoading(false);
+        const checkForExistingPlan = async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    const plan = await getUserWorkoutPlan(user.id);
+                    setHasPlan(!!plan);
+                }
+            } catch (error) {
+                console.error('Error checking for existing plan:', error);
+            } finally {
+                setIsLoading(false);
+            }
         };
 
-        setTimeout(checkForExistingPlan, 500);
+        checkForExistingPlan();
     }, []);
 
-    const handlePlanCompleted = (planData: PlanData) => {
-        localStorage.setItem('fitchum-plan', JSON.stringify(planData));
+    const handlePlanCompleted = () => {
         setHasPlan(true);
     };
 
@@ -42,7 +44,7 @@ export default function Plan() {
                 <div className="text-center space-y-4">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
                     <p className="text-neutral-dark/70 dark:text-neutral-light/70">
-                        Plan wird geladen...
+                        Loading your plan...
                     </p>
                 </div>
             </div>

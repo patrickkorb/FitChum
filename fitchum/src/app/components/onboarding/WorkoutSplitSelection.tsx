@@ -17,32 +17,39 @@ interface WorkoutSplitSelectionProps {
 
 const workoutSplits: WorkoutSplit[] = [
   {
-    id: 'push-pull-legs',
+    id: 'ppl',
     name: 'Push/Pull/Legs',
-    description: 'Split nach Bewegungsmustern',
-    example: 'Push: Brust, Schultern, Trizeps | Pull: Rücken, Bizeps | Legs: Beine, Po',
+    description: 'Classic split by movement patterns',
+    example: 'Push: Chest, Shoulders, Triceps | Pull: Back, Biceps | Legs: Quads, Glutes, Hams',
     icon: 'Dumbbell'
   },
   {
-    id: 'upper-lower',
+    id: 'upper_lower',
     name: 'Upper/Lower',
-    description: 'Oberkörper und Unterkörper getrennt',
-    example: 'Upper: Brust, Rücken, Schultern, Arme | Lower: Beine, Po, Waden',
+    description: 'Upper and lower body separated',
+    example: 'Upper: Chest, Back, Shoulders, Arms | Lower: Legs, Glutes, Calves',
     icon: 'Target'
   },
   {
-    id: 'fullbody',
-    name: 'Fullbody',
-    description: 'Ganzkörpertraining in jeder Einheit',
-    example: 'Alle Muskelgruppen in jedem Training',
+    id: 'full_body',
+    name: 'Full Body',
+    description: 'Complete body workout each session',
+    example: 'All muscle groups trained every workout',
     icon: 'Zap'
   },
   {
-    id: 'bro-split',
-    name: 'Bro Split',
-    description: 'Eine Muskelgruppe pro Tag',
-    example: 'Montag: Brust | Dienstag: Rücken | Mittwoch: Beine | etc.',
+    id: 'ppl_arnold',
+    name: 'PPL x Arnold',
+    description: 'Arnold-style chest/back combo with PPL',
+    example: 'Chest&Back | Shoulders&Arms | Legs | Repeat',
     icon: 'Dumbbell'
+  },
+  {
+    id: 'ppl_ul',
+    name: 'PPL x Upper/Lower',
+    description: 'Hybrid of PPL and Upper/Lower splits',
+    example: 'Push | Pull | Legs | Upper | Lower',
+    icon: 'Target'
   }
 ];
 
@@ -57,10 +64,10 @@ export default function WorkoutSplitSelection({ onSelect, selectedSplit }: Worko
     <div className="space-y-6">
       <div className="text-center space-y-2">
         <h2 className="text-3xl font-bold text-neutral-dark dark:text-neutral-light">
-          Welchen Workout Split bevorzugst du?
+          Choose Your Workout Split
         </h2>
         <p className="text-neutral-dark/70 dark:text-neutral-light/70 text-lg">
-          Wähle den Split, der am besten zu deinem Trainingsplan passt
+          Select the training split that best fits your goals and schedule
         </p>
       </div>
 

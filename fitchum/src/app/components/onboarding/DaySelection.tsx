@@ -1,5 +1,5 @@
 "use client"
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Card from '../ui/Card';
 
 export interface SelectedDays {
@@ -9,21 +9,48 @@ export interface SelectedDays {
 
 interface DaySelectionProps {
   frequency: number;
+  splitType: string;
   onSelect: (selection: SelectedDays) => void;
   selectedDays?: SelectedDays;
 }
 
 const weekDays: Array<{id: string; name: string; short: string}> = [
-  { id: 'monday', name: 'Montag', short: 'Mo' },
-  { id: 'tuesday', name: 'Dienstag', short: 'Di' },
-  { id: 'wednesday', name: 'Mittwoch', short: 'Mi' },
-  { id: 'thursday', name: 'Donnerstag', short: 'Do' },
-  { id: 'friday', name: 'Freitag', short: 'Fr' },
-  { id: 'saturday', name: 'Samstag', short: 'Sa' },
-  { id: 'sunday', name: 'Sonntag', short: 'So' }
+  { id: 'monday', name: 'Monday', short: 'Mo' },
+  { id: 'tuesday', name: 'Tuesday', short: 'Tu' },
+  { id: 'wednesday', name: 'Wednesday', short: 'We' },
+  { id: 'thursday', name: 'Thursday', short: 'Th' },
+  { id: 'friday', name: 'Friday', short: 'Fr' },
+  { id: 'saturday', name: 'Saturday', short: 'Sa' },
+  { id: 'sunday', name: 'Sunday', short: 'Su' }
 ];
 
-export default function DaySelection({ frequency, onSelect, selectedDays }: DaySelectionProps) {
+const getWorkoutForDay = (splitType: string, dayIndex: number): string => {
+  switch (splitType) {
+    case 'ppl':
+      const pplOrder = ['Push Day', 'Pull Day', 'Leg Day'];
+      return pplOrder[dayIndex % 3];
+    
+    case 'upper_lower':
+      const ulOrder = ['Upper Body', 'Lower Body'];
+      return ulOrder[dayIndex % 2];
+    
+    case 'full_body':
+      return 'Full Body';
+    
+    case 'ppl_arnold':
+      const arnoldOrder = ['Chest & Back', 'Shoulders & Arms', 'Leg Day'];
+      return arnoldOrder[dayIndex % 3];
+    
+    case 'ppl_ul':
+      const pplUlOrder = ['Push Day', 'Pull Day', 'Leg Day', 'Upper Body', 'Lower Body'];
+      return pplUlOrder[dayIndex % 5];
+    
+    default:
+      return 'Workout';
+  }
+};
+
+export default function DaySelection({ frequency, splitType, onSelect, selectedDays }: DaySelectionProps) {
   const [selectedPattern, setSelectedPattern] = useState<'specific' | 'interval'>('specific');
   const [selectedDaysList, setSelectedDaysList] = useState<string[]>(selectedDays?.days || []);
 
@@ -58,10 +85,10 @@ export default function DaySelection({ frequency, onSelect, selectedDays }: DayS
     <div className="space-y-6">
       <div className="text-center space-y-2 px-4">
         <h2 className="text-2xl sm:text-3xl font-bold text-neutral-dark dark:text-neutral-light">
-          Wann möchtest du trainieren?
+          When do you want to train?
         </h2>
         <p className="text-neutral-dark/70 dark:text-neutral-light/70 text-base sm:text-lg">
-          Wähle deine Trainingstage ({frequency}x pro Woche)
+          Choose your training days ({frequency}x per week)
         </p>
       </div>
 
@@ -73,10 +100,10 @@ export default function DaySelection({ frequency, onSelect, selectedDays }: DayS
           className="flex-1 max-w-xs text-center"
         >
           <h3 className="font-bold text-lg text-neutral-dark dark:text-neutral-light mb-2">
-            Feste Tage
+            Specific Days
           </h3>
           <p className="text-sm text-neutral-dark/60 dark:text-neutral-light/60">
-            Wähle spezifische Wochentage
+            Choose specific weekdays
           </p>
         </Card>
         
@@ -86,10 +113,10 @@ export default function DaySelection({ frequency, onSelect, selectedDays }: DayS
           className="flex-1 max-w-xs text-center"
         >
           <h3 className="font-bold text-lg text-neutral-dark dark:text-neutral-light mb-2">
-            Flexible Intervalle
+            Flexible Schedule
           </h3>
           <p className="text-sm text-neutral-dark/60 dark:text-neutral-light/60">
-            Alle {Math.floor(7/frequency)} Tage trainieren
+            Train every {Math.floor(7/frequency)}-{Math.ceil(7/frequency)} days
           </p>
         </Card>
       </div>
@@ -97,17 +124,55 @@ export default function DaySelection({ frequency, onSelect, selectedDays }: DayS
       {/* Day Selection (only if specific pattern is selected) */}
       {selectedPattern === 'specific' && (
         <div className="space-y-4">
-          <div className="grid grid-cols-7 gap-1 sm:gap-2">
+          {/* Mobile Layout - Stacked Cards */}
+          <div className="block sm:hidden space-y-2">
             {weekDays.map((day) => {
               const isSelected = selectedDaysList.includes(day.id);
               const isDisabled = !isSelected && selectedDaysList.length >= frequency;
+              const dayIndex = selectedDaysList.indexOf(day.id);
+              const workoutType = isSelected && dayIndex !== -1 ? getWorkoutForDay(splitType, dayIndex) : '';
               
               return (
                 <button
                   key={day.id}
                   onClick={() => handleDayToggle(day.id)}
                   disabled={isDisabled}
-                  className={`p-2 sm:p-4 rounded-lg sm:rounded-xl text-center transition-all duration-200 min-h-[60px] sm:min-h-[80px] ${
+                  className={`w-full p-4 rounded-xl text-left transition-all duration-200 flex items-center justify-between ${
+                    isSelected
+                      ? 'bg-primary text-white shadow-lg'
+                      : isDisabled
+                      ? 'bg-neutral-dark/5 dark:bg-neutral-light/5 text-neutral-dark/30 dark:text-neutral-light/30 cursor-not-allowed'
+                      : 'bg-neutral-dark/10 dark:bg-neutral-light/10 text-neutral-dark dark:text-neutral-light hover:bg-neutral-dark/20 dark:hover:bg-neutral-light/20'
+                  }`}
+                >
+                  <div className="flex flex-col">
+                    <div className="font-bold text-lg">{day.name}</div>
+                    {isSelected && workoutType && (
+                      <div className="text-sm font-medium bg-white/20 px-2 py-1 rounded mt-1 inline-block w-fit">
+                        {workoutType}
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-2xl font-bold opacity-50">{day.short}</div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Desktop Layout - Grid */}
+          <div className="hidden sm:grid grid-cols-7 gap-2">
+            {weekDays.map((day) => {
+              const isSelected = selectedDaysList.includes(day.id);
+              const isDisabled = !isSelected && selectedDaysList.length >= frequency;
+              const dayIndex = selectedDaysList.indexOf(day.id);
+              const workoutType = isSelected && dayIndex !== -1 ? getWorkoutForDay(splitType, dayIndex) : '';
+              
+              return (
+                <button
+                  key={day.id}
+                  onClick={() => handleDayToggle(day.id)}
+                  disabled={isDisabled}
+                  className={`p-3 rounded-xl text-center transition-all duration-200 min-h-[120px] flex flex-col justify-center ${
                     isSelected
                       ? 'bg-primary text-white shadow-lg hover:cursor-pointer'
                       : isDisabled
@@ -115,8 +180,13 @@ export default function DaySelection({ frequency, onSelect, selectedDays }: DayS
                       : 'bg-neutral-dark/10 dark:bg-neutral-light/10 text-neutral-dark dark:text-neutral-light hover:bg-neutral-dark/20 dark:hover:bg-neutral-light/20 hover:scale-105 hover:cursor-pointer'
                   }`}
                 >
-                  <div className="font-bold text-sm sm:text-lg">{day.short}</div>
-                  <div className="text-xs hidden sm:block">{day.name}</div>
+                  <div className="font-bold text-lg">{day.short}</div>
+                  <div className="text-xs mb-1">{day.name}</div>
+                  {isSelected && workoutType && (
+                    <div className="text-xs font-semibold bg-white/20 px-1.5 py-0.5 rounded mt-1">
+                      {workoutType.split(' ')[0]}
+                    </div>
+                  )}
                 </button>
               );
             })}
@@ -124,7 +194,7 @@ export default function DaySelection({ frequency, onSelect, selectedDays }: DayS
           
           <div className="text-center">
             <p className="text-sm text-neutral-dark/60 dark:text-neutral-light/60">
-              {selectedDaysList.length} von {frequency} Tagen ausgewählt
+              {selectedDaysList.length} of {frequency} days selected
             </p>
           </div>
         </div>
@@ -134,11 +204,11 @@ export default function DaySelection({ frequency, onSelect, selectedDays }: DayS
       {selectedPattern === 'interval' && (
         <div className="text-center p-6 bg-neutral-dark/5 dark:bg-neutral-light/5 rounded-2xl">
           <h3 className="font-bold text-lg text-neutral-dark dark:text-neutral-light mb-2">
-            Flexibles Training
+            Flexible Training
           </h3>
           <p className="text-neutral-dark/70 dark:text-neutral-light/70">
-            Du trainierst alle {Math.floor(7/frequency)}-{Math.ceil(7/frequency)} Tage, je nachdem wie es in deinen Zeitplan passt.
-            Wir erinnern dich daran, wenn es Zeit für das nächste Training ist.
+            You'll train every {Math.floor(7/frequency)}-{Math.ceil(7/frequency)} days based on your schedule.
+            We'll remind you when it's time for your next workout.
           </p>
         </div>
       )}

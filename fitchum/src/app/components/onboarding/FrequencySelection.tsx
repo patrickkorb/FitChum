@@ -20,41 +20,49 @@ const frequencies: WorkoutFrequency[] = [
   {
     id: '2-days',
     days: 2,
-    title: '2x pro Woche',
-    description: 'Entspannt starten',
-    recommendation: 'Perfekt für Anfänger oder bei wenig Zeit',
+    title: '2x per week',
+    description: 'Easy start',
+    recommendation: 'Perfect for beginners or limited time',
     icon: 'Calendar'
   },
   {
     id: '3-days',
     days: 3,
-    title: '3x pro Woche',
-    description: 'Ausgewogenes Training',
-    recommendation: 'Ideal für die meisten Trainingsziele',
+    title: '3x per week',
+    description: 'Balanced training',
+    recommendation: 'Ideal for most fitness goals',
     icon: 'Clock'
   },
   {
     id: '4-days',
     days: 4,
-    title: '4x pro Woche',
-    description: 'Intensives Training',
-    recommendation: 'Für ambitionierte Sportler',
+    title: '4x per week',
+    description: 'Intensive training',
+    recommendation: 'For dedicated athletes',
     icon: 'Flame'
   },
   {
     id: '5-days',
     days: 5,
-    title: '5x pro Woche',
-    description: 'Hochfrequentes Training',
-    recommendation: 'Für sehr erfahrene Athleten',
+    title: '5x per week',
+    description: 'High-frequency training',
+    recommendation: 'For experienced lifters',
     icon: 'Flame'
   },
   {
     id: '6-days',
     days: 6,
-    title: '6x pro Woche',
-    description: 'Professionelles Training',
-    recommendation: 'Nur für sehr erfahrene Sportler',
+    title: '6x per week',
+    description: 'Professional training',
+    recommendation: 'Advanced athletes only',
+    icon: 'Flame'
+  },
+  {
+    id: '7-days',
+    days: 7,
+    title: '7x per week',
+    description: 'Daily training',
+    recommendation: 'For the absolute freaks 🔥',
     icon: 'Flame'
   }
 ];
@@ -70,10 +78,10 @@ export default function FrequencySelection({ onSelect, selectedFrequency }: Freq
     <div className="space-y-6">
       <div className="text-center space-y-2">
         <h2 className="text-3xl font-bold text-neutral-dark dark:text-neutral-light">
-          Wie oft möchtest du trainieren?
+          How often do you want to train?
         </h2>
         <p className="text-neutral-dark/70 dark:text-neutral-light/70 text-lg">
-          Wähle eine realistische Trainingsfrequenz für dich
+          Choose a realistic training frequency that fits your lifestyle
         </p>
       </div>
 

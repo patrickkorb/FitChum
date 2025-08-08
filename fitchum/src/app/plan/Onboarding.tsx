@@ -1,5 +1,7 @@
 "use client"
 import { useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { createWorkoutPlan } from '@/lib/workoutPlan';
 import Button from '../components/ui/Button';
 import WorkoutSplitSelection, { WorkoutSplit } from '../components/onboarding/WorkoutSplitSelection';
 import FrequencySelection, { WorkoutFrequency } from '../components/onboarding/FrequencySelection';
@@ -13,13 +15,16 @@ interface OnboardingData {
 }
 
 interface OnboardingProps {
-  onComplete: (data: OnboardingData) => void;
+  onComplete: () => void;
 }
 
 export default function Onboarding({ onComplete }: OnboardingProps) {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const totalSteps: number = 3;
+  
+  const supabase = createClient();
 
   const handleSplitSelect = (split: WorkoutSplit): void => {
     setOnboardingData(prev => ({ ...prev, workoutSplit: split }));
@@ -60,9 +65,39 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
     }
   };
 
-  const handleComplete = (): void => {
-    console.log('Onboarding completed:', onboardingData);
-    onComplete(onboardingData);
+  const handleComplete = async (): Promise<void> => {
+    if (!onboardingData.workoutSplit || !onboardingData.frequency || !onboardingData.schedule) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      const planData = {
+        splitType: onboardingData.workoutSplit.id as 'ppl' | 'upper_lower' | 'full_body' | 'ppl_arnold' | 'ppl_ul',
+        frequency: onboardingData.frequency.days,
+        selectedDays: onboardingData.schedule.days,
+        isFlexible: onboardingData.schedule.pattern === 'interval'
+      };
+
+      const success = await createWorkoutPlan(user.id, planData);
+      
+      if (success) {
+        onComplete();
+      } else {
+        alert('Failed to create workout plan. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error creating workout plan:', error);
+      alert('An error occurred while creating your workout plan. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const renderCurrentStep = () => {
@@ -82,9 +117,10 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           />
         );
       case 3:
-        return onboardingData.frequency ? (
+        return onboardingData.frequency && onboardingData.workoutSplit ? (
           <DaySelection
             frequency={onboardingData.frequency.days}
+            splitType={onboardingData.workoutSplit.id}
             onSelect={handleScheduleSelect}
             selectedDays={onboardingData.schedule}
           />
@@ -102,11 +138,11 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
             <Target className="text-primary" size={24} />
             <h1 className="text-2xl sm:text-4xl font-bold text-neutral-dark dark:text-neutral-light">
-              Trainingsplan Setup
+              Workout Plan Setup
             </h1>
           </div>
           <p className="text-neutral-dark/70 dark:text-neutral-light/70 text-base sm:text-lg px-4">
-            Lass uns deinen perfekten Trainingsplan erstellen
+            Let's create your perfect workout plan
           </p>
         </div>
 
@@ -114,7 +150,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         <div className="mb-6 sm:mb-8 px-2">
           <div className="flex justify-between items-center mb-3 sm:mb-4">
             <span className="text-xs sm:text-sm font-medium text-neutral-dark dark:text-neutral-light">
-              Schritt {currentStep} von {totalSteps}
+              Step {currentStep} of {totalSteps}
             </span>
             <span className="text-xs sm:text-sm text-neutral-dark/60 dark:text-neutral-light/60">
               {Math.round((currentStep / totalSteps) * 100)}%
@@ -184,12 +220,21 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             {currentStep === totalSteps ? (
               <Button
                 onClick={handleComplete}
-                disabled={!canProceed()}
+                disabled={!canProceed() || isSubmitting}
                 className="bg-secondary hover:bg-secondary/90 w-full sm:w-auto"
                 size="md"
               >
-                <Check size={18} />
-                Abschließen
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                    Creating Plan...
+                  </>
+                ) : (
+                  <>
+                    <Check size={18} />
+                    Complete Setup
+                  </>
+                )}
               </Button>
             ) : (
               <Button
@@ -210,16 +255,16 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         {currentStep === totalSteps && onboardingData.workoutSplit && onboardingData.frequency && (
           <div className="mt-6 sm:mt-8 p-4 sm:p-6 bg-neutral-dark/5 dark:bg-neutral-light/5 rounded-xl sm:rounded-2xl">
             <h3 className="font-bold text-base sm:text-lg text-neutral-dark dark:text-neutral-light mb-3 sm:mb-4">
-              Dein Trainingsplan im Überblick:
+              Your Workout Plan Summary:
             </h3>
             <div className="space-y-2 text-sm sm:text-base text-neutral-dark/80 dark:text-neutral-light/80">
               <p><strong>Split:</strong> {onboardingData.workoutSplit.name}</p>
-              <p><strong>Frequenz:</strong> {onboardingData.frequency.title}</p>
+              <p><strong>Frequency:</strong> {onboardingData.frequency.title}</p>
               <p>
-                <strong>Trainingstage:</strong>{' '}
+                <strong>Training Days:</strong>{' '}
                 {onboardingData.schedule?.pattern === 'interval'
-                  ? 'Flexibel je nach Zeitplan'
-                  : onboardingData.schedule?.days.join(', ') || 'Nicht ausgewählt'
+                  ? 'Flexible based on schedule'
+                  : onboardingData.schedule?.days.join(', ') || 'Not selected'
                 }
               </p>
             </div>
