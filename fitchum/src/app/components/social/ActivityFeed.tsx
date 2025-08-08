@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { ActivityLog } from '@/lib/supabase';
 import { getUserPlan, isPro } from '@/lib/subscription';
@@ -41,14 +41,14 @@ export default function ActivityFeed({ currentUserId }: ActivityFeedProps) {
   }, [currentUserId]);
 
 
-  const fetchGlobalActivity = async () => {
+  const fetchGlobalActivity = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('activity_logs')
         .select(`
           *,
-          profiles!activity_logs_user_id_fkey (
+          profiles (
             username,
             profile_pic_url
           )
@@ -74,9 +74,9 @@ export default function ActivityFeed({ currentUserId }: ActivityFeedProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [supabase]);
 
-  const fetchFriendsActivity = async () => {
+  const fetchFriendsActivity = useCallback(async () => {
     if (!currentUserId) return;
     
     setLoading(true);
@@ -105,7 +105,7 @@ export default function ActivityFeed({ currentUserId }: ActivityFeedProps) {
         .from('activity_logs')
         .select(`
           *,
-          profiles!activity_logs_user_id_fkey (
+          profiles (
             username,
             profile_pic_url
           )
@@ -132,7 +132,7 @@ export default function ActivityFeed({ currentUserId }: ActivityFeedProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUserId, supabase]);
 
   const getActivityIcon = (activityType: string) => {
     switch (activityType) {
@@ -205,7 +205,7 @@ export default function ActivityFeed({ currentUserId }: ActivityFeedProps) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [activeTab, currentUserId, fetchGlobalActivity, fetchFriendsActivity, supabase]);
+  }, [activeTab, currentUserId, fetchGlobalActivity, fetchFriendsActivity]);
 
   const handleTabChange = (tab: 'all' | 'friends') => {
     if (tab === 'friends' && !userHasPro) {

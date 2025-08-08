@@ -62,7 +62,10 @@ export default function Profile() {
                     theme_preference: (profile.theme_preference || 'light') as 'light' | 'dark',
                     subscription_plan: (profile.subscription_plan || 'free') as 'free' | 'pro',
                 });
-                setTheme(profile.theme_preference || 'light');
+                // Only set theme on initial load, don't override user's current theme choice
+                if (theme === 'system' || !theme) {
+                    setTheme(profile.theme_preference || 'light');
+                }
             }
 
             setLoading(false);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Profile } from '@/lib/supabase';
 import { getUserPlan, isPro } from '@/lib/subscription';
@@ -40,7 +40,7 @@ export default function Leaderboard({ currentUserId }: LeaderboardProps) {
   }, [currentUserId]);
 
 
-  const fetchGlobalLeaderboard = async () => {
+  const fetchGlobalLeaderboard = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -68,32 +68,41 @@ export default function Leaderboard({ currentUserId }: LeaderboardProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUserId, supabase]);
 
-  const fetchFriendsLeaderboard = async () => {
+  const fetchFriendsLeaderboard = useCallback(async () => {
     if (!currentUserId) return;
     
     setLoading(true);
     try {
+      // Get current user's friends
+      const { data: friendships, error: friendshipsError } = await supabase
+        .from('friendships')
+        .select('requester_id, addressee_id')
+        .or(`requester_id.eq.${currentUserId},addressee_id.eq.${currentUserId}`)
+        .eq('status', 'accepted');
+
+      if (friendshipsError) throw friendshipsError;
+
+      const friendIds = friendships?.map(friendship => 
+        friendship.requester_id === currentUserId 
+          ? friendship.addressee_id 
+          : friendship.requester_id
+      ) || [];
+
+      // Add current user to the list
+      friendIds.push(currentUserId);
+
+      if (friendIds.length === 0) {
+        setLeaderboardData([]);
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('profiles')
-        .select(`
-          user_id, 
-          username, 
-          current_streak, 
-          profile_pic_url,
-          requester_friendships:friendships!friendships_requester_id_fkey(
-            addressee_id,
-            status
-          ),
-          addressee_friendships:friendships!friendships_addressee_id_fkey(
-            requester_id,
-            status
-          )
-        `)
-        .or(`requester_friendships.addressee_id.eq.${currentUserId},addressee_friendships.requester_id.eq.${currentUserId}`)
-        .eq('requester_friendships.status', 'accepted')
-        .eq('addressee_friendships.status', 'accepted')
+        .select('user_id, username, current_streak, profile_pic_url')
+        .in('user_id', friendIds)
         .order('current_streak', { ascending: false });
 
       if (error) throw error;
@@ -106,27 +115,6 @@ export default function Leaderboard({ currentUserId }: LeaderboardProps) {
         rank: index + 1
       })) || [];
 
-      const currentUserProfile = await supabase
-        .from('profiles')
-        .select('user_id, username, current_streak, profile_pic_url')
-        .eq('user_id', currentUserId)
-        .single();
-
-      if (currentUserProfile.data) {
-        leaderboard.unshift({
-          user_id: currentUserProfile.data.user_id,
-          username: currentUserProfile.data.username || `User ${currentUserProfile.data.user_id.slice(-4)}`,
-          current_streak: currentUserProfile.data.current_streak,
-          profile_pic_url: currentUserProfile.data.profile_pic_url,
-          rank: 0
-        });
-      }
-
-      leaderboard.sort((a, b) => b.current_streak - a.current_streak);
-      leaderboard.forEach((entry, index) => {
-        entry.rank = index + 1;
-      });
-
       setLeaderboardData(leaderboard);
       
       const currentUserEntry = leaderboard.find(entry => entry.user_id === currentUserId);
@@ -137,7 +125,7 @@ export default function Leaderboard({ currentUserId }: LeaderboardProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUserId, supabase]);
 
   useEffect(() => {
     if (activeTab === 'all') {
@@ -145,7 +133,7 @@ export default function Leaderboard({ currentUserId }: LeaderboardProps) {
     } else {
       fetchFriendsLeaderboard();
     }
-  }, [activeTab, currentUserId, fetchGlobalLeaderboard, fetchFriendsLeaderboard]);
+  }, [activeTab, fetchGlobalLeaderboard, fetchFriendsLeaderboard]);
 
   const getRankIcon = (rank: number) => {
     switch (rank) {

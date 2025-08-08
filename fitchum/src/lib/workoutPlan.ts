@@ -162,11 +162,19 @@ export async function getUserWorkoutSchedule(userId: string): Promise<WorkoutSch
     const { data, error } = await supabase
       .from('workout_schedule')
       .select('*')
-      .eq('user_id', userId)
-      .order('day_of_week');
+      .eq('user_id', userId);
 
     if (error) throw error;
-    return data || [];
+    
+    // Define the correct day order
+    const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    
+    // Sort the data according to the day order
+    const sortedData = (data || []).sort((a, b) => {
+      return dayOrder.indexOf(a.day_of_week) - dayOrder.indexOf(b.day_of_week);
+    });
+    
+    return sortedData;
   } catch (error) {
     console.error('Error fetching user workout schedule:', error);
     return [];
