@@ -26,6 +26,20 @@ export type WorkoutEntry = {
   updated_at: string
 }
 
+export type JournalEntry = {
+  id: string
+  user_id: string
+  date: string
+  workout_type: string
+  workout_name: string
+  notes: string | null
+  duration: number | null
+  difficulty: number | null
+  completed: boolean
+  created_at: string
+  updated_at: string
+}
+
 export type ActivityLog = {
   id: string
   user_id: string
@@ -102,6 +116,11 @@ export type Database = {
         Row: WorkoutEntry
         Insert: Omit<WorkoutEntry, 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Omit<WorkoutEntry, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
+      }
+      journal_entries: {
+        Row: JournalEntry
+        Insert: Omit<JournalEntry, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<JournalEntry, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
       }
       activity_logs: {
         Row: ActivityLog
