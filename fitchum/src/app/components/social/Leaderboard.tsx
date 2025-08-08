@@ -39,13 +39,6 @@ export default function Leaderboard({ currentUserId }: LeaderboardProps) {
     checkProStatus();
   }, [currentUserId]);
 
-  useEffect(() => {
-    if (activeTab === 'all') {
-      fetchGlobalLeaderboard();
-    } else {
-      fetchFriendsLeaderboard();
-    }
-  }, [activeTab, currentUserId, fetchGlobalLeaderboard, fetchFriendsLeaderboard]);
 
   const fetchGlobalLeaderboard = async () => {
     setLoading(true);
@@ -145,6 +138,14 @@ export default function Leaderboard({ currentUserId }: LeaderboardProps) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (activeTab === 'all') {
+      fetchGlobalLeaderboard();
+    } else {
+      fetchFriendsLeaderboard();
+    }
+  }, [activeTab, currentUserId, fetchGlobalLeaderboard, fetchFriendsLeaderboard]);
 
   const getRankIcon = (rank: number) => {
     switch (rank) {

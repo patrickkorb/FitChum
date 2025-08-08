@@ -40,31 +40,6 @@ export default function ActivityFeed({ currentUserId }: ActivityFeedProps) {
     checkProStatus();
   }, [currentUserId]);
 
-  useEffect(() => {
-    if (activeTab === 'all') {
-      fetchGlobalActivity();
-    } else {
-      fetchFriendsActivity();
-    }
-
-    const channel = supabase
-      .channel('activity_feed')
-      .on('postgres_changes', 
-        { event: 'INSERT', schema: 'public', table: 'activity_logs' }, 
-        () => {
-          if (activeTab === 'all') {
-            fetchGlobalActivity();
-          } else {
-            fetchFriendsActivity();
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [activeTab, currentUserId, fetchGlobalActivity, fetchFriendsActivity, supabase]);
 
   const fetchGlobalActivity = async () => {
     setLoading(true);
@@ -205,6 +180,32 @@ export default function ActivityFeed({ currentUserId }: ActivityFeedProps) {
     const diffInWeeks = Math.floor(diffInDays / 7);
     return `${diffInWeeks}w ago`;
   };
+
+  useEffect(() => {
+    if (activeTab === 'all') {
+      fetchGlobalActivity();
+    } else {
+      fetchFriendsActivity();
+    }
+
+    const channel = supabase
+        .channel('activity_feed')
+        .on('postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'activity_logs' },
+            () => {
+              if (activeTab === 'all') {
+                fetchGlobalActivity();
+              } else {
+                fetchFriendsActivity();
+              }
+            }
+        )
+        .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [activeTab, currentUserId, fetchGlobalActivity, fetchFriendsActivity, supabase]);
 
   const handleTabChange = (tab: 'all' | 'friends') => {
     if (tab === 'friends' && !userHasPro) {
