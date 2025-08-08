@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client';
-import { WorkoutPlan, WorkoutSchedule } from './supabase';
+import { WorkoutPlan, WorkoutSchedule, Exercise } from './supabase';
 
 const supabase = createClient();
 
@@ -59,7 +59,14 @@ async function generateWorkoutSchedule(
       .eq('user_id', userId);
 
     const allDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-    const scheduleEntries = [];
+    const scheduleEntries: Array<{
+      user_id: string;
+      workout_plan_id: string;
+      day_of_week: string;
+      workout_type: string;
+      workout_name: string;
+      exercises: Exercise[];
+    }> = [];
 
     // Generate workouts for selected days
     selectedDays.forEach((day, index) => {
