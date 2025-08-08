@@ -28,7 +28,7 @@ export default function Plan() {
         };
 
         checkForExistingPlan();
-    }, []);
+    }, [supabase.auth]);
 
     const handlePlanCompleted = () => {
         setHasPlan(true);

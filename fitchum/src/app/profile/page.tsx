@@ -69,7 +69,7 @@ export default function Profile() {
         }
 
         fetchProfile();
-    }, []);
+    }, [setTheme, supabase]);
 
     // 📤 Profilbild ändern
     const handleProfilePicChange = async (event: React.ChangeEvent<HTMLInputElement>) => {

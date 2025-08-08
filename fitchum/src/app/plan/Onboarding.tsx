@@ -142,7 +142,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             </h1>
           </div>
           <p className="text-neutral-dark/70 dark:text-neutral-light/70 text-base sm:text-lg px-4">
-            Let's create your perfect workout plan
+            Let&apos;s create your perfect workout plan
           </p>
         </div>
 

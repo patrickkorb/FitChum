@@ -3,7 +3,7 @@ import { Roboto } from "next/font/google";
 import "./globals.css";
 import ConditionalLayout from "@/app/components/ConditionalLayout";
 import { ThemeProvider } from '@/app/components/ThemeProvider';
-import { Analytics } from "@vercel/analytics/next"
+// import { Analytics } from "@vercel/analytics/next"
 
 const robotoCondensed = Roboto({
   subsets: ["latin"],

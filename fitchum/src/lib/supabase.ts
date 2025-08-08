@@ -30,7 +30,7 @@ export type ActivityLog = {
   id: string
   user_id: string
   activity_type: 'workout_logged' | 'streak_milestone' | 'goal_achieved'
-  activity_data: Record<string, any>
+  activity_data: Record<string, unknown>
   created_at: string
 }
 

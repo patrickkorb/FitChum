@@ -15,7 +15,7 @@ export default function Social() {
             setUserId(user?.id || null);
         };
         getUser();
-    }, []);
+    }, [supabase.auth]);
 
     return (
         <div className="min-h-screen bg-white dark:bg-neutral-dark">
@@ -26,7 +26,7 @@ export default function Social() {
                         Social Hub
                     </h1>
                     <p className="text-base sm:text-lg text-neutral-dark/70 dark:text-neutral-light/70 max-w-2xl mx-auto">
-                        Connect with your fitness community, compete on leaderboards, and stay motivated by tracking everyone's progress.
+                        Connect with your fitness community, compete on leaderboards, and stay motivated by tracking everyone&apos;s progress.
                     </p>
                 </div>
 
@@ -58,7 +58,7 @@ export default function Social() {
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <button className="bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-6 rounded-xl transition-colors">
-                                Log Today's Workout
+                                Log Today&apos;s Workout
                             </button>
                             <button className="bg-transparent border-2 border-neutral-dark/20 dark:border-neutral-light/20 text-neutral-dark dark:text-neutral-light font-semibold py-3 px-6 rounded-xl hover:bg-neutral-dark/5 dark:hover:bg-neutral-light/5 transition-colors">
                                 View My Profile

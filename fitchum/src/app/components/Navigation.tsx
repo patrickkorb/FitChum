@@ -28,7 +28,7 @@ export default function Navigation() {
                 </div>
                 
                 <nav className="flex flex-col gap-2 flex-1">
-                    {navElements.map((navElement, index) => (
+                    {navElements.map((navElement) => (
                         <NavElement
                             key={navElement.link}
                             name={navElement.name}

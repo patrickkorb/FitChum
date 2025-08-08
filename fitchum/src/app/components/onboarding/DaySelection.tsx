@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Card from '../ui/Card';
 
 export interface SelectedDays {
@@ -207,8 +207,8 @@ export default function DaySelection({ frequency, splitType, onSelect, selectedD
             Flexible Training
           </h3>
           <p className="text-neutral-dark/70 dark:text-neutral-light/70">
-            You'll train every {Math.floor(7/frequency)}-{Math.ceil(7/frequency)} days based on your schedule.
-            We'll remind you when it's time for your next workout.
+            You&apos;ll train every {Math.floor(7/frequency)}-{Math.ceil(7/frequency)} days based on your schedule.
+            We&apos;ll remind you when it&apos;s time for your next workout.
           </p>
         </div>
       )}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Profile } from '@/lib/supabase';
+import type { Profile } from '@/lib/supabase';
 import { getUserPlan, isPro } from '@/lib/subscription';
 import { Trophy, Medal, Award, Crown, Lock } from 'lucide-react';
 import Button from '../ui/Button';
@@ -45,7 +45,7 @@ export default function Leaderboard({ currentUserId }: LeaderboardProps) {
     } else {
       fetchFriendsLeaderboard();
     }
-  }, [activeTab, currentUserId]);
+  }, [activeTab, currentUserId, fetchGlobalLeaderboard, fetchFriendsLeaderboard]);
 
   const fetchGlobalLeaderboard = async () => {
     setLoading(true);

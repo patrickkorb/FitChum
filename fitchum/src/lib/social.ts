@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client';
-import { ActivityLog, WorkoutEntry, Profile } from './supabase';
+import type { ActivityLog } from './supabase';
 
 const supabase = createClient();
 
@@ -77,7 +77,7 @@ export async function updateUserStreak(userId: string, workoutType: string): Pro
 export async function logActivity(
   userId: string, 
   activityType: 'workout_logged' | 'streak_milestone' | 'goal_achieved', 
-  activityData: Record<string, any>
+  activityData: Record<string, unknown>
 ): Promise<void> {
   try {
     const { error } = await supabase

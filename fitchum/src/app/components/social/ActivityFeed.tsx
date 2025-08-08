@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { ActivityLog, Profile } from '@/lib/supabase';
+import type { ActivityLog } from '@/lib/supabase';
 import { getUserPlan, isPro } from '@/lib/subscription';
 import { Dumbbell, Flame, Target, Clock, Lock } from 'lucide-react';
 import Button from '../ui/Button';
@@ -17,7 +17,7 @@ type ActivityItem = {
   username: string;
   profile_pic_url?: string;
   activity_type: 'workout_logged' | 'streak_milestone' | 'goal_achieved';
-  activity_data: Record<string, any>;
+  activity_data: Record<string, unknown>;
   created_at: string;
 };
 
@@ -64,7 +64,7 @@ export default function ActivityFeed({ currentUserId }: ActivityFeedProps) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [activeTab, currentUserId]);
+  }, [activeTab, currentUserId, fetchGlobalActivity, fetchFriendsActivity, supabase]);
 
   const fetchGlobalActivity = async () => {
     setLoading(true);

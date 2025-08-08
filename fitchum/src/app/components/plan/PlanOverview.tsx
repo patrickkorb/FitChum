@@ -4,7 +4,6 @@ import { createClient } from '@/lib/supabase/client';
 import { getUserWorkoutPlan, getUserWorkoutSchedule, getTodaysWorkout, getWorkoutExercises } from '@/lib/workoutPlan';
 import { WorkoutPlan, WorkoutSchedule, Exercise } from '@/lib/supabase';
 import PlanHeader from './PlanHeader';
-import WeeklySchedule from './WeeklySchedule';
 
 type TodaysWorkoutData = WorkoutSchedule & {
   exercises: Exercise[];
@@ -28,7 +27,6 @@ export default function PlanOverview({ onEditPlan }: PlanOverviewProps) {
   const [todaysWorkout, setTodaysWorkout] = useState<TodaysWorkoutData | null>(null);
   const [weeklySchedule, setWeeklySchedule] = useState<WeeklyScheduleDay[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
 
   const supabase = createClient();
 
@@ -38,7 +36,6 @@ export default function PlanOverview({ onEditPlan }: PlanOverviewProps) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        setUserId(user.id);
 
         // Load workout plan
         const plan = await getUserWorkoutPlan(user.id);
@@ -81,7 +78,7 @@ export default function PlanOverview({ onEditPlan }: PlanOverviewProps) {
     };
 
     initializeData();
-  }, []);
+  }, [supabase.auth]);
 
   const handleDayClick = (day: WeeklyScheduleDay): void => {
     console.log('Clicked on day:', day);
@@ -137,7 +134,7 @@ export default function PlanOverview({ onEditPlan }: PlanOverviewProps) {
         {/* Today's Workout */}
         <div className="space-y-3 sm:space-y-4">
           <h2 className="text-xl sm:text-2xl font-bold text-neutral-dark dark:text-neutral-light">
-            Today's Workout
+            Today&apos;s Workout
           </h2>
           {todaysWorkout ? (
             <div className="bg-white dark:bg-neutral-dark/50 rounded-2xl p-6 border border-neutral-dark/10 dark:border-neutral-light/10 shadow-sm">
@@ -189,7 +186,7 @@ export default function PlanOverview({ onEditPlan }: PlanOverviewProps) {
         {/* Weekly Schedule */}
         <div className="space-y-3 sm:space-y-4">
           <h2 className="text-xl sm:text-2xl font-bold text-neutral-dark dark:text-neutral-light">
-            This Week's Schedule
+            This Week&apos;s Schedule
           </h2>
           
           {/* Mobile Layout - Stacked Cards */}
