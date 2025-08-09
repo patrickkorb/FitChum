@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { getUserStats, UserStats } from '@/lib/userStats';
 import ActivityHeatmap from '@/app/components/journal/ActivityHeatmap';
-import { TrendingUp, Target, Clock, Zap } from 'lucide-react';
+import { TrendingUp, Target, Clock, Zap, LucideIcon } from 'lucide-react';
 
 export default function StatsPage() {
     const [user, setUser] = useState<{ id: string } | null>(null);
@@ -64,7 +64,7 @@ export default function StatsPage() {
         title: string; 
         value: string | number; 
         subtitle: string; 
-        icon: any; 
+        icon: LucideIcon; 
         color: string; 
     }) => (
         <div className="bg-white dark:bg-neutral-800 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-700 shadow-sm hover:shadow-md transition-shadow">

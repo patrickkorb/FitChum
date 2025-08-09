@@ -51,8 +51,8 @@ export async function middleware(request: NextRequest) {
   )
 
   if (isAuthPath && user) {
-    // Redirect to dashboard or requested page
-    const redirectTo = request.nextUrl.searchParams.get('redirectTo') || '/dashboard'
+    // Redirect to stats or requested page
+    const redirectTo = request.nextUrl.searchParams.get('redirectTo') || '/stats'
     const url = request.nextUrl.clone()
     url.pathname = redirectTo
     url.searchParams.delete('redirectTo')

@@ -52,8 +52,8 @@ export default function PricingPage() {
 
     // Handle free plan
     if (plan.isFree) {
-      // User is already on free plan, redirect to dashboard
-      window.location.href = '/dashboard';
+      // User is already on free plan, redirect to stats
+      window.location.href = '/stats';
       return;
     }
 

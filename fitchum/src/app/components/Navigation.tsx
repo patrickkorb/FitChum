@@ -7,7 +7,7 @@ import NavElement, { NavElementProps } from '@/app/components/NavElement';
 const navElements: NavElementProps[] = [
     { name: 'Journal', link: '/journal', icon: 'BookOpen' },
     { name: 'Plan', link: '/plan', icon: 'Dumbbell' },
-    { name: 'Stats', link: '/dashboard', icon: 'BarChart3' },
+    { name: 'Stats', link: '/stats', icon: 'BarChart3' },
     { name: 'Social', link: '/social', icon: 'Medal' },
     { name: 'Profile', link: '/profile', icon: 'User' },
     { name: 'Pricing', link: '/pricing', icon: 'Crown' }

@@ -66,14 +66,7 @@ export default function PaymentSuccessPage() {
             Priority support
           </div>
         </div>
-        
-        <Button 
-          onClick={() => router.push('/dashboard')}
-          variant="primary"
-          className="w-full"
-        >
-          Start Using Pro Features
-        </Button>
+
         
         <p className="text-xs text-neutral-dark/50 dark:text-neutral-light/50">
           No recurring charges. You own Pro for life!

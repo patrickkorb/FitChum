@@ -14,7 +14,7 @@ interface NavItem {
 const navItems: NavItem[] = [
     { name: 'Journal', link: '/journal', icon: BookOpen, shortName: 'Journal' },
     { name: 'Plan', link: '/plan', icon: Dumbbell, shortName: 'Plan' },
-    { name: 'Stats', link: '/dashboard', icon: BarChart3, shortName: 'Stats' },
+    { name: 'Stats', link: '/stats', icon: BarChart3, shortName: 'Stats' },
     { name: 'Social', link: '/social', icon: Medal, shortName: 'Social' },
     { name: 'Profile', link: '/profile', icon: User, shortName: 'Profile' },
     { name: 'Pricing', link: '/pricing', icon: Crown, shortName: 'Pro' }
