@@ -1,13 +1,11 @@
 "use client"
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { getUserWorkoutPlan, getUserWorkoutSchedule, getTodaysWorkout, getWorkoutExercises } from '@/lib/workoutPlan';
-import { WorkoutPlan, WorkoutSchedule, Exercise } from '@/lib/supabase';
+import { getUserWorkoutPlan, getUserWorkoutSchedule, getTodaysWorkout } from '@/lib/workoutPlan';
+import { WorkoutPlan, WorkoutSchedule } from '@/lib/supabase';
 import PlanHeader from './PlanHeader';
 
-type TodaysWorkoutData = WorkoutSchedule & {
-  exercises: Exercise[];
-};
+type TodaysWorkoutData = WorkoutSchedule;
 
 type WeeklyScheduleDay = {
   day: string;
@@ -15,7 +13,6 @@ type WeeklyScheduleDay = {
   type: string;
   isToday: boolean;
   isRestDay: boolean;
-  exercises: Exercise[];
 };
 
 interface PlanOverviewProps {
@@ -43,31 +40,19 @@ export default function PlanOverview({ onEditPlan }: PlanOverviewProps) {
 
         // Load today's workout
         const today = await getTodaysWorkout(user.id);
-        if (today) {
-          const exercises = await getWorkoutExercises(today.workout_type, plan?.split_type || '');
-          setTodaysWorkout({ ...today, exercises });
-        }
+        setTodaysWorkout(today);
 
         // Load weekly schedule
         const schedule = await getUserWorkoutSchedule(user.id);
         const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
         
-        const formattedSchedule: WeeklyScheduleDay[] = await Promise.all(
-          schedule.map(async (day) => {
-            const exercises = day.workout_type !== 'rest' 
-              ? await getWorkoutExercises(day.workout_type, plan?.split_type || '')
-              : [];
-            
-            return {
-              day: day.day_of_week,
-              name: day.workout_name,
-              type: day.workout_type,
-              isToday: day.day_of_week === todayName,
-              isRestDay: day.workout_type === 'rest',
-              exercises
-            };
-          })
-        );
+        const formattedSchedule: WeeklyScheduleDay[] = schedule.map((day) => ({
+          day: day.day_of_week,
+          name: day.workout_name,
+          type: day.workout_type,
+          isToday: day.day_of_week === todayName,
+          isRestDay: day.workout_type === 'rest'
+        }));
 
         setWeeklySchedule(formattedSchedule);
       } catch (error) {
@@ -144,7 +129,7 @@ export default function PlanOverview({ onEditPlan }: PlanOverviewProps) {
                     {todaysWorkout.workout_name}
                   </h3>
                   <p className="text-neutral-dark/70 dark:text-neutral-light/70">
-                    {todaysWorkout.exercises.length} exercises
+                    {todaysWorkout.workout_type} session
                   </p>
                 </div>
                 <div className="text-primary font-bold text-lg">
@@ -152,23 +137,10 @@ export default function PlanOverview({ onEditPlan }: PlanOverviewProps) {
                 </div>
               </div>
               
-              {/* Exercise List */}
-              <div className="space-y-3">
-                <h4 className="font-semibold text-neutral-dark dark:text-neutral-light mb-2">
-                  Exercises:
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {todaysWorkout.exercises.map((exercise, index) => (
-                    <div key={index} className="bg-neutral-dark/5 dark:bg-neutral-light/5 p-3 rounded-lg">
-                      <div className="font-medium text-neutral-dark dark:text-neutral-light">
-                        {exercise.name}
-                      </div>
-                      <div className="text-sm text-neutral-dark/70 dark:text-neutral-light/70">
-                        {exercise.sets} × {exercise.reps} • {exercise.rest} rest
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="bg-neutral-dark/5 dark:bg-neutral-light/5 p-4 rounded-lg text-center">
+                <p className="text-neutral-dark/70 dark:text-neutral-light/70">
+                  Get ready for your {todaysWorkout.workout_type.toLowerCase()} workout! 💪
+                </p>
               </div>
             </div>
           ) : (
@@ -209,11 +181,6 @@ export default function PlanOverview({ onEditPlan }: PlanOverviewProps) {
                     {day.isToday && <span className="ml-2 text-sm font-normal bg-white/20 px-2 py-0.5 rounded">Today</span>}
                   </div>
                   <div className="text-sm font-medium mt-1">{day.name}</div>
-                  {!day.isRestDay && (
-                    <div className="text-xs mt-1 opacity-80">
-                      {day.exercises.length} exercises
-                    </div>
-                  )}
                 </div>
                 <div className="text-xs font-medium opacity-50">
                   {day.day.slice(0, 3).toUpperCase()}
@@ -242,11 +209,6 @@ export default function PlanOverview({ onEditPlan }: PlanOverviewProps) {
                 <div className="text-sm font-semibold mb-1">
                   {day.name}
                 </div>
-                {!day.isRestDay && (
-                  <div className="text-xs opacity-80">
-                    {day.exercises.length} exercises
-                  </div>
-                )}
               </button>
             ))}
           </div>

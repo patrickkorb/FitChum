@@ -7,7 +7,7 @@ interface ActivityData {
   date: string;
   hasWorkout: boolean;
   duration?: number;
-  type: 'workout' | 'none';
+  type: 'workout' | 'rest' | 'none';
 }
 
 interface ActivityHeatmapProps {
@@ -54,11 +54,24 @@ export default function ActivityHeatmap({ userId }: ActivityHeatmapProps) {
         const journalData = journalMap.get(dateStr);
         const hasWorkout = journalData?.completed || false;
         
+        // Determine if it's a rest day (assuming rest days are planned every 4th day or weekends)
+        const dayOfWeek = d.getDay(); // 0 = Sunday, 6 = Saturday
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+        const isPastDay = d < new Date();
+        
+        let type: 'workout' | 'rest' | 'none' = 'none';
+        if (hasWorkout) {
+          type = 'workout';
+        } else if (isPastDay && !hasWorkout) {
+          // Auto-assign rest days for weekends or if no workout was logged
+          type = isWeekend ? 'rest' : 'none';
+        }
+        
         activities.push({
           date: dateStr,
           hasWorkout,
           duration: journalData?.duration,
-          type: hasWorkout ? 'workout' : 'none'
+          type
         });
       }
 
@@ -72,16 +85,11 @@ export default function ActivityHeatmap({ userId }: ActivityHeatmapProps) {
 
   const getIntensityClass = (activity: ActivityData) => {
     if (activity.type === 'workout') {
-      // Different intensities based on duration
-      if (activity.duration && activity.duration >= 60) {
-        return 'bg-primary';
-      } else if (activity.duration && activity.duration >= 30) {
-        return 'bg-primary/70';
-      } else {
-        return 'bg-primary/40';
-      }
+      return 'bg-primary'; // Green for workouts
+    } else if (activity.type === 'rest') {
+      return 'bg-secondary'; // Orange for rest days
     }
-    return 'bg-neutral-100 dark:bg-neutral-700';
+    return 'bg-neutral-100 dark:bg-neutral-700'; // Gray for empty days
   };
 
   const getTooltipText = (activity: ActivityData) => {
@@ -94,8 +102,10 @@ export default function ActivityHeatmap({ userId }: ActivityHeatmapProps) {
     if (activity.type === 'workout') {
       const duration = activity.duration ? ` (${activity.duration} min)` : '';
       return `${date}: Workout completed${duration}`;
+    } else if (activity.type === 'rest') {
+      return `${date}: Rest day`;
     }
-    return `${date}: No workout`;
+    return `${date}: No activity`;
   };
 
   // Group activities by month for better organization
@@ -149,42 +159,68 @@ export default function ActivityHeatmap({ userId }: ActivityHeatmapProps) {
         </p>
       </div>
 
-      {/* Mobile: Show 3 months at a time with horizontal scroll */}
+      {/* Mobile: Show weekly streaks with better UX */}
       <div className="block sm:hidden">
-        <div className="overflow-x-auto">
-          <div className="flex gap-4" style={{ minWidth: 'max-content' }}>
-            {months.slice(-3).map((month) => (
-              <div key={month.name} className="flex-shrink-0">
-                <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-2 text-center">
+        <div className="space-y-4">
+          {/* Recent weeks overview */}
+          {months.slice(-2).map((month) => {
+            // Group month activities into weeks
+            const weeks: ActivityData[][] = [];
+            let currentWeek: ActivityData[] = [];
+            
+            month.activities.forEach((activity, index) => {
+              const date = new Date(activity.date);
+              const dayOfWeek = date.getDay();
+              
+              // If it's Sunday and we have a current week, push it and start new one
+              if (dayOfWeek === 0 && currentWeek.length > 0) {
+                weeks.push(currentWeek);
+                currentWeek = [];
+              }
+              
+              currentWeek.push(activity);
+              
+              // If it's the last item, push the current week
+              if (index === month.activities.length - 1) {
+                weeks.push(currentWeek);
+              }
+            });
+
+            return (
+              <div key={month.name} className="bg-neutral-50 dark:bg-neutral-700/50 rounded-xl p-4">
+                <h3 className="text-lg font-semibold text-neutral-700 dark:text-neutral-300 mb-3">
                   {month.name}
                 </h3>
-                <div className="grid grid-cols-7 gap-1">
-                  {/* Day labels */}
-                  {dayLabels.map((day) => (
-                    <div key={day} className="text-xs text-neutral-500 dark:text-neutral-400 text-center font-medium">
-                      {day}
+                <div className="space-y-3">
+                  {weeks.slice(-4).map((week, weekIndex) => (
+                    <div key={weekIndex} className="flex items-center gap-2">
+                      <span className="text-xs text-neutral-500 dark:text-neutral-400 w-16">
+                        Week {weeks.length - 3 + weekIndex}
+                      </span>
+                      <div className="flex gap-1 flex-1">
+                        {dayLabels.map((day, dayIndex) => {
+                          const activity = week.find(a => new Date(a.date).getDay() === dayIndex);
+                          return (
+                            <div
+                              key={dayIndex}
+                              className={`flex-1 h-8 rounded-md flex items-center justify-center text-xs font-medium transition-all ${
+                                activity 
+                                  ? getIntensityClass(activity) + ' text-white' 
+                                  : 'bg-neutral-200 dark:bg-neutral-600 text-neutral-500'
+                              }`}
+                              title={activity ? getTooltipText(activity) : ''}
+                            >
+                              {day}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  ))}
-                  
-                  {/* Fill empty cells at start of month */}
-                  {month.activities.length > 0 && 
-                    Array.from({ length: new Date(month.activities[0].date).getDay() }).map((_, i) => (
-                      <div key={`empty-${i}`} className="w-4 h-4" />
-                    ))
-                  }
-                  
-                  {/* Activity cells */}
-                  {month.activities.map((activity) => (
-                    <div
-                      key={activity.date}
-                      className={`w-4 h-4 rounded-sm cursor-pointer hover:ring-2 hover:ring-offset-1 hover:ring-primary transition-all ${getIntensityClass(activity)}`}
-                      title={getTooltipText(activity)}
-                    />
                   ))}
                 </div>
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
       </div>
 
@@ -226,21 +262,21 @@ export default function ActivityHeatmap({ userId }: ActivityHeatmapProps) {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center justify-between mt-6 pt-4 border-t border-neutral-200 dark:border-neutral-700">
-        <span className="text-xs text-neutral-600 dark:text-neutral-400">Less active</span>
-        <div className="flex gap-1 items-center">
-          <div className="w-3 h-3 bg-neutral-100 dark:bg-neutral-700 rounded-sm"></div>
-          <div className="w-3 h-3 bg-primary/40 rounded-sm"></div>
-          <div className="w-3 h-3 bg-primary/70 rounded-sm"></div>
-          <div className="w-3 h-3 bg-primary rounded-sm"></div>
+      <div className="mt-6 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+        <div className="flex items-center justify-center gap-6">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-primary rounded-sm"></div>
+            <span className="text-sm text-neutral-600 dark:text-neutral-400">Workout</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-secondary rounded-sm"></div>
+            <span className="text-sm text-neutral-600 dark:text-neutral-400">Rest Day</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-neutral-100 dark:bg-neutral-700 rounded-sm"></div>
+            <span className="text-sm text-neutral-600 dark:text-neutral-400">No Activity</span>
+          </div>
         </div>
-        <span className="text-xs text-neutral-600 dark:text-neutral-400">More active</span>
-      </div>
-
-      <div className="mt-2 text-center">
-        <p className="text-xs text-neutral-500 dark:text-neutral-400">
-          Color intensity based on workout duration
-        </p>
       </div>
     </div>
   );
