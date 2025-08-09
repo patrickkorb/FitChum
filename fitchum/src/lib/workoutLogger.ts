@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/client';
 import type { JournalEntry } from './supabase';
+import { updateUserStreak } from './social';
 
 const supabase = createClient();
 
@@ -87,66 +88,12 @@ export async function logWorkout(data: LogWorkoutData): Promise<void> {
   }
 
   // Update user streak
-  await updateUserStreak(data.userId);
+  await updateUserStreak(data.userId, data.workoutType);
 
   // Log activity
   await logWorkoutActivity(data.userId, data.workoutName);
 }
 
-/**
- * Update user's workout streak
- */
-export async function updateUserStreak(userId: string): Promise<void> {
-  try {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('current_streak, longest_streak, last_workout_date, total_workouts')
-      .eq('user_id', userId)
-      .single();
-
-    if (!profile) return;
-
-    const today = new Date().toISOString().split('T')[0];
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-
-    let newCurrentStreak = 1;
-    
-    if (profile.last_workout_date === yesterdayStr) {
-      // Continue streak
-      newCurrentStreak = (profile.current_streak || 0) + 1;
-    } else if (profile.last_workout_date === today) {
-      // Already logged today, don't change streak
-      newCurrentStreak = profile.current_streak || 1;
-    }
-    // If gap is more than 1 day, streak resets to 1
-
-    const newLongestStreak = Math.max(profile.longest_streak || 0, newCurrentStreak);
-    const newTotalWorkouts = (profile.total_workouts || 0) + 1;
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        current_streak: newCurrentStreak,
-        longest_streak: newLongestStreak,
-        last_workout_date: today,
-        total_workouts: newTotalWorkouts
-      })
-      .eq('user_id', userId);
-
-    if (error) {
-      console.error('Error updating streak:', error);
-    }
-
-    // Log streak milestone if it's a significant achievement
-    if (newCurrentStreak > 0 && newCurrentStreak % 7 === 0) {
-      await logStreakMilestone(userId, newCurrentStreak);
-    }
-  } catch (error) {
-    console.error('Error updating user streak:', error);
-  }
-}
 
 /**
  * Log workout activity for the activity feed
