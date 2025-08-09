@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookOpen, Dumbbell, LayoutDashboard, Medal, User, Crown, LucideIcon } from 'lucide-react';
+import { BookOpen, Dumbbell, BarChart3, Medal, User, Crown, LucideIcon } from 'lucide-react';
 
 export interface NavElementProps {
     name: string;
@@ -13,7 +13,7 @@ export interface NavElementProps {
 const iconMap: Record<string, LucideIcon> = {
     BookOpen,
     Dumbbell,
-    LayoutDashboard,
+    BarChart3,
     Medal,
     User,
     Crown,

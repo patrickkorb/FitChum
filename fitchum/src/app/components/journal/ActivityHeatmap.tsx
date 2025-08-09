@@ -6,7 +6,8 @@ import { createClient } from '@/lib/supabase/client';
 interface ActivityData {
   date: string;
   hasWorkout: boolean;
-  type: 'workout' | 'rest' | 'none';
+  duration?: number;
+  type: 'workout' | 'none';
 }
 
 interface ActivityHeatmapProps {
@@ -16,8 +17,6 @@ interface ActivityHeatmapProps {
 export default function ActivityHeatmap({ userId }: ActivityHeatmapProps) {
   const [activityData, setActivityData] = useState<ActivityData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [streak, setStreak] = useState(0);
-  const [totalWorkouts, setTotalWorkouts] = useState(0);
 
   const supabase = createClient();
 
@@ -38,7 +37,7 @@ export default function ActivityHeatmap({ userId }: ActivityHeatmapProps) {
       // Get all journal entries for the year
       const { data: journalEntries, error: journalError } = await supabase
         .from('journal_entries')
-        .select('date, completed')
+        .select('date, completed, duration')
         .eq('user_id', userId)
         .gte('date', startDate.toISOString().split('T')[0])
         .lte('date', endDate.toISOString().split('T')[0])
@@ -46,29 +45,19 @@ export default function ActivityHeatmap({ userId }: ActivityHeatmapProps) {
 
       if (journalError) throw journalError;
 
-      // Get user profile for streak and total workouts
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('current_streak, total_workouts')
-        .eq('user_id', userId)
-        .single();
-
-      if (profileError) throw profileError;
-
-      setStreak(profile?.current_streak || 0);
-      setTotalWorkouts(profile?.total_workouts || 0);
-
       // Create activity data for each day of the year
       const activities: ActivityData[] = [];
-      const journalMap = new Map(journalEntries?.map(entry => [entry.date, entry.completed]) || []);
+      const journalMap = new Map(journalEntries?.map(entry => [entry.date, { completed: entry.completed, duration: entry.duration }]) || []);
 
       for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
         const dateStr = d.toISOString().split('T')[0];
-        const hasWorkout = journalMap.get(dateStr) || false;
+        const journalData = journalMap.get(dateStr);
+        const hasWorkout = journalData?.completed || false;
         
         activities.push({
           date: dateStr,
           hasWorkout,
+          duration: journalData?.duration,
           type: hasWorkout ? 'workout' : 'none'
         });
       }
@@ -83,9 +72,16 @@ export default function ActivityHeatmap({ userId }: ActivityHeatmapProps) {
 
   const getIntensityClass = (activity: ActivityData) => {
     if (activity.type === 'workout') {
-      return 'bg-primary';
+      // Different intensities based on duration
+      if (activity.duration && activity.duration >= 60) {
+        return 'bg-primary';
+      } else if (activity.duration && activity.duration >= 30) {
+        return 'bg-primary/70';
+      } else {
+        return 'bg-primary/40';
+      }
     }
-    return 'bg-neutral-200 dark:bg-neutral-700';
+    return 'bg-neutral-100 dark:bg-neutral-700';
   };
 
   const getTooltipText = (activity: ActivityData) => {
@@ -96,145 +92,155 @@ export default function ActivityHeatmap({ userId }: ActivityHeatmapProps) {
     });
     
     if (activity.type === 'workout') {
-      return `${date}: Workout completed`;
+      const duration = activity.duration ? ` (${activity.duration} min)` : '';
+      return `${date}: Workout completed${duration}`;
     }
     return `${date}: No workout`;
   };
 
-  // Group activities by week
-  const getWeeksFromActivities = () => {
-    const weeks: ActivityData[][] = [];
-    let currentWeek: ActivityData[] = [];
+  // Group activities by month for better organization
+  const getMonthsFromActivities = () => {
+    const months: { name: string; activities: ActivityData[] }[] = [];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     
-    activityData.forEach((activity, index) => {
+    // Group by month
+    const monthGroups: { [key: string]: ActivityData[] } = {};
+    
+    activityData.forEach(activity => {
       const date = new Date(activity.date);
-      const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth()).padStart(2, '0')}`;
       
-      // If it's Sunday and we have a current week, push it and start new one
-      if (dayOfWeek === 0 && currentWeek.length > 0) {
-        weeks.push(currentWeek);
-        currentWeek = [];
+      if (!monthGroups[monthKey]) {
+        monthGroups[monthKey] = [];
       }
-      
-      currentWeek.push(activity);
-      
-      // If it's the last item, push the current week
-      if (index === activityData.length - 1) {
-        weeks.push(currentWeek);
-      }
+      monthGroups[monthKey].push(activity);
     });
-    
-    return weeks;
+
+    // Convert to array and sort by date
+    Object.keys(monthGroups).sort().forEach(monthKey => {
+      const [year, monthNum] = monthKey.split('-');
+      const monthName = `${monthNames[parseInt(monthNum)]} ${year}`;
+      months.push({
+        name: monthName,
+        activities: monthGroups[monthKey]
+      });
+    });
+
+    return months.slice(-12); // Show last 12 months
   };
 
-  const weeks = getWeeksFromActivities();
-  const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const months = getMonthsFromActivities();
   const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
   if (loading) {
     return (
-      <div className="animate-pulse bg-neutral-200 dark:bg-neutral-700 rounded-lg h-32 w-full"></div>
+      <div className="animate-pulse bg-neutral-200 dark:bg-neutral-700 rounded-2xl h-64 w-full"></div>
     );
   }
 
-  const calculateConsistency = () => {
-    if (activityData.length === 0) return 0;
-    const workoutDays = activityData.filter(activity => activity.type === 'workout').length;
-    return Math.round((workoutDays / activityData.length) * 100);
-  };
-
   return (
-    <div className="bg-white dark:bg-neutral-800 rounded-2xl p-4 sm:p-6 border border-neutral-200 dark:border-neutral-700">
-      {/* Header Stats */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-neutral-dark dark:text-neutral-light">
-          Activity Overview
+    <div className="bg-white dark:bg-neutral-800 rounded-2xl p-4 sm:p-6 border border-neutral-200 dark:border-neutral-700 shadow-sm">
+      <div className="mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-neutral-dark dark:text-neutral-light mb-2">
+          Activity Heatmap
         </h2>
-        
-        <div className="flex flex-wrap gap-4 text-sm">
-          <div className="flex flex-col items-center bg-neutral-100 dark:bg-neutral-700 rounded-lg px-3 py-2">
-            <span className="text-2xl font-bold text-primary">{streak}</span>
-            <span className="text-neutral-600 dark:text-neutral-400">Streak</span>
-          </div>
-          
-          <div className="flex flex-col items-center bg-neutral-100 dark:bg-neutral-700 rounded-lg px-3 py-2">
-            <span className="text-2xl font-bold text-secondary">{calculateConsistency()}%</span>
-            <span className="text-neutral-600 dark:text-neutral-400">Consistency</span>
-          </div>
-          
-          <div className="flex flex-col items-center bg-neutral-100 dark:bg-neutral-700 rounded-lg px-3 py-2">
-            <span className="text-2xl font-bold text-blue-600">{totalWorkouts}</span>
-            <span className="text-neutral-600 dark:text-neutral-400">Total</span>
+        <p className="text-neutral-600 dark:text-neutral-400 text-sm">
+          Your workout consistency over the past year
+        </p>
+      </div>
+
+      {/* Mobile: Show 3 months at a time with horizontal scroll */}
+      <div className="block sm:hidden">
+        <div className="overflow-x-auto">
+          <div className="flex gap-4" style={{ minWidth: 'max-content' }}>
+            {months.slice(-3).map((month) => (
+              <div key={month.name} className="flex-shrink-0">
+                <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-2 text-center">
+                  {month.name}
+                </h3>
+                <div className="grid grid-cols-7 gap-1">
+                  {/* Day labels */}
+                  {dayLabels.map((day) => (
+                    <div key={day} className="text-xs text-neutral-500 dark:text-neutral-400 text-center font-medium">
+                      {day}
+                    </div>
+                  ))}
+                  
+                  {/* Fill empty cells at start of month */}
+                  {month.activities.length > 0 && 
+                    Array.from({ length: new Date(month.activities[0].date).getDay() }).map((_, i) => (
+                      <div key={`empty-${i}`} className="w-4 h-4" />
+                    ))
+                  }
+                  
+                  {/* Activity cells */}
+                  {month.activities.map((activity) => (
+                    <div
+                      key={activity.date}
+                      className={`w-4 h-4 rounded-sm cursor-pointer hover:ring-2 hover:ring-offset-1 hover:ring-primary transition-all ${getIntensityClass(activity)}`}
+                      title={getTooltipText(activity)}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Heatmap */}
-      <div className="overflow-x-auto">
-        <div className="min-w-full">
-          {/* Month labels */}
-          <div className="flex mb-2 text-xs text-neutral-600 dark:text-neutral-400 ml-8">
-            {monthLabels.map((month, index) => (
-              <div key={month} className="flex-1 text-center min-w-[2rem]">
-                {index % 3 === 0 ? month : ''}
+      {/* Desktop: Show all months in a grid */}
+      <div className="hidden sm:block">
+        <div className="grid grid-cols-4 gap-6">
+          {months.map((month) => (
+            <div key={month.name}>
+              <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-3 text-center">
+                {month.name}
+              </h3>
+              <div className="grid grid-cols-7 gap-1">
+                {/* Day labels */}
+                {dayLabels.map((day) => (
+                  <div key={day} className="text-xs text-neutral-500 dark:text-neutral-400 text-center font-medium mb-1">
+                    {day}
+                  </div>
+                ))}
+                
+                {/* Fill empty cells at start of month */}
+                {month.activities.length > 0 && 
+                  Array.from({ length: new Date(month.activities[0].date).getDay() }).map((_, i) => (
+                    <div key={`empty-${i}`} className="w-4 h-4" />
+                  ))
+                }
+                
+                {/* Activity cells */}
+                {month.activities.map((activity) => (
+                  <div
+                    key={activity.date}
+                    className={`w-4 h-4 rounded-sm cursor-pointer hover:ring-2 hover:ring-offset-1 hover:ring-primary transition-all ${getIntensityClass(activity)}`}
+                    title={getTooltipText(activity)}
+                  />
+                ))}
               </div>
-            ))}
-          </div>
-
-          <div className="flex gap-1">
-            {/* Day labels */}
-            <div className="flex flex-col gap-1 mr-2 text-xs text-neutral-600 dark:text-neutral-400 justify-start pt-1">
-              {dayLabels.map((day, index) => (
-                <div key={day} className="h-3 flex items-center justify-center">
-                  {index % 2 === 1 ? day : ''}
-                </div>
-              ))}
             </div>
-
-            {/* Activity grid */}
-            <div className="flex gap-1">
-              {weeks.map((week, weekIndex) => (
-                <div key={weekIndex} className="flex flex-col gap-1">
-                  {Array.from({ length: 7 }, (_, dayIndex) => {
-                    const activity = week.find((a, i) => {
-                      const date = new Date(a.date);
-                      return date.getDay() === dayIndex;
-                    }) || week[dayIndex];
-                    
-                    if (!activity) {
-                      return (
-                        <div
-                          key={`empty-${weekIndex}-${dayIndex}`}
-                          className="w-3 h-3 bg-neutral-100 dark:bg-neutral-800 rounded-sm"
-                        />
-                      );
-                    }
-
-                    return (
-                      <div
-                        key={`${weekIndex}-${dayIndex}`}
-                        className={`w-3 h-3 rounded-sm cursor-pointer hover:ring-2 hover:ring-offset-1 hover:ring-primary transition-all ${getIntensityClass(activity)}`}
-                        title={getTooltipText(activity)}
-                      />
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 
       {/* Legend */}
-      <div className="flex items-center justify-between mt-4 text-xs text-neutral-600 dark:text-neutral-400">
-        <span>Less</span>
+      <div className="flex items-center justify-between mt-6 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+        <span className="text-xs text-neutral-600 dark:text-neutral-400">Less active</span>
         <div className="flex gap-1 items-center">
-          <div className="w-3 h-3 bg-neutral-200 dark:bg-neutral-700 rounded-sm"></div>
-          <div className="w-3 h-3 bg-primary/30 rounded-sm"></div>
-          <div className="w-3 h-3 bg-primary/60 rounded-sm"></div>
+          <div className="w-3 h-3 bg-neutral-100 dark:bg-neutral-700 rounded-sm"></div>
+          <div className="w-3 h-3 bg-primary/40 rounded-sm"></div>
+          <div className="w-3 h-3 bg-primary/70 rounded-sm"></div>
           <div className="w-3 h-3 bg-primary rounded-sm"></div>
         </div>
-        <span>More</span>
+        <span className="text-xs text-neutral-600 dark:text-neutral-400">More active</span>
+      </div>
+
+      <div className="mt-2 text-center">
+        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+          Color intensity based on workout duration
+        </p>
       </div>
     </div>
   );

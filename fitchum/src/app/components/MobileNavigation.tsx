@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { BookOpen, Dumbbell, LayoutDashboard, Medal, User, Crown, LucideIcon } from 'lucide-react';
+import { BookOpen, Dumbbell, BarChart3, Medal, User, Crown, LucideIcon } from 'lucide-react';
 
 interface NavItem {
     name: string;
@@ -14,7 +14,7 @@ interface NavItem {
 const navItems: NavItem[] = [
     { name: 'Journal', link: '/journal', icon: BookOpen, shortName: 'Journal' },
     { name: 'Plan', link: '/plan', icon: Dumbbell, shortName: 'Plan' },
-    { name: 'Dashboard', link: '/dashboard', icon: LayoutDashboard, shortName: 'Home' },
+    { name: 'Stats', link: '/dashboard', icon: BarChart3, shortName: 'Stats' },
     { name: 'Social', link: '/social', icon: Medal, shortName: 'Social' },
     { name: 'Profile', link: '/profile', icon: User, shortName: 'Profile' },
     { name: 'Pricing', link: '/pricing', icon: Crown, shortName: 'Pro' }

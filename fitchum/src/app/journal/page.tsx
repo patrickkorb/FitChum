@@ -4,7 +4,6 @@ import { CirclePlus, Zap, CheckCircle2, Calendar } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { createClient } from "@/lib/supabase/client";
 import WorkoutLogModal from '@/app/components/journal/WorkoutLogModal';
-import ActivityHeatmap from '@/app/components/journal/ActivityHeatmap';
 import { hasLoggedWorkoutToday, getTodaysJournalEntry } from '@/lib/workoutLogger';
 import type { JournalEntry } from '@/lib/supabase';
 
@@ -242,12 +241,6 @@ export default function Journal() {
                 </div>
             </div>
 
-            {/* Activity Heatmap */}
-            {user && (
-                <div className="px-4 sm:px-8 pb-8">
-                    <ActivityHeatmap userId={user.id} />
-                </div>
-            )}
 
             {/* Workout Log Modal */}
             {user && (
