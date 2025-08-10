@@ -168,9 +168,11 @@ export default function Leaderboard({ currentUserId }: LeaderboardProps) {
     setActiveTab(tab);
   };
 
+  const shouldUseFixedHeight = leaderboardData.length > 5;
+
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <div className="flex items-center justify-between">
+    <div className={`space-y-4 sm:space-y-6 ${shouldUseFixedHeight ? 'h-[600px] flex flex-col' : ''}`}>
+      <div className={`flex items-center justify-between ${shouldUseFixedHeight ? 'flex-shrink-0' : ''}`}>
         <h2 className="text-xl sm:text-2xl font-bold text-neutral-dark dark:text-neutral-light">
           Streak Leaderboard
         </h2>
@@ -181,7 +183,7 @@ export default function Leaderboard({ currentUserId }: LeaderboardProps) {
         )}
       </div>
 
-      <div className="flex space-x-1 bg-neutral-dark/5 dark:bg-neutral-light/5 p-1 rounded-lg">
+      <div className={`flex space-x-1 bg-neutral-dark/5 dark:bg-neutral-light/5 p-1 rounded-lg ${shouldUseFixedHeight ? 'flex-shrink-0' : ''}`}>
         <button
           onClick={() => handleTabChange('all')}
           className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
@@ -224,75 +226,77 @@ export default function Leaderboard({ currentUserId }: LeaderboardProps) {
       )}
 
       {(userHasPro || activeTab === 'all') && (
-        <div className="space-y-2">
-          {loading ? (
-            <div className="space-y-3">
-              {[...Array(10)].map((_, i) => (
-                <div key={i} className="animate-pulse flex items-center gap-4 p-4 bg-neutral-dark/5 dark:bg-neutral-light/5 rounded-lg">
-                  <div className="w-8 h-8 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded-full" />
-                  <div className="flex-1 h-4 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded" />
-                  <div className="w-16 h-4 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded" />
-                </div>
-              ))}
-            </div>
-          ) : leaderboardData.length > 0 ? (
-            leaderboardData.map((entry) => (
-              <div
-                key={entry.user_id}
-                className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition-all ${
-                  entry.user_id === currentUserId
-                    ? 'ring-2 ring-primary bg-primary/10'
-                    : getRankColor(entry.rank)
-                } ${entry.rank <= 3 ? 'shadow-md' : ''}`}
-              >
-                <div className="flex items-center justify-center w-6 sm:w-8 flex-shrink-0">
-                  {getRankIcon(entry.rank)}
-                </div>
-                
-                <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-neutral-dark/10 dark:bg-neutral-light/10 flex items-center justify-center overflow-hidden flex-shrink-0">
-                    {entry.profile_pic_url ? (
-                      <img 
-                        src={entry.profile_pic_url} 
-                        alt={entry.username}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-xs sm:text-sm font-semibold text-neutral-dark dark:text-neutral-light">
-                        {entry.username.charAt(0).toUpperCase()}
-                      </span>
-                    )}
+        <div className={shouldUseFixedHeight ? "flex-1 min-h-0" : ""}>
+          <div className={`${shouldUseFixedHeight ? 'h-full overflow-y-auto' : ''} space-y-2`}>
+            {loading ? (
+              <div className="space-y-3">
+                {[...Array(10)].map((_, i) => (
+                  <div key={i} className="animate-pulse flex items-center gap-4 p-4 bg-neutral-dark/5 dark:bg-neutral-light/5 rounded-lg">
+                    <div className="w-8 h-8 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded-full" />
+                    <div className="flex-1 h-4 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded" />
+                    <div className="w-16 h-4 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded" />
+                  </div>
+                ))}
+              </div>
+            ) : leaderboardData.length > 0 ? (
+              leaderboardData.map((entry) => (
+                <div
+                  key={entry.user_id}
+                  className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition-all ${
+                    entry.user_id === currentUserId
+                      ? 'ring-2 ring-primary bg-primary/10'
+                      : getRankColor(entry.rank)
+                  } ${entry.rank <= 3 ? 'shadow-md' : ''}`}
+                >
+                  <div className="flex items-center justify-center w-6 sm:w-8 flex-shrink-0">
+                    {getRankIcon(entry.rank)}
                   </div>
                   
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                      <p className="font-medium text-neutral-dark dark:text-neutral-light truncate">
-                        {entry.username}
-                      </p>
-                      {entry.user_id === currentUserId && (
-                        <span className="text-xs bg-primary text-white px-2 py-0.5 rounded-full self-start sm:self-auto">
-                          You
+                  <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-neutral-dark/10 dark:bg-neutral-light/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                      {entry.profile_pic_url ? (
+                        <img 
+                          src={entry.profile_pic_url} 
+                          alt={entry.username}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-xs sm:text-sm font-semibold text-neutral-dark dark:text-neutral-light">
+                          {entry.username.charAt(0).toUpperCase()}
                         </span>
                       )}
                     </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                        <p className="font-medium text-neutral-dark dark:text-neutral-light truncate">
+                          {entry.username}
+                        </p>
+                        {entry.user_id === currentUserId && (
+                          <span className="text-xs bg-primary text-white px-2 py-0.5 rounded-full self-start sm:self-auto">
+                            You
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-base sm:text-lg font-bold text-neutral-dark dark:text-neutral-light">
+                      {entry.current_streak}
+                    </p>
+                    <p className="text-xs text-neutral-dark/70 dark:text-neutral-light/70">
+                      {entry.current_streak === 1 ? 'day' : 'days'}
+                    </p>
                   </div>
                 </div>
-                
-                <div className="text-right flex-shrink-0">
-                  <p className="text-base sm:text-lg font-bold text-neutral-dark dark:text-neutral-light">
-                    {entry.current_streak}
-                  </p>
-                  <p className="text-xs text-neutral-dark/70 dark:text-neutral-light/70">
-                    {entry.current_streak === 1 ? 'day' : 'days'}
-                  </p>
-                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-neutral-dark/70 dark:text-neutral-light/70">
+                {activeTab === 'friends' ? 'No friends found. Add some friends to see the leaderboard!' : 'No users found.'}
               </div>
-            ))
-          ) : (
-            <div className="text-center py-8 text-neutral-dark/70 dark:text-neutral-light/70">
-              {activeTab === 'friends' ? 'No friends found. Add some friends to see the leaderboard!' : 'No users found.'}
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
     </div>

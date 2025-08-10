@@ -44,29 +44,50 @@ export default function ActivityFeed({ currentUserId }: ActivityFeedProps) {
   const fetchGlobalActivity = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // First get activities
+      const { data: activitiesData, error: activitiesError } = await supabase
         .from('activity_logs')
-        .select(`
-          *,
-          profiles (
-            username,
-            profile_pic_url
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (error) throw error;
+      if (activitiesError) throw activitiesError;
 
-      const formattedActivities: ActivityItem[] = data?.map(activity => ({
-        id: activity.id,
-        user_id: activity.user_id,
-        username: activity.profiles?.username || `User ${activity.user_id.slice(-4)}`,
-        profile_pic_url: activity.profiles?.profile_pic_url,
-        activity_type: activity.activity_type,
-        activity_data: activity.activity_data,
-        created_at: activity.created_at
-      })) || [];
+      if (!activitiesData || activitiesData.length === 0) {
+        setActivities([]);
+        setLoading(false);
+        return;
+      }
+
+      // Get unique user IDs
+      const userIds = [...new Set(activitiesData.map(activity => activity.user_id))];
+
+      // Then get profiles for those users
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, username, profile_pic_url')
+        .in('user_id', userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Create a map of user_id to profile
+      const profilesMap = new Map();
+      profilesData?.forEach(profile => {
+        profilesMap.set(profile.user_id, profile);
+      });
+
+      const formattedActivities: ActivityItem[] = activitiesData.map(activity => {
+        const profile = profilesMap.get(activity.user_id);
+        return {
+          id: activity.id,
+          user_id: activity.user_id,
+          username: profile?.username || `User ${activity.user_id.slice(-4)}`,
+          profile_pic_url: profile?.profile_pic_url,
+          activity_type: activity.activity_type,
+          activity_data: activity.activity_data,
+          created_at: activity.created_at
+        };
+      });
 
       setActivities(formattedActivities);
     } catch (error) {
@@ -101,30 +122,51 @@ export default function ActivityFeed({ currentUserId }: ActivityFeedProps) {
         return;
       }
 
-      const { data, error } = await supabase
+      // Get activities for friends
+      const { data: activitiesData, error: activitiesError } = await supabase
         .from('activity_logs')
-        .select(`
-          *,
-          profiles (
-            username,
-            profile_pic_url
-          )
-        `)
+        .select('*')
         .in('user_id', friendIds)
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (error) throw error;
+      if (activitiesError) throw activitiesError;
 
-      const formattedActivities: ActivityItem[] = data?.map(activity => ({
-        id: activity.id,
-        user_id: activity.user_id,
-        username: activity.profiles?.username || `User ${activity.user_id.slice(-4)}`,
-        profile_pic_url: activity.profiles?.profile_pic_url,
-        activity_type: activity.activity_type,
-        activity_data: activity.activity_data,
-        created_at: activity.created_at
-      })) || [];
+      if (!activitiesData || activitiesData.length === 0) {
+        setActivities([]);
+        setLoading(false);
+        return;
+      }
+
+      // Get unique user IDs
+      const userIds = [...new Set(activitiesData.map(activity => activity.user_id))];
+
+      // Then get profiles for those users
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, username, profile_pic_url')
+        .in('user_id', userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Create a map of user_id to profile
+      const profilesMap = new Map();
+      profilesData?.forEach(profile => {
+        profilesMap.set(profile.user_id, profile);
+      });
+
+      const formattedActivities: ActivityItem[] = activitiesData.map(activity => {
+        const profile = profilesMap.get(activity.user_id);
+        return {
+          id: activity.id,
+          user_id: activity.user_id,
+          username: profile?.username || `User ${activity.user_id.slice(-4)}`,
+          profile_pic_url: profile?.profile_pic_url,
+          activity_type: activity.activity_type,
+          activity_data: activity.activity_data,
+          created_at: activity.created_at
+        };
+      });
 
       setActivities(formattedActivities);
     } catch (error) {
@@ -214,9 +256,11 @@ export default function ActivityFeed({ currentUserId }: ActivityFeedProps) {
     setActiveTab(tab);
   };
 
+  const shouldUseFixedHeight = activities.length > 5;
+
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <div className="flex items-center justify-between">
+    <div className={`space-y-4 sm:space-y-6 ${shouldUseFixedHeight ? 'h-[600px] flex flex-col' : ''}`}>
+      <div className={`flex items-center justify-between ${shouldUseFixedHeight ? 'flex-shrink-0' : ''}`}>
         <h2 className="text-xl sm:text-2xl font-bold text-neutral-dark dark:text-neutral-light">
           Activity Feed
         </h2>
@@ -226,7 +270,7 @@ export default function ActivityFeed({ currentUserId }: ActivityFeedProps) {
         </div>
       </div>
 
-      <div className="flex space-x-1 bg-neutral-dark/5 dark:bg-neutral-light/5 p-1 rounded-lg">
+      <div className={`flex space-x-1 bg-neutral-dark/5 dark:bg-neutral-light/5 p-1 rounded-lg ${shouldUseFixedHeight ? 'flex-shrink-0' : ''}`}>
         <button
           onClick={() => handleTabChange('all')}
           className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
@@ -269,65 +313,67 @@ export default function ActivityFeed({ currentUserId }: ActivityFeedProps) {
       )}
 
       {(userHasPro || activeTab === 'all') && (
-        <div className="space-y-3">
-          {loading ? (
-            <div className="space-y-3">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="animate-pulse flex items-start gap-4 p-4 bg-neutral-dark/5 dark:bg-neutral-light/5 rounded-lg">
-                  <div className="w-10 h-10 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded-full" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded w-3/4" />
-                    <div className="h-3 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded w-1/2" />
+        <div className={shouldUseFixedHeight ? "flex-1 min-h-0" : ""}>
+          <div className={`${shouldUseFixedHeight ? 'h-full overflow-y-auto' : ''} space-y-3`}>
+            {loading ? (
+              <div className="space-y-3">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="animate-pulse flex items-start gap-4 p-4 bg-neutral-dark/5 dark:bg-neutral-light/5 rounded-lg">
+                    <div className="w-10 h-10 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded-full" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded w-3/4" />
+                      <div className="h-3 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded w-1/2" />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : activities.length > 0 ? (
-            activities.map((activity) => (
-              <div
-                key={activity.id}
-                className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 bg-neutral-dark/5 dark:bg-neutral-light/5 rounded-lg hover:bg-neutral-dark/10 dark:hover:bg-neutral-light/10 transition-colors"
-              >
-                <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-neutral-dark/10 dark:bg-neutral-light/10 flex items-center justify-center overflow-hidden">
-                    {activity.profile_pic_url ? (
-                      <img 
-                        src={activity.profile_pic_url} 
-                        alt={activity.username}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-xs sm:text-sm font-semibold text-neutral-dark dark:text-neutral-light">
-                        {activity.username.charAt(0).toUpperCase()}
-                      </span>
-                    )}
+                ))}
+              </div>
+            ) : activities.length > 0 ? (
+              activities.map((activity) => (
+                <div
+                  key={activity.id}
+                  className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 bg-neutral-dark/5 dark:bg-neutral-light/5 rounded-lg hover:bg-neutral-dark/10 dark:hover:bg-neutral-light/10 transition-colors"
+                >
+                  <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-neutral-dark/10 dark:bg-neutral-light/10 flex items-center justify-center overflow-hidden">
+                      {activity.profile_pic_url ? (
+                        <img 
+                          src={activity.profile_pic_url} 
+                          alt={activity.username}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-xs sm:text-sm font-semibold text-neutral-dark dark:text-neutral-light">
+                          {activity.username.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center flex-shrink-0">
+                      {getActivityIcon(activity.activity_type)}
+                    </div>
                   </div>
                   
-                  <div className="flex items-center flex-shrink-0">
-                    {getActivityIcon(activity.activity_type)}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-neutral-dark dark:text-neutral-light text-sm sm:text-base">
+                      <span className="font-semibold">{activity.username}</span>
+                      {' '}
+                      <span>{formatActivityMessage(activity)}</span>
+                    </p>
+                    <p className="text-xs sm:text-sm text-neutral-dark/70 dark:text-neutral-light/70 mt-1">
+                      {formatTimeAgo(activity.created_at)}
+                    </p>
                   </div>
                 </div>
-                
-                <div className="flex-1 min-w-0">
-                  <p className="text-neutral-dark dark:text-neutral-light text-sm sm:text-base">
-                    <span className="font-semibold">{activity.username}</span>
-                    {' '}
-                    <span>{formatActivityMessage(activity)}</span>
-                  </p>
-                  <p className="text-xs sm:text-sm text-neutral-dark/70 dark:text-neutral-light/70 mt-1">
-                    {formatTimeAgo(activity.created_at)}
-                  </p>
-                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-neutral-dark/70 dark:text-neutral-light/70">
+                {activeTab === 'friends' 
+                  ? 'No friend activity yet. Add some friends to see their workouts!' 
+                  : 'No recent activity. Be the first to log a workout!'
+                }
               </div>
-            ))
-          ) : (
-            <div className="text-center py-8 text-neutral-dark/70 dark:text-neutral-light/70">
-              {activeTab === 'friends' 
-                ? 'No friend activity yet. Add some friends to see their workouts!' 
-                : 'No recent activity. Be the first to log a workout!'
-              }
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
     </div>

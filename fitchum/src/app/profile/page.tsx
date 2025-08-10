@@ -236,6 +236,71 @@ export default function Profile() {
         router.push('/account-deleted'); // Optional
     }
 
+    // Loading state
+    if (loading) {
+        return (
+            <div className="max-w-2xl mx-auto space-y-6">
+                <div className="text-center mb-8">
+                    <h1 className="text-3xl font-bold text-neutral-dark dark:text-neutral-light mb-2">
+                        Profil
+                    </h1>
+                    <p className="text-neutral-dark/70 dark:text-neutral-light/70">
+                        Verwalte deine persönlichen Einstellungen
+                    </p>
+                </div>
+
+                <Card>
+                    <div className="animate-pulse space-y-6">
+                        {/* Profile Picture Skeleton */}
+                        <div className="text-center">
+                            <div className="w-24 h-24 rounded-full bg-neutral-dark/10 dark:bg-neutral-light/10 mx-auto"></div>
+                        </div>
+
+                        {/* Form Fields Skeleton */}
+                        <div className="space-y-4">
+                            <div>
+                                <div className="h-4 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded w-1/4 mb-2"></div>
+                                <div className="h-12 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded-xl"></div>
+                            </div>
+                            <div>
+                                <div className="h-4 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded w-1/4 mb-2"></div>
+                                <div className="h-12 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded-xl"></div>
+                            </div>
+                            <div>
+                                <div className="h-4 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded w-1/4 mb-2"></div>
+                                <div className="h-10 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded w-1/3"></div>
+                            </div>
+                        </div>
+
+                        {/* Theme Toggle Skeleton */}
+                        <div className="flex items-center justify-between p-4 bg-neutral-dark/5 dark:bg-neutral-light/5 rounded-xl">
+                            <div className="space-y-2">
+                                <div className="h-4 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded w-20"></div>
+                                <div className="h-3 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded w-32"></div>
+                            </div>
+                            <div className="w-11 h-6 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded-full"></div>
+                        </div>
+
+                        {/* Buttons Skeleton */}
+                        <div className="flex gap-3">
+                            <div className="flex-1 h-12 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded-xl"></div>
+                            <div className="h-12 w-24 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded-xl"></div>
+                        </div>
+
+                        {/* Delete Section Skeleton */}
+                        <div className="border-t border-neutral-dark/10 dark:border-neutral-light/10 pt-6">
+                            <div className="text-center space-y-3">
+                                <div className="h-5 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded w-32 mx-auto"></div>
+                                <div className="h-4 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded w-48 mx-auto"></div>
+                                <div className="h-10 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded w-32 mx-auto"></div>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+            </div>
+        );
+    }
+
     return (
         <div className="max-w-2xl mx-auto space-y-6">
             <div className="text-center mb-8">
