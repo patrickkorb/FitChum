@@ -137,23 +137,43 @@ export default function WorkoutLogModal({ isOpen, onClose, onSuccess, userId }: 
             <>
               {/* Today's Workout Info */}
               {todaysWorkout && (
-                <div className="bg-primary/10 rounded-xl p-4 text-center">
-                  <h3 className="font-semibold text-primary text-lg mb-1">
-                    Today&apo;s Workout
+                <div className={`rounded-xl p-4 text-center ${todaysWorkout.workout_type.toLowerCase().includes('rest') ? 'bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-700' : 'bg-primary/10'}`}>
+                  <h3 className={`font-semibold text-lg mb-1 ${todaysWorkout.workout_type.toLowerCase().includes('rest') ? 'text-blue-600 dark:text-blue-400' : 'text-primary'}`}>
+                    {todaysWorkout.workout_type.toLowerCase().includes('rest') ? 'Rest Day' : "Today's Workout"}
                   </h3>
                   <p className="text-neutral-dark dark:text-neutral-light font-medium">
                     {todaysWorkout.workout_name}
                   </p>
-                  {todaysWorkout.workout_type === 'rest' && (
-                    <p className="text-neutral-dark/70 dark:text-neutral-light/70 text-sm mt-1">
-                      Rest day - but any activity counts!
-                    </p>
+                  {todaysWorkout.workout_type.toLowerCase().includes('rest') && (
+                    <div className="mt-3 space-y-2">
+                      <p className="text-blue-600 dark:text-blue-400 text-sm font-medium">
+                        🌙 Time to recover and recharge!
+                      </p>
+                      <p className="text-neutral-dark/70 dark:text-neutral-light/70 text-sm">
+                        Rest days are crucial for muscle recovery and growth. Your streak continues automatically - no logging needed!
+                      </p>
+                    </div>
                   )}
                 </div>
               )}
 
-              {/* Quick Log Button */}
-              {!isCompleted ? (
+              {/* Quick Log Button or Rest Day Message */}
+              {todaysWorkout?.workout_type.toLowerCase().includes('rest') ? (
+                <div className="text-center py-6">
+                  <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl">😴</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-blue-600 dark:text-blue-400 mb-2">Enjoy Your Rest Day!</h3>
+                  <p className="text-neutral-dark/70 dark:text-neutral-light/70 max-w-sm mx-auto">
+                    No workout logging needed today. Your streak continues automatically on rest days.
+                  </p>
+                  <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
+                    <p className="text-green-700 dark:text-green-400 text-sm font-medium">
+                      ✨ Streak Safe - Rest days don't break your streak!
+                    </p>
+                  </div>
+                </div>
+              ) : !isCompleted ? (
                 <div className="text-center">
                   <Button
                     onClick={handleQuickLog}
@@ -186,7 +206,8 @@ export default function WorkoutLogModal({ isOpen, onClose, onSuccess, userId }: 
                 </div>
               )}
 
-              {/* Optional Details */}
+              {/* Optional Details - Hidden on rest days */}
+              {!todaysWorkout?.workout_type.toLowerCase().includes('rest') && (
               <div className="space-y-4 border-t border-neutral-dark/10 dark:border-neutral-light/10 pt-6">
                 <h4 className="font-semibold text-neutral-dark dark:text-neutral-light flex items-center gap-2">
                   <MessageSquare size={18} />
@@ -262,6 +283,7 @@ export default function WorkoutLogModal({ isOpen, onClose, onSuccess, userId }: 
                   </Button>
                 )}
               </div>
+              )}
             </>
           )}
         </div>

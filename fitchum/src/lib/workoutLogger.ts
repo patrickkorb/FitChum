@@ -87,11 +87,8 @@ export async function logWorkout(data: LogWorkoutData): Promise<void> {
     throw new Error('Failed to log workout');
   }
 
-  // Update user streak
-  await updateUserStreak(data.userId, data.workoutType);
-
-  // Log activity
-  await logWorkoutActivity(data.userId, data.workoutName);
+  // Update user streak (this will handle activity logging)
+  await updateUserStreak(data.userId, data.workoutName);
 }
 
 

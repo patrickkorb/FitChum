@@ -40,6 +40,16 @@ export default function ActivityFeed({ currentUserId }: ActivityFeedProps) {
     checkProStatus();
   }, [currentUserId]);
 
+  const filterRestDayActivities = (activitiesData: any[]) => {
+    return activitiesData.filter(activity => {
+      // Filter out rest day activities
+      if (activity.activity_type === 'workout_logged') {
+        const workoutType = activity.activity_data?.workout_type as string;
+        return workoutType && !workoutType.toLowerCase().includes('rest');
+      }
+      return true; // Keep streak milestones and other activities
+    });
+  };
 
   const fetchGlobalActivity = useCallback(async () => {
     setLoading(true);
@@ -59,8 +69,11 @@ export default function ActivityFeed({ currentUserId }: ActivityFeedProps) {
         return;
       }
 
+      // Filter out rest days
+      const filteredActivities = filterRestDayActivities(activitiesData);
+
       // Get unique user IDs
-      const userIds = [...new Set(activitiesData.map(activity => activity.user_id))];
+      const userIds = [...new Set(filteredActivities.map(activity => activity.user_id))];
 
       // Then get profiles for those users
       const { data: profilesData, error: profilesError } = await supabase
@@ -76,7 +89,7 @@ export default function ActivityFeed({ currentUserId }: ActivityFeedProps) {
         profilesMap.set(profile.user_id, profile);
       });
 
-      const formattedActivities: ActivityItem[] = activitiesData.map(activity => {
+      const formattedActivities: ActivityItem[] = filteredActivities.map(activity => {
         const profile = profilesMap.get(activity.user_id);
         return {
           id: activity.id,
@@ -138,8 +151,11 @@ export default function ActivityFeed({ currentUserId }: ActivityFeedProps) {
         return;
       }
 
+      // Filter out rest days
+      const filteredActivities = filterRestDayActivities(activitiesData);
+
       // Get unique user IDs
-      const userIds = [...new Set(activitiesData.map(activity => activity.user_id))];
+      const userIds = [...new Set(filteredActivities.map(activity => activity.user_id))];
 
       // Then get profiles for those users
       const { data: profilesData, error: profilesError } = await supabase
@@ -155,7 +171,7 @@ export default function ActivityFeed({ currentUserId }: ActivityFeedProps) {
         profilesMap.set(profile.user_id, profile);
       });
 
-      const formattedActivities: ActivityItem[] = activitiesData.map(activity => {
+      const formattedActivities: ActivityItem[] = filteredActivities.map(activity => {
         const profile = profilesMap.get(activity.user_id);
         return {
           id: activity.id,

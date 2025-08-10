@@ -3,6 +3,37 @@ import type { ActivityLog } from './supabase';
 
 const supabase = createClient();
 
+// Helper function to check if missed days were rest days
+async function checkRestDaysBetween(userId: string, startDate: string, endDate: string): Promise<boolean> {
+  try {
+    const { data: workoutSchedule, error } = await supabase
+      .from('workout_schedule')
+      .select('day_of_week, workout_type')
+      .eq('user_id', userId);
+
+    if (error || !workoutSchedule) return false;
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    // Check each day between start and end
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const dayOfWeek = d.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+      const scheduleForDay = workoutSchedule.find(s => s.day_of_week.toLowerCase() === dayOfWeek);
+      
+      // If any day was supposed to be a workout day (not rest), return false
+      if (scheduleForDay && !scheduleForDay.workout_type.toLowerCase().includes('rest')) {
+        return false;
+      }
+    }
+    
+    return true; // All missed days were rest days
+  } catch (error) {
+    console.error('Error checking rest days:', error);
+    return false; // Assume streak should break on error
+  }
+}
+
 export async function updateUserStreak(userId: string, workoutType: string): Promise<void> {
   try {
     // Get user's current profile data
@@ -35,9 +66,26 @@ export async function updateUserStreak(userId: string, workoutType: string): Pro
       } else if (daysDiff === 1) {
         // Consecutive day
         newStreak = (profile.current_streak || 0) + 1;
-      } else {
-        // Streak broken
-        newStreak = 1;
+      } else if (daysDiff > 1) {
+        // Check if missed days were rest days
+        const missedStartDate = new Date(lastWorkoutDate);
+        missedStartDate.setDate(missedStartDate.getDate() + 1);
+        const yesterdayDate = new Date(todayDate);
+        yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+        
+        const wereRestDays = await checkRestDaysBetween(
+          userId,
+          missedStartDate.toISOString().split('T')[0],
+          yesterdayDate.toISOString().split('T')[0]
+        );
+        
+        if (wereRestDays) {
+          // All missed days were rest days, continue streak
+          newStreak = (profile.current_streak || 0) + 1;
+        } else {
+          // Some missed days were workout days, streak broken
+          newStreak = 1;
+        }
       }
     }
     
@@ -60,8 +108,10 @@ export async function updateUserStreak(userId: string, workoutType: string): Pro
 
     if (updateError) throw updateError;
 
-    // Log workout activity
-    await logActivity(userId, 'workout_logged', { workout_type: workoutType });
+    // Log workout activity (but not for rest days)
+    if (!workoutType.toLowerCase().includes('rest')) {
+      await logActivity(userId, 'workout_logged', { workout_type: workoutType });
+    }
 
     // Log streak milestone if it's a special number
     if (newStreak > 0 && (newStreak % 5 === 0 || newStreak === 1)) {
