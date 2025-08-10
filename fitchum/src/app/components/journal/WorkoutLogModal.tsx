@@ -169,7 +169,7 @@ export default function WorkoutLogModal({ isOpen, onClose, onSuccess, userId }: 
                   </p>
                   <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
                     <p className="text-green-700 dark:text-green-400 text-sm font-medium">
-                      ✨ Streak Safe - Rest days don't break your streak!
+                      ✨ Streak Safe - Rest days don&apos;t break your streak!
                     </p>
                   </div>
                 </div>

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import type { ActivityLog } from '@/lib/supabase';
 import { getUserPlan, isPro } from '@/lib/subscription';
 import { Dumbbell, Flame, Target, Clock, Lock } from 'lucide-react';
 import Button from '../ui/Button';
@@ -40,7 +39,7 @@ export default function ActivityFeed({ currentUserId }: ActivityFeedProps) {
     checkProStatus();
   }, [currentUserId]);
 
-  const filterRestDayActivities = (activitiesData: any[]) => {
+  const filterRestDayActivities = (activitiesData: ActivityItem[]) => {
     return activitiesData.filter(activity => {
       // Filter out rest day activities
       if (activity.activity_type === 'workout_logged') {
