@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/client';
-import type { ActivityLog } from './supabase';
 
 const supabase = createClient();
 
@@ -234,5 +233,151 @@ export async function acceptFriendRequest(friendshipId: string): Promise<boolean
   } catch (error) {
     console.error('Error accepting friend request:', error);
     return false;
+  }
+}
+
+export async function removeFriend(userId: string, friendId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('friendships')
+      .delete()
+      .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`)
+      .or(`requester_id.eq.${friendId},addressee_id.eq.${friendId}`);
+
+    return !error;
+  } catch (error) {
+    console.error('Error removing friend:', error);
+    return false;
+  }
+}
+
+export async function rejectFriendRequest(friendshipId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('friendships')
+      .delete()
+      .eq('id', friendshipId);
+
+    return !error;
+  } catch (error) {
+    console.error('Error rejecting friend request:', error);
+    return false;
+  }
+}
+
+export async function getFriendRequests(userId: string): Promise<{
+  incoming: Array<{
+    id: string;
+    created_at: string;
+    requester: {
+      user_id: string;
+      username: string;
+      profile_pic_url?: string;
+      current_streak: number;
+    };
+  }>;
+  outgoing: Array<{
+    id: string;
+    created_at: string;
+    addressee: {
+      user_id: string;
+      username: string;
+      profile_pic_url?: string;
+      current_streak: number;
+    };
+  }>;
+}> {
+  try {
+    // Incoming requests
+    const { data: incoming } = await supabase
+      .from('friendships')
+      .select(`
+        id,
+        created_at,
+        profiles!friendships_requester_id_fkey(user_id, username, profile_pic_url, current_streak)
+      `)
+      .eq('addressee_id', userId)
+      .eq('status', 'pending');
+
+    // Outgoing requests  
+    const { data: outgoing } = await supabase
+      .from('friendships')
+      .select(`
+        id,
+        created_at,
+        profiles!friendships_addressee_id_fkey(user_id, username, profile_pic_url, current_streak)
+      `)
+      .eq('requester_id', userId)
+      .eq('status', 'pending');
+
+    return {
+      incoming: incoming?.map(req => ({
+        id: req.id,
+        created_at: req.created_at,
+        requester: req.profiles[0]
+      })) || [],
+      outgoing: outgoing?.map(req => ({
+        id: req.id,
+        created_at: req.created_at,
+        addressee: req.profiles[0]
+      })) || []
+    };
+  } catch (error) {
+    console.error('Error fetching friend requests:', error);
+    return { incoming: [], outgoing: [] };
+  }
+}
+
+export async function searchUsers(query: string, currentUserId: string): Promise<Array<{
+  user_id: string;
+  username: string;
+  profile_pic_url?: string;
+  current_streak: number;
+  friendship_status: 'none' | 'pending_sent' | 'pending_received' | 'friends';
+}>> {
+  try {
+    if (query.trim().length < 2) return [];
+
+    const { data: users } = await supabase
+      .from('profiles')
+      .select('user_id, username, profile_pic_url, current_streak')
+      .ilike('username', `%${query}%`)
+      .neq('user_id', currentUserId)
+      .limit(20);
+
+    if (!users) return [];
+
+    // Check friendship status for each user
+    const { data: friendships } = await supabase
+      .from('friendships')
+      .select('requester_id, addressee_id, status')
+      .or(`requester_id.eq.${currentUserId},addressee_id.eq.${currentUserId}`)
+      .in('requester_id', users.map(u => u.user_id))
+      .or(`addressee_id.in.(${users.map(u => u.user_id).join(',')})`);
+
+    return users.map(user => {
+      const friendship = friendships?.find(f => 
+        (f.requester_id === currentUserId && f.addressee_id === user.user_id) ||
+        (f.addressee_id === currentUserId && f.requester_id === user.user_id)
+      );
+
+      let status: 'none' | 'pending_sent' | 'pending_received' | 'friends' = 'none';
+      if (friendship) {
+        if (friendship.status === 'accepted') {
+          status = 'friends';
+        } else if (friendship.status === 'pending') {
+          status = friendship.requester_id === currentUserId ? 'pending_sent' : 'pending_received';
+        }
+      }
+
+      return {
+        ...user,
+        username: user.username || `User ${user.user_id.slice(-4)}`,
+        friendship_status: status
+      };
+    });
+  } catch (error) {
+    console.error('Error searching users:', error);
+    return [];
   }
 }

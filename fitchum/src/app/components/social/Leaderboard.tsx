@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import type { Profile } from '@/lib/supabase';
 import { getUserPlan, isPro } from '@/lib/subscription';
 import { Trophy, Medal, Award, Crown, Lock } from 'lucide-react';
 import Button from '../ui/Button';
