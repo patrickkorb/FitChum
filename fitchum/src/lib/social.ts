@@ -188,15 +188,14 @@ export async function getFriends(userId: string): Promise<string[]> {
 
 export async function sendFriendRequest(requesterId: string, addresseeId: string): Promise<boolean> {
   try {
-    // Check if friendship already exists
+    // Check if any relationship already exists between these users
     const { data: existing } = await supabase
       .from('friendships')
-      .select('id')
-      .or(`requester_id.eq.${requesterId},addressee_id.eq.${requesterId}`)
-      .or(`requester_id.eq.${addresseeId},addressee_id.eq.${addresseeId}`);
+      .select('id, status')
+      .or(`and(requester_id.eq.${requesterId},addressee_id.eq.${addresseeId}),and(requester_id.eq.${addresseeId},addressee_id.eq.${requesterId})`);
 
     if (existing && existing.length > 0) {
-      console.log('Friendship already exists');
+      console.log('Friendship or request already exists');
       return false;
     }
 
@@ -210,7 +209,10 @@ export async function sendFriendRequest(requesterId: string, addresseeId: string
         updated_at: new Date().toISOString()
       });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Insert error:', error);
+      throw error;
+    }
     return true;
   } catch (error) {
     console.error('Error sending friend request:', error);
@@ -288,40 +290,81 @@ export async function getFriendRequests(userId: string): Promise<{
   }>;
 }> {
   try {
-    // Incoming requests
-    const { data: incoming } = await supabase
+    // Incoming requests - get basic friendship data first
+    const { data: incomingRequests, error: incomingError } = await supabase
       .from('friendships')
-      .select(`
-        id,
-        created_at,
-        profiles!friendships_requester_id_fkey(user_id, username, profile_pic_url, current_streak)
-      `)
+      .select('id, created_at, requester_id')
       .eq('addressee_id', userId)
       .eq('status', 'pending');
 
-    // Outgoing requests  
-    const { data: outgoing } = await supabase
+    if (incomingError) {
+      console.error('Error fetching incoming requests:', incomingError);
+    }
+
+    // Outgoing requests - get basic friendship data first
+    const { data: outgoingRequests, error: outgoingError } = await supabase
       .from('friendships')
-      .select(`
-        id,
-        created_at,
-        profiles!friendships_addressee_id_fkey(user_id, username, profile_pic_url, current_streak)
-      `)
+      .select('id, created_at, addressee_id')
       .eq('requester_id', userId)
       .eq('status', 'pending');
 
-    return {
-      incoming: incoming?.map(req => ({
-        id: req.id,
-        created_at: req.created_at,
-        requester: req.profiles[0]
-      })) || [],
-      outgoing: outgoing?.map(req => ({
-        id: req.id,
-        created_at: req.created_at,
-        addressee: req.profiles[0]
-      })) || []
-    };
+    if (outgoingError) {
+      console.error('Error fetching outgoing requests:', outgoingError);
+    }
+
+    // Fetch requester profiles for incoming requests
+    const incoming = [];
+    if (incomingRequests && incomingRequests.length > 0) {
+      const requesterIds = incomingRequests.map(req => req.requester_id);
+      const { data: requesterProfiles } = await supabase
+        .from('profiles')
+        .select('user_id, username, profile_pic_url, current_streak')
+        .in('user_id', requesterIds);
+
+      for (const request of incomingRequests) {
+        const requesterProfile = requesterProfiles?.find(p => p.user_id === request.requester_id);
+        if (requesterProfile) {
+          incoming.push({
+            id: request.id,
+            created_at: request.created_at,
+            requester: {
+              user_id: requesterProfile.user_id,
+              username: requesterProfile.username || `User ${requesterProfile.user_id.slice(-4)}`,
+              profile_pic_url: requesterProfile.profile_pic_url,
+              current_streak: requesterProfile.current_streak || 0
+            }
+          });
+        }
+      }
+    }
+
+    // Fetch addressee profiles for outgoing requests
+    const outgoing = [];
+    if (outgoingRequests && outgoingRequests.length > 0) {
+      const addresseeIds = outgoingRequests.map(req => req.addressee_id);
+      const { data: addresseeProfiles } = await supabase
+        .from('profiles')
+        .select('user_id, username, profile_pic_url, current_streak')
+        .in('user_id', addresseeIds);
+
+      for (const request of outgoingRequests) {
+        const addresseeProfile = addresseeProfiles?.find(p => p.user_id === request.addressee_id);
+        if (addresseeProfile) {
+          outgoing.push({
+            id: request.id,
+            created_at: request.created_at,
+            addressee: {
+              user_id: addresseeProfile.user_id,
+              username: addresseeProfile.username || `User ${addresseeProfile.user_id.slice(-4)}`,
+              profile_pic_url: addresseeProfile.profile_pic_url,
+              current_streak: addresseeProfile.current_streak || 0
+            }
+          });
+        }
+      }
+    }
+
+    return { incoming, outgoing };
   } catch (error) {
     console.error('Error fetching friend requests:', error);
     return { incoming: [], outgoing: [] };

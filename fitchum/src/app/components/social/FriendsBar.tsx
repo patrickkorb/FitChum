@@ -197,10 +197,10 @@ export default function FriendsBar({ currentUserId }: FriendsBarProps) {
 
   return (
     <>
-      <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg border border-primary/10">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg border border-primary/10">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
           <div className="flex items-center gap-3">
-            <Users size={20} className="text-primary" />
+            <Users size={20} className="text-primary flex-shrink-0" />
             <div>
               <h3 className="font-semibold text-neutral-dark dark:text-neutral-light">
                 Friends ({friends.length})
@@ -217,11 +217,11 @@ export default function FriendsBar({ currentUserId }: FriendsBarProps) {
           </div>
 
           {/* Friend Avatars */}
-          <div className="flex items-center -space-x-2">
-            {friends.slice(0, 5).map((friend) => (
+          <div className="flex items-center -space-x-2 ml-0 sm:ml-2">
+            {friends.slice(0, 4).map((friend) => (
               <div
                 key={friend.user_id}
-                className="relative w-8 h-8 rounded-full border-2 border-white dark:border-neutral-dark overflow-hidden bg-neutral-dark/10 dark:bg-neutral-light/10"
+                className="relative w-8 h-8 rounded-full border-2 border-white dark:border-neutral-dark overflow-hidden bg-neutral-dark/10 dark:bg-neutral-light/10 flex-shrink-0"
                 title={`${friend.username} • ${friend.current_streak} day streak`}
               >
                 {friend.profile_pic_url ? (
@@ -237,15 +237,15 @@ export default function FriendsBar({ currentUserId }: FriendsBarProps) {
                 )}
               </div>
             ))}
-            {friends.length > 5 && (
-              <div className="w-8 h-8 rounded-full border-2 border-white dark:border-neutral-dark bg-neutral-dark/10 dark:bg-neutral-light/10 flex items-center justify-center">
+            {friends.length > 4 && (
+              <div className="w-8 h-8 rounded-full border-2 border-white dark:border-neutral-dark bg-neutral-dark/10 dark:bg-neutral-light/10 flex items-center justify-center flex-shrink-0">
                 <span className="text-xs font-semibold text-neutral-dark/70 dark:text-neutral-light/70">
-                  +{friends.length - 5}
+                  +{friends.length - 4}
                 </span>
               </div>
             )}
             {friends.length === 0 && (
-              <div className="text-sm text-neutral-dark/70 dark:text-neutral-light/70">
+              <div className="text-sm text-neutral-dark/70 dark:text-neutral-light/70 whitespace-nowrap">
                 No friends yet
               </div>
             )}
@@ -256,10 +256,11 @@ export default function FriendsBar({ currentUserId }: FriendsBarProps) {
           onClick={() => setIsModalOpen(true)}
           variant="outline" 
           size="sm"
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto justify-center"
         >
           <UserPlus size={16} />
-          Manage Friends
+          <span className="hidden sm:inline">Manage Friends</span>
+          <span className="sm:hidden">Manage</span>
         </Button>
       </div>
 

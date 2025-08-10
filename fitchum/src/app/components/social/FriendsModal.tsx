@@ -101,45 +101,16 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
     }
   };
 
-  // Fetch friend requests
+  // Fetch friend requests using the improved function
   const fetchFriendRequests = async () => {
     if (!currentUserId) return;
 
     try {
-      // Incoming requests
-      const { data: incoming } = await supabase
-        .from('friendships')
-        .select(`
-          id,
-          created_at,
-          profiles!friendships_requester_id_fkey(user_id, username, profile_pic_url, current_streak)
-        `)
-        .eq('addressee_id', currentUserId)
-        .eq('status', 'pending');
-
-      // Outgoing requests  
-      const { data: outgoing } = await supabase
-        .from('friendships')
-        .select(`
-          id,
-          created_at,
-          profiles!friendships_addressee_id_fkey(user_id, username, profile_pic_url, current_streak)
-        `)
-        .eq('requester_id', currentUserId)
-        .eq('status', 'pending');
-
-      setIncomingRequests(incoming?.map(req => ({
-        id: req.id,
-        created_at: req.created_at,
-        requester: req.profiles[0]
-      })) || []);
-
-      setOutgoingRequests(outgoing?.map(req => ({
-        id: req.id,
-        created_at: req.created_at,
-        addressee: req.profiles[0]
-      })) || []);
-
+      const { getFriendRequests } = await import('@/lib/social');
+      const requests = await getFriendRequests(currentUserId);
+      
+      setIncomingRequests(requests.incoming);
+      setOutgoingRequests(requests.outgoing);
     } catch (error) {
       console.error('Error fetching friend requests:', error);
     }
@@ -206,21 +177,23 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
     if (!currentUserId) return;
 
     try {
-      const { error } = await supabase
-        .from('friendships')
-        .insert({
-          requester_id: currentUserId,
-          addressee_id: addresseeId,
-          status: 'pending'
-        });
+      const { sendFriendRequest: sendRequest } = await import('@/lib/social');
+      const success = await sendRequest(currentUserId, addresseeId);
 
-      if (!error) {
+      if (success) {
         // Update search results
         setSearchResults(prev => prev.map(user => 
           user.user_id === addresseeId 
             ? { ...user, friendship_status: 'pending_sent' }
             : user
         ));
+        
+        // Refresh friend requests
+        fetchFriendRequests();
+      } else {
+        console.log('Failed to send friend request - may already exist');
+        // Refresh search to get current status
+        searchUsers(searchQuery);
       }
     } catch (error) {
       console.error('Error sending friend request:', error);
@@ -327,44 +300,46 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-neutral-dark/10 dark:border-neutral-light/10">
+        <div className="flex border-b border-neutral-dark/10 dark:border-neutral-light/10 overflow-x-auto">
           <button
             onClick={() => setActiveTab('friends')}
-            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+            className={`flex-1 px-3 sm:px-6 py-3 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap min-w-0 ${
               activeTab === 'friends'
                 ? 'text-primary border-b-2 border-primary bg-primary/5'
                 : 'text-neutral-dark/70 dark:text-neutral-light/70 hover:text-neutral-dark dark:hover:text-neutral-light'
             }`}
           >
-            <div className="flex items-center justify-center gap-2">
-              <Users size={16} />
-              Friends ({friends.length})
+            <div className="flex items-center justify-center gap-1 sm:gap-2">
+              <Users size={14} className="sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="truncate">Friends ({friends.length})</span>
             </div>
           </button>
           <button
             onClick={() => setActiveTab('find')}
-            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+            className={`flex-1 px-3 sm:px-6 py-3 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap min-w-0 ${
               activeTab === 'find'
                 ? 'text-primary border-b-2 border-primary bg-primary/5'
                 : 'text-neutral-dark/70 dark:text-neutral-light/70 hover:text-neutral-dark dark:hover:text-neutral-light'
             }`}
           >
-            <div className="flex items-center justify-center gap-2">
-              <Search size={16} />
-              Find Friends
+            <div className="flex items-center justify-center gap-1 sm:gap-2">
+              <Search size={14} className="sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="hidden sm:inline">Find Friends</span>
+              <span className="sm:hidden">Find</span>
             </div>
           </button>
           <button
             onClick={() => setActiveTab('requests')}
-            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+            className={`flex-1 px-3 sm:px-6 py-3 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap min-w-0 ${
               activeTab === 'requests'
                 ? 'text-primary border-b-2 border-primary bg-primary/5'
                 : 'text-neutral-dark/70 dark:text-neutral-light/70 hover:text-neutral-dark dark:hover:text-neutral-light'
             }`}
           >
-            <div className="flex items-center justify-center gap-2">
-              <UserPlus size={16} />
-              Requests ({incomingRequests.length + outgoingRequests.length})
+            <div className="flex items-center justify-center gap-1 sm:gap-2">
+              <UserPlus size={14} className="sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="hidden sm:inline">Requests ({incomingRequests.length + outgoingRequests.length})</span>
+              <span className="sm:hidden">Req ({incomingRequests.length + outgoingRequests.length})</span>
             </div>
           </button>
         </div>
