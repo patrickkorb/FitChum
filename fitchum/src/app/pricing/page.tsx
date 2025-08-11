@@ -11,7 +11,7 @@ const pricingOptions = {
     name: 'Pro Monthly',
     price: 5,
     period: '/month',
-    priceId: 'price_monthly_5eur', // You'll need to create this in Stripe
+    priceId: 'price_1RuyKyHjVDpsMb5NvyqzNfMx', // You'll need to create this in Stripe
     billing: 'Billed monthly',
     savings: null
   },
@@ -19,7 +19,7 @@ const pricingOptions = {
     name: 'Pro Lifetime',
     price: 29,
     period: 'once',
-    priceId: 'price_lifetime_29eur', // You'll need to create this in Stripe
+    priceId: 'price_1RuyNBHjVDpsMb5NSXvNd37p', // You'll need to create this in Stripe
     billing: 'One-time payment',
     savings: 'Save €31 per year'
   }
