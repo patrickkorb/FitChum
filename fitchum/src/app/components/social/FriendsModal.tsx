@@ -253,11 +253,18 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
         .eq('id', requestId);
 
       if (!error) {
+        // Refresh friend requests
         fetchFriendRequests();
-        // Also refresh search results if user is on find tab
-        if (activeTab === 'find' && searchQuery.length >= 2) {
+        
+        // Always refresh search results to update button states
+        if (searchQuery.length >= 2) {
           searchUsers(searchQuery);
         }
+        
+        // Update parent component
+        onFriendsUpdate?.();
+      } else {
+        console.error('Database error rejecting request:', error);
       }
     } catch (error) {
       console.error('Error rejecting friend request:', error);
@@ -267,14 +274,28 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
   // Remove friend
   const removeFriend = async (friendshipId: string) => {
     try {
+      console.log('Removing friend with friendship ID:', friendshipId);
+      
       const { error } = await supabase
         .from('friendships')
         .delete()
         .eq('id', friendshipId);
 
       if (!error) {
+        console.log('Friend removed successfully');
+        
+        // Refresh friends list
         fetchFriends();
+        
+        // Refresh search results to update button states
+        if (searchQuery.length >= 2) {
+          searchUsers(searchQuery);
+        }
+        
+        // Update parent component
         onFriendsUpdate?.();
+      } else {
+        console.error('Database error removing friend:', error);
       }
     } catch (error) {
       console.error('Error removing friend:', error);

@@ -172,44 +172,47 @@ export default function DemoStats() {
 
 
         {/* Demo Progress Insights */}
-        <div className="bg-white dark:bg-neutral-800 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-700 relative">
+        <div className="bg-white dark:bg-neutral-800 rounded-2xl p-4 sm:p-6 border border-neutral-200 dark:border-neutral-700 relative">
           <div className="absolute top-4 right-4 bg-primary/10 text-primary px-2 py-1 rounded-full text-xs font-medium">
             Demo Data
           </div>
-          <div className="flex items-center gap-2 mb-6">
-            <Heart className="w-5 h-5 text-pink-500" />
-            <h3 className="text-xl font-bold text-neutral-dark dark:text-neutral-light">
-              Your Progress Insights
+          <div className="flex items-center gap-2 mb-4">
+            <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-pink-500" />
+            <h3 className="text-lg sm:text-xl font-bold text-neutral-dark dark:text-neutral-light">
+              Progress Insights
             </h3>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {demoInsights.map((insight, index) => {
               const IconComponent = insight.icon;
               
               return (
                 <div
                   key={index}
-                  className="group relative overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700"
+                  className="group relative overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700 transition-all duration-200"
                 >
-                  <div className={`absolute inset-0 bg-gradient-to-r ${insight.color} opacity-5 group-hover:opacity-10 transition-opacity duration-200`}></div>
+                  <div className={`absolute inset-0 bg-gradient-to-r ${insight.color} opacity-5`}></div>
                   
-                  <div className="relative p-4 flex items-start gap-4">
-                    <div className={`flex-shrink-0 p-2 rounded-lg bg-gradient-to-r ${insight.color}`}>
-                      <IconComponent className="w-5 h-5 text-white" />
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-neutral-dark dark:text-neutral-light mb-1">
-                        {insight.title}
-                      </h4>
-                      <p className="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed">
-                        {insight.message}
-                      </p>
-                    </div>
-                    
-                    <div className="flex-shrink-0 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
-                      ✨ Great
+                  <div className="relative p-3 sm:p-4">
+                    <div className="flex items-start gap-3">
+                      <div className={`flex-shrink-0 p-1.5 sm:p-2 rounded-lg bg-gradient-to-r ${insight.color}`}>
+                        <IconComponent className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className="font-semibold text-sm sm:text-base text-neutral-dark dark:text-neutral-light leading-tight">
+                            {insight.title}
+                          </h4>
+                          <div className="flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                            ✨
+                          </div>
+                        </div>
+                        <p className="text-neutral-600 dark:text-neutral-400 text-xs sm:text-sm leading-relaxed mt-1">
+                          {insight.message}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>

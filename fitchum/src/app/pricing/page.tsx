@@ -138,24 +138,24 @@ export default function PricingPage() {
       </div>
 
       {/* Pricing Card */}
-      <Card className="relative overflow-hidden border-2 border-primary/20 shadow-xl">
+      <Card className="relative overflow-hidden border-2 border-primary/20 shadow-lg">
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-secondary"></div>
         
-        <div className="p-8">
+        <div className="p-6">
           {/* Price Header */}
-          <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold text-neutral-dark dark:text-neutral-light mb-2">
+          <div className="text-center mb-6">
+            <h3 className="text-xl font-bold text-neutral-dark dark:text-neutral-light mb-3">
               {currentPlan.name}
             </h3>
             <div className="mb-2">
-              <span className="text-5xl font-bold text-neutral-dark dark:text-neutral-light">
+              <span className="text-4xl font-bold text-neutral-dark dark:text-neutral-light">
                 €{currentPlan.price}
               </span>
-              <span className="text-xl text-neutral-dark/70 dark:text-neutral-light/70 ml-1">
+              <span className="text-lg text-neutral-dark/70 dark:text-neutral-light/70 ml-1">
                 {currentPlan.period}
               </span>
             </div>
-            <p className="text-neutral-dark/60 dark:text-neutral-light/60 mb-1">
+            <p className="text-neutral-dark/60 dark:text-neutral-light/60 text-sm mb-2">
               {currentPlan.billing}
             </p>
             {currentPlan.savings && (
@@ -166,19 +166,19 @@ export default function PricingPage() {
           </div>
 
           {/* Features */}
-          <div className="space-y-6 mb-8">
+          <div className="space-y-4 mb-6">
             {features.map((feature, index) => {
               const IconComponent = feature.icon;
               return (
-                <div key={index} className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                    <IconComponent size={20} className="text-primary" />
+                <div key={index} className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center mt-0.5">
+                    <IconComponent size={16} className="text-primary" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-neutral-dark dark:text-neutral-light mb-1">
+                    <h4 className="font-semibold text-neutral-dark dark:text-neutral-light text-sm mb-0.5">
                       {feature.title}
                     </h4>
-                    <p className="text-neutral-dark/70 dark:text-neutral-light/70 text-sm">
+                    <p className="text-neutral-dark/70 dark:text-neutral-light/70 text-xs leading-relaxed">
                       {feature.description}
                     </p>
                   </div>
@@ -191,11 +191,11 @@ export default function PricingPage() {
           <Button
             onClick={handlePlanSelect}
             disabled={loading}
-            className="w-full bg-primary hover:bg-primary/90 text-white font-semibold text-lg py-4"
+            className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3"
           >
             {loading ? (
               <>
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                 Processing...
               </>
             ) : (

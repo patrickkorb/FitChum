@@ -3,12 +3,11 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { getUserStats, UserStats } from '@/lib/userStats';
-import ActivityHeatmap from '@/app/components/journal/ActivityHeatmap';
 import YearlyProgress from '@/app/components/stats/YearlyProgress';
 import AchievementBadges from '@/app/components/stats/AchievementBadges';
 import ProgressInsights from '@/app/components/stats/ProgressInsights';
 import DemoStats from '@/app/components/stats/DemoStats';
-import { TrendingUp, Target, Clock, Zap, LucideIcon, Calendar } from 'lucide-react';
+import { TrendingUp, Target, Clock, Zap, LucideIcon } from 'lucide-react';
 
 export default function StatsPage() {
     const [user, setUser] = useState<{ id: string } | null>(null);
@@ -150,17 +149,6 @@ export default function StatsPage() {
 
                 {/* Achievement Badges */}
                 <AchievementBadges userId={user.id} userStats={stats} />
-
-                {/* Activity Heatmap */}
-                <div className="bg-white dark:bg-neutral-800 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-700">
-                    <div className="flex items-center gap-2 mb-4">
-                        <Calendar className="w-5 h-5 text-primary" />
-                        <h3 className="text-xl font-bold text-neutral-dark dark:text-neutral-light">
-                            Activity Calendar
-                        </h3>
-                    </div>
-                    <ActivityHeatmap userId={user.id} />
-                </div>
             </div>
         </div>
     );

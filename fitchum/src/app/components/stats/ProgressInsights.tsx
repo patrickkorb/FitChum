@@ -283,48 +283,51 @@ export default function ProgressInsights({ userId, userStats }: ProgressInsights
   }
 
   return (
-    <div className="bg-white dark:bg-neutral-800 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-700">
-      <div className="flex items-center gap-2 mb-6">
-        <Heart className="w-5 h-5 text-pink-500" />
-        <h3 className="text-xl font-bold text-neutral-dark dark:text-neutral-light">
-          Your Progress Insights
+    <div className="bg-white dark:bg-neutral-800 rounded-2xl p-4 sm:p-6 border border-neutral-200 dark:border-neutral-700">
+      <div className="flex items-center gap-2 mb-4">
+        <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-pink-500" />
+        <h3 className="text-lg sm:text-xl font-bold text-neutral-dark dark:text-neutral-light">
+          Progress Insights
         </h3>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {insights.map((insight) => {
           const IconComponent = insight.icon;
           
           return (
             <div
               key={insight.id}
-              className="group relative overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 hover:shadow-lg transition-all duration-200"
+              className="group relative overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700 transition-all duration-200"
             >
-              <div className={`absolute inset-0 bg-gradient-to-r ${insight.color} opacity-5 group-hover:opacity-10 transition-opacity duration-200`}></div>
+              <div className={`absolute inset-0 bg-gradient-to-r ${insight.color} opacity-5`}></div>
               
-              <div className="relative p-4 flex items-start gap-4">
-                <div className={`flex-shrink-0 p-2 rounded-lg bg-gradient-to-r ${insight.color}`}>
-                  <IconComponent className="w-5 h-5 text-white" />
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-neutral-dark dark:text-neutral-light mb-1">
-                    {insight.title}
-                  </h4>
-                  <p className="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed">
-                    {insight.message}
-                  </p>
-                </div>
-                
-                <div className={`flex-shrink-0 px-2 py-1 rounded-full text-xs font-medium ${
-                  insight.type === 'positive' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' :
-                  insight.type === 'achievement' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' :
-                  insight.type === 'tip' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' :
-                  'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300'
-                }`}>
-                  {insight.type === 'positive' ? '✨ Great' :
-                   insight.type === 'achievement' ? '🏆 Achievement' :
-                   insight.type === 'tip' ? '💡 Tip' : '🚀 Motivation'}
+              <div className="relative p-3 sm:p-4">
+                <div className="flex items-start gap-3">
+                  <div className={`flex-shrink-0 p-1.5 sm:p-2 rounded-lg bg-gradient-to-r ${insight.color}`}>
+                    <IconComponent className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <h4 className="font-semibold text-sm sm:text-base text-neutral-dark dark:text-neutral-light leading-tight">
+                        {insight.title}
+                      </h4>
+                      <div className={`flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${
+                        insight.type === 'positive' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' :
+                        insight.type === 'achievement' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' :
+                        insight.type === 'tip' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' :
+                        'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300'
+                      }`}>
+                        {insight.type === 'positive' ? '✨' :
+                         insight.type === 'achievement' ? '🏆' :
+                         insight.type === 'tip' ? '💡' : '🚀'}
+                      </div>
+                    </div>
+                    <p className="text-neutral-600 dark:text-neutral-400 text-xs sm:text-sm leading-relaxed mt-1">
+                      {insight.message}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

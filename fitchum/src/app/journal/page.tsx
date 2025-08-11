@@ -1,11 +1,12 @@
 'use client';
 
-import { CirclePlus, Zap, CheckCircle2, Calendar } from 'lucide-react';
+import { CirclePlus, Zap, CheckCircle2, Calendar, Trash2, AlertTriangle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { createClient } from "@/lib/supabase/client";
 import WorkoutLogModal from '@/app/components/journal/WorkoutLogModal';
 import { hasLoggedWorkoutToday, getTodaysJournalEntry } from '@/lib/workoutLogger';
 import type { JournalEntry } from '@/lib/supabase';
+import Button from '@/app/components/ui/Button';
 
 const MOTIVATIONAL_MESSAGES = [
     'Ready to crush todays workout?',
@@ -33,6 +34,8 @@ export default function Journal() {
     const [hasLoggedToday, setHasLoggedToday] = useState(false);
     const [todaysEntry, setTodaysEntry] = useState<JournalEntry | null>(null);
     const [loading, setLoading] = useState(true);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleting, setDeleting] = useState(false);
 
     const supabase = createClient();
 
@@ -90,6 +93,119 @@ export default function Journal() {
     const handleWorkoutLogged = () => {
         setShowModal(false);
         checkAuthAndWorkoutStatus(); // Refresh the status
+    };
+
+    const deleteWorkoutEntry = async () => {
+        if (!user || !todaysEntry) return;
+
+        setDeleting(true);
+        try {
+            const today = new Date().toISOString().split('T')[0];
+
+            // Delete the journal entry
+            const { error: journalError } = await supabase
+                .from('journal_entries')
+                .delete()
+                .eq('user_id', user.id)
+                .eq('date', today);
+
+            if (journalError) {
+                console.error('Error deleting journal entry:', journalError);
+                return;
+            }
+
+            // Remove today's activity log entry if it exists
+            await supabase
+                .from('activity_logs')
+                .delete()
+                .eq('user_id', user.id)
+                .eq('date', today)
+                .eq('action_type', 'workout_logged');
+
+            // Recalculate streak - get all remaining journal entries to recalculate streak
+            const { data: allEntries } = await supabase
+                .from('journal_entries')
+                .select('date')
+                .eq('user_id', user.id)
+                .order('date', { ascending: false });
+
+            let currentStreak = 0;
+            let maxStreak = 0;
+
+            if (allEntries && allEntries.length > 0) {
+                const dates = allEntries.map(entry => entry.date).sort().reverse();
+                
+                // Calculate current streak from today backwards
+                const currentDate = new Date();
+                currentDate.setDate(currentDate.getDate() - 1); // Start from yesterday since today is deleted
+                
+                for (let i = 0; i < dates.length; i++) {
+                    const expectedDate = currentDate.toISOString().split('T')[0];
+                    
+                    if (dates.includes(expectedDate)) {
+                        if (currentDate.toISOString().split('T')[0] === new Date(Date.now() - 86400000).toISOString().split('T')[0]) {
+                            // This is yesterday, continue current streak
+                            currentStreak++;
+                        }
+                        currentDate.setDate(currentDate.getDate() - 1);
+                    } else {
+                        break;
+                    }
+                }
+
+                // Calculate max streak
+                let consecutiveDays = 0;
+                for (let i = 0; i < dates.length - 1; i++) {
+                    const currentDateObj = new Date(dates[i]);
+                    const nextDateObj = new Date(dates[i + 1]);
+                    const dayDifference = (currentDateObj.getTime() - nextDateObj.getTime()) / (1000 * 60 * 60 * 24);
+                    
+                    if (dayDifference === 1) {
+                        consecutiveDays++;
+                    } else {
+                        if (consecutiveDays + 1 > maxStreak) {
+                            maxStreak = consecutiveDays + 1;
+                        }
+                        consecutiveDays = 0;
+                    }
+                }
+                
+                // Check the last sequence
+                if (consecutiveDays + 1 > maxStreak) {
+                    maxStreak = consecutiveDays + 1;
+                }
+
+                // If there's only one entry or isolated entries, max streak is 1
+                if (maxStreak === 0 && dates.length > 0) {
+                    maxStreak = 1;
+                }
+            }
+
+            // Update user's streak and total workout count
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .update({ 
+                    current_streak: currentStreak,
+                    max_streak: maxStreak,
+                    total_workouts: allEntries ? allEntries.length : 0
+                })
+                .eq('user_id', user.id);
+
+            if (profileError) {
+                console.error('Error updating profile:', profileError);
+                return;
+            }
+
+            // Reset UI state
+            setHasLoggedToday(false);
+            setTodaysEntry(null);
+            setShowDeleteConfirm(false);
+            
+        } catch (error) {
+            console.error('Error deleting workout:', error);
+        } finally {
+            setDeleting(false);
+        }
     };
 
     const formatDate = (dateString: string) => {
@@ -202,6 +318,20 @@ export default function Journal() {
                                         </div>
                                     )}
                                 </div>
+
+                                {/* Delete/Undo Button */}
+                                <div className="mt-6 pt-4 border-t border-neutral-dark/10 dark:border-neutral-light/10">
+                                    <div className="flex justify-center">
+                                        <Button
+                                            onClick={() => setShowDeleteConfirm(true)}
+                                            variant="outline"
+                                            className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-950 dark:hover:border-red-700"
+                                        >
+                                            <Trash2 size={16} className="mr-2" />
+                                            Undo Entry
+                                        </Button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     ) : (
@@ -250,6 +380,64 @@ export default function Journal() {
                     onSuccess={handleWorkoutLogged}
                     userId={user.id}
                 />
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-neutral-dark w-full max-w-md mx-auto rounded-2xl shadow-2xl overflow-hidden">
+                        <div className="p-6">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-2 rounded-full bg-red-100 dark:bg-red-900">
+                                    <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                                </div>
+                                <h3 className="text-lg font-bold text-neutral-dark dark:text-neutral-light">
+                                    Undo Workout Entry
+                                </h3>
+                            </div>
+                            
+                            <div className="mb-6">
+                                <p className="text-neutral-dark/70 dark:text-neutral-light/70 mb-3">
+                                    Are you sure you want to delete today&apos;s workout entry? This will:
+                                </p>
+                                <ul className="text-sm text-neutral-dark/60 dark:text-neutral-light/60 space-y-1 ml-4">
+                                    <li>• Remove the workout from your journal</li>
+                                    <li>• Update your current streak</li>
+                                    <li>• Remove it from your activity feed</li>
+                                    <li>• This action cannot be undone</li>
+                                </ul>
+                            </div>
+
+                            <div className="flex gap-3">
+                                <Button
+                                    onClick={() => setShowDeleteConfirm(false)}
+                                    variant="outline"
+                                    className="flex-1"
+                                    disabled={deleting}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={deleteWorkoutEntry}
+                                    className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                                    disabled={deleting}
+                                >
+                                    {deleting ? (
+                                        <>
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                                            Deleting...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Trash2 size={16} className="mr-2" />
+                                            Delete Entry
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             )}
         </>
     )

@@ -243,10 +243,13 @@ export async function removeFriend(userId: string, friendId: string): Promise<bo
     const { error } = await supabase
       .from('friendships')
       .delete()
-      .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`)
-      .or(`requester_id.eq.${friendId},addressee_id.eq.${friendId}`);
+      .or(`and(requester_id.eq.${userId},addressee_id.eq.${friendId}),and(requester_id.eq.${friendId},addressee_id.eq.${userId})`);
 
-    return !error;
+    if (error) {
+      console.error('Remove friend error:', error);
+      return false;
+    }
+    return true;
   } catch (error) {
     console.error('Error removing friend:', error);
     return false;
