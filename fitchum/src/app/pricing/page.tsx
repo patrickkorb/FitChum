@@ -3,43 +3,63 @@
 import { useState } from 'react';
 import Button from '@/app/components/ui/Button';
 import Card from '@/app/components/ui/Card';
-import { Check } from 'lucide-react';
+import { Check, Zap, Users, Trophy, Target, Heart } from 'lucide-react';
 import {createClient} from "@/lib/supabase/client";
 
-const plans = [
+const pricingOptions = {
+  monthly: {
+    name: 'Pro Monthly',
+    price: 5,
+    period: '/month',
+    priceId: 'price_monthly_5eur', // You'll need to create this in Stripe
+    billing: 'Billed monthly',
+    savings: null
+  },
+  lifetime: {
+    name: 'Pro Lifetime',
+    price: 29,
+    period: 'once',
+    priceId: 'price_lifetime_29eur', // You'll need to create this in Stripe
+    billing: 'One-time payment',
+    savings: 'Save €31 per year'
+  }
+};
+
+const features = [
   {
-    name: 'Free Chumm',
-    price: 0,
-    priceId: null,
-    features: [
-      'Daily Journals',
-      'Gym Plan',
-      'Public Leaderboard',
-      'Community Access'
-    ],
-    popular: false,
-    isFree: true
+    icon: Users,
+    title: 'Add & Connect with Friends',
+    description: 'Build your fitness community and stay motivated together'
   },
   {
-    name: 'Pro Chumm',
-    price: 10,
-    priceId: 'price_1RsrusHjVDpsMb5NV1b3CiYA',
-    features: [
-      'Everything in Free',
-      'Add Friends',
-      'Custom Friends Leaderboards', 
-      'Custom Challenges',
-      'Priority Support'
-    ],
-    popular: true,
-    isFree: false
+    icon: Trophy,
+    title: 'Friends-Only Leaderboards',
+    description: 'Compete with your circle and track progress together'
+  },
+  {
+    icon: Target,
+    title: 'Custom Challenges',
+    description: 'Create personalized fitness challenges with friends'
+  },
+  {
+    icon: Zap,
+    title: 'Priority Support',
+    description: 'Get help faster with dedicated customer support'
+  },
+  {
+    icon: Heart,
+    title: 'Advanced Analytics',
+    description: 'Deep insights into your progress and performance'
   }
 ];
 
 export default function PricingPage() {
-  const [loading, setLoading] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [isLifetime, setIsLifetime] = useState(false);
 
-  const handlePlanSelect = async (plan: typeof plans[0]) => {
+  const currentPlan = isLifetime ? pricingOptions.lifetime : pricingOptions.monthly;
+
+  const handlePlanSelect = async () => {
     const supabase = createClient()
     const {data: userData} = await supabase.auth.getUser();
     const user = userData?.user;
@@ -50,22 +70,14 @@ export default function PricingPage() {
       return;
     }
 
-    // Handle free plan
-    if (plan.isFree) {
-      // User is already on free plan, redirect to stats
-      window.location.href = '/stats';
-      return;
-    }
-
-    // Handle Pro plan payment
-    setLoading(plan.priceId);
+    setLoading(true);
 
     try {
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          priceId: plan.priceId,
+          priceId: currentPlan.priceId,
           userId: user.id,
         }),
       });
@@ -82,87 +94,139 @@ export default function PricingPage() {
     } catch (error) {
       console.error('Error creating checkout session:', error);
     } finally {
-      setLoading(null);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto py-4">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-neutral-dark dark:text-neutral-light mb-2">
-          Choose Your FitChum Plan
+    <div className="space-y-8 max-w-4xl mx-auto py-8">
+      {/* Header */}
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold text-neutral-dark dark:text-neutral-light mb-4">
+          Unlock FitChum Pro
         </h1>
-        <p className="text-neutral-dark/70 dark:text-neutral-light/70">
-          Achieve your fitness goals with the power of social accountability
+        <p className="text-xl text-neutral-dark/70 dark:text-neutral-light/70 mb-8">
+          Connect with friends and supercharge your fitness journey
         </p>
+        
+        {/* Pricing Toggle */}
+        <div className="inline-flex items-center bg-neutral-dark/5 dark:bg-neutral-light/5 rounded-xl p-1">
+          <button
+            onClick={() => setIsLifetime(false)}
+            className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+              !isLifetime 
+                ? 'bg-white dark:bg-neutral-dark shadow-md text-neutral-dark dark:text-neutral-light'
+                : 'text-neutral-dark/70 dark:text-neutral-light/70 hover:text-neutral-dark dark:hover:text-neutral-light'
+            }`}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setIsLifetime(true)}
+            className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 relative ${
+              isLifetime 
+                ? 'bg-white dark:bg-neutral-dark shadow-md text-neutral-dark dark:text-neutral-light'
+                : 'text-neutral-dark/70 dark:text-neutral-light/70 hover:text-neutral-dark dark:hover:text-neutral-light'
+            }`}
+          >
+            Lifetime
+            <span className="absolute -top-2 -right-2 bg-secondary text-white text-xs px-2 py-1 rounded-full">
+              Save 83%
+            </span>
+          </button>
+        </div>
       </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {plans.map((plan) => (
-            <Card 
-              key={plan.name}
-              className={`relative space-y-6 ${
-                plan.popular 
-                  ? 'border-2 border-primary shadow-lg' 
-                  : ''
-              }`}
-            >
-              {plan.popular && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-primary text-white px-4 py-1 rounded-full text-sm font-medium">
-                    Most Popular
-                  </span>
-                </div>
-              )}
-
-              <div className="text-center">
-                <h3 className="text-2xl font-bold text-neutral-dark dark:text-neutral-light mb-2">
-                  {plan.name}
-                </h3>
-                <div className="mb-4">
-                  <span className="text-4xl font-bold text-neutral-dark dark:text-neutral-light">
-                    {plan.price === 0 ? 'Free' : `€${plan.price}`}
-                  </span>
-                  {plan.price > 0 && (
-                    <span className="text-neutral-dark/70 dark:text-neutral-light/70"> one-time</span>
-                  )}
-                </div>
+      {/* Pricing Card */}
+      <Card className="relative overflow-hidden border-2 border-primary/20 shadow-xl">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-secondary"></div>
+        
+        <div className="p-8">
+          {/* Price Header */}
+          <div className="text-center mb-8">
+            <h3 className="text-2xl font-bold text-neutral-dark dark:text-neutral-light mb-2">
+              {currentPlan.name}
+            </h3>
+            <div className="mb-2">
+              <span className="text-5xl font-bold text-neutral-dark dark:text-neutral-light">
+                €{currentPlan.price}
+              </span>
+              <span className="text-xl text-neutral-dark/70 dark:text-neutral-light/70 ml-1">
+                {currentPlan.period}
+              </span>
+            </div>
+            <p className="text-neutral-dark/60 dark:text-neutral-light/60 mb-1">
+              {currentPlan.billing}
+            </p>
+            {currentPlan.savings && (
+              <div className="inline-flex items-center bg-secondary/10 text-secondary px-3 py-1 rounded-full text-sm font-medium">
+                🎉 {currentPlan.savings}
               </div>
+            )}
+          </div>
 
-              <ul className="space-y-4">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-center">
-                    <Check className="w-5 h-5 text-primary mr-3 flex-shrink-0" />
-                    <span className="text-neutral-dark/80 dark:text-neutral-light/80">{feature}</span>
-                  </li>
-                ))}
-              </ul>
+          {/* Features */}
+          <div className="space-y-6 mb-8">
+            {features.map((feature, index) => {
+              const IconComponent = feature.icon;
+              return (
+                <div key={index} className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <IconComponent size={20} className="text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-neutral-dark dark:text-neutral-light mb-1">
+                      {feature.title}
+                    </h4>
+                    <p className="text-neutral-dark/70 dark:text-neutral-light/70 text-sm">
+                      {feature.description}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
 
-              <Button
-                onClick={() => handlePlanSelect(plan)}
-                disabled={loading === plan.priceId}
-                variant={plan.popular ? "primary" : plan.isFree ? "outline" : "primary"}
-                className="w-full"
-              >
-                {loading === plan.priceId 
-                  ? 'Loading...' 
-                  : plan.isFree 
-                    ? 'Get Started Free' 
-                    : `Upgrade to ${plan.name}`
-                }
-              </Button>
-            </Card>
-          ))}
+          {/* CTA Button */}
+          <Button
+            onClick={handlePlanSelect}
+            disabled={loading}
+            className="w-full bg-primary hover:bg-primary/90 text-white font-semibold text-lg py-4"
+          >
+            {loading ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+                Processing...
+              </>
+            ) : (
+              `Get FitChum Pro ${isLifetime ? 'Forever' : 'Now'}`
+            )}
+          </Button>
         </div>
+      </Card>
 
-        <div className="text-center space-y-4 mt-8 pt-8 border-t border-neutral-dark/20 dark:border-neutral-light/20">
-          <p className="text-neutral-dark/70 dark:text-neutral-light/70">
-            Start free, upgrade when you&apos;re ready. No recurring charges.
-          </p>
-          <p className="text-sm text-neutral-dark/50 dark:text-neutral-light/50">
-            Secure payments powered by Stripe
-          </p>
+      {/* Bottom Info */}
+      <div className="text-center space-y-4 pt-8 border-t border-neutral-dark/10 dark:border-neutral-light/10">
+        <div className="flex items-center justify-center gap-6 text-sm text-neutral-dark/60 dark:text-neutral-light/60">
+          <div className="flex items-center gap-2">
+            <Check className="w-4 h-4 text-primary" />
+            <span>30-day money-back guarantee</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Check className="w-4 h-4 text-primary" />
+            <span>Cancel anytime</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Check className="w-4 h-4 text-primary" />
+            <span>Secure payments by Stripe</span>
+          </div>
         </div>
+        
+        <p className="text-xs text-neutral-dark/50 dark:text-neutral-light/50 max-w-2xl mx-auto">
+          Join thousands of fitness enthusiasts who have transformed their workout routine with FitChum Pro.
+          Start your journey today and experience the power of social accountability.
+        </p>
+      </div>
     </div>
   );
 }

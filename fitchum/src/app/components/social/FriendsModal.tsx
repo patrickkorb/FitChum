@@ -64,36 +64,62 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
 
     setLoading(true);
     try {
-      const { data: friendships, error } = await supabase
+      // First get the friendships
+      const { data: friendships, error: friendshipsError } = await supabase
         .from('friendships')
-        .select(`
-          id,
-          requester_id,
-          addressee_id,
-          profiles!friendships_requester_id_fkey(user_id, username, profile_pic_url, current_streak, total_workouts),
-          profiles!friendships_addressee_id_fkey(user_id, username, profile_pic_url, current_streak, total_workouts)
-        `)
+        .select('id, requester_id, addressee_id')
         .or(`requester_id.eq.${currentUserId},addressee_id.eq.${currentUserId}`)
         .eq('status', 'accepted');
 
-      if (!error && friendships) {
-        const friendsData: Friend[] = friendships.map(friendship => {
-          const friendProfile = friendship.requester_id === currentUserId 
-            ? friendship.profiles[1]
-            : friendship.profiles[0];
-          
-          return {
-            user_id: friendProfile.user_id,
-            username: friendProfile.username || `User ${friendProfile.user_id.slice(-4)}`,
-            profile_pic_url: friendProfile.profile_pic_url,
-            current_streak: friendProfile.current_streak || 0,
-            total_workouts: friendProfile.total_workouts || 0,
-            friendship_id: friendship.id
-          };
-        });
-        
-        setFriends(friendsData);
+      if (friendshipsError || !friendships) {
+        console.error('Error fetching friendships:', friendshipsError);
+        return;
       }
+
+      if (friendships.length === 0) {
+        setFriends([]);
+        return;
+      }
+
+      // Get friend user IDs
+      const friendUserIds = friendships.map(friendship => 
+        friendship.requester_id === currentUserId 
+          ? friendship.addressee_id 
+          : friendship.requester_id
+      );
+
+      // Fetch friend profiles
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, username, profile_pic_url, current_streak, total_workouts')
+        .in('user_id', friendUserIds);
+
+      if (profilesError || !profiles) {
+        console.error('Error fetching friend profiles:', profilesError);
+        return;
+      }
+
+      // Map friendships with profiles
+      const friendsData: Friend[] = friendships.map(friendship => {
+        const friendUserId = friendship.requester_id === currentUserId 
+          ? friendship.addressee_id 
+          : friendship.requester_id;
+        
+        const friendProfile = profiles.find(p => p.user_id === friendUserId);
+        
+        if (!friendProfile) return null;
+
+        return {
+          user_id: friendProfile.user_id,
+          username: friendProfile.username || `User ${friendProfile.user_id.slice(-4)}`,
+          profile_pic_url: friendProfile.profile_pic_url,
+          current_streak: friendProfile.current_streak || 0,
+          total_workouts: friendProfile.total_workouts || 0,
+          friendship_id: friendship.id
+        };
+      }).filter(Boolean) as Friend[];
+      
+      setFriends(friendsData);
     } catch (error) {
       console.error('Error fetching friends:', error);
     } finally {
@@ -228,6 +254,10 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
 
       if (!error) {
         fetchFriendRequests();
+        // Also refresh search results if user is on find tab
+        if (activeTab === 'find' && searchQuery.length >= 2) {
+          searchUsers(searchQuery);
+        }
       }
     } catch (error) {
       console.error('Error rejecting friend request:', error);

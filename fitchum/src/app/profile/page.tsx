@@ -79,56 +79,115 @@ export default function Profile() {
         const file = event.target.files?.[0];
         if (!file) return;
 
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            setError('File size must be less than 5MB');
+            return;
+        }
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            setError('Please select an image file');
+            return;
+        }
+
         setLoading(true);
         setError('');
-        setMessage('');
+        setMessage('Uploading...');
 
-        const {
-            data: { user },
-            error: userError
-        } = await supabase.auth.getUser();
+        try {
+            const {
+                data: { user },
+                error: userError
+            } = await supabase.auth.getUser();
 
-        if (userError || !user) {
-            setError('Benutzer nicht gefunden.');
+            if (userError || !user) {
+                setError('User not found.');
+                setLoading(false);
+                return;
+            }
+
+            // Create unique filename
+            const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+            const timestamp = Date.now();
+            const filePath = `${user.id}/avatar-${timestamp}.${fileExt}`;
+
+            console.log('Uploading file to:', filePath);
+
+            // Check if bucket exists by trying to list
+            const { error: listError } = await supabase.storage.from('profile-pictures').list();
+            
+            if (listError) {
+                console.error('Storage bucket error:', listError);
+                // Fallback: try to use a direct URL approach
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const dataUrl = e.target?.result as string;
+                    const { error: updateError } = await supabase
+                        .from('profiles')
+                        .update({ profile_pic_url: dataUrl })
+                        .eq('user_id', user.id);
+
+                    if (updateError) {
+                        setError('Failed to save profile picture.');
+                        console.error(updateError);
+                    } else {
+                        setFormData((prev) => ({
+                            ...prev,
+                            profile_pic_url: dataUrl
+                        }));
+                        setMessage('Profile picture updated!');
+                    }
+                    setLoading(false);
+                };
+                reader.readAsDataURL(file);
+                return;
+            }
+
+            // Upload to Supabase storage
+            const { error: uploadError, data: uploadData } = await supabase.storage
+                .from('profile-pictures')
+                .upload(filePath, file, { upsert: true });
+
+            if (uploadError) {
+                console.error('Upload error:', uploadError);
+                setError(`Upload failed: ${uploadError.message}`);
+                setLoading(false);
+                return;
+            }
+
+            console.log('Upload successful:', uploadData);
+
+            // Get public URL
+            const {
+                data: { publicUrl }
+            } = supabase.storage.from('avatars').getPublicUrl(filePath);
+
+            console.log('Public URL:', publicUrl);
+
+            // Update profile
+            const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ profile_pic_url: publicUrl })
+                .eq('user_id', user.id);
+
+            if (updateError) {
+                setError('Failed to save profile picture to database.');
+                console.error('Database update error:', updateError);
+            } else {
+                setFormData((prev) => ({
+                    ...prev,
+                    profile_pic_url: publicUrl
+                }));
+                setMessage('Profile picture updated successfully!');
+            }
+
+        } catch (error) {
+            console.error('Unexpected error:', error);
+            setError('An unexpected error occurred. Please try again.');
+        } finally {
             setLoading(false);
-            return;
         }
-
-        const fileExt = file.name.split('.').pop();
-        const filePath = `${user.id}/avatar.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-            .from('avatars')
-            .upload(filePath, file, { upsert: true });
-
-        if (uploadError) {
-            setError('Fehler beim Hochladen des Bilds.');
-            console.error(uploadError);
-            setLoading(false);
-            return;
-        }
-
-        const {
-            data: { publicUrl }
-        } = supabase.storage.from('avatars').getPublicUrl(filePath);
-
-        const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ profile_pic_url: publicUrl })
-            .eq('user_id', user.id);
-
-        if (updateError) {
-            setError('Bild konnte nicht im Profil gespeichert werden.');
-            console.error(updateError);
-        } else {
-            setFormData((prev) => ({
-                ...prev,
-                profile_pic_url: publicUrl
-            }));
-            setMessage('Profilbild aktualisiert!');
-        }
-
-        setLoading(false);
     };
 
     // 🧑‍💼 Formularfeld ändern
@@ -194,7 +253,7 @@ export default function Profile() {
             setError('Abmeldung fehlgeschlagen.');
             setLoading(false);
         } else {
-            router.push('/login');
+            router.push('/auth/login');
         }
     }
 

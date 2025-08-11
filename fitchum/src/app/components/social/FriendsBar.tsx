@@ -145,7 +145,7 @@ export default function FriendsBar({ currentUserId }: FriendsBarProps) {
         <Button 
           variant="primary" 
           size="sm"
-          onClick={() => window.location.href = '/login'}
+          onClick={() => window.location.href = '/auth/login'}
         >
           Login
         </Button>

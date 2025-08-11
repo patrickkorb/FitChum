@@ -4,7 +4,11 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { getUserStats, UserStats } from '@/lib/userStats';
 import ActivityHeatmap from '@/app/components/journal/ActivityHeatmap';
-import { TrendingUp, Target, Clock, Zap, LucideIcon } from 'lucide-react';
+import YearlyProgress from '@/app/components/stats/YearlyProgress';
+import AchievementBadges from '@/app/components/stats/AchievementBadges';
+import ProgressInsights from '@/app/components/stats/ProgressInsights';
+import DemoStats from '@/app/components/stats/DemoStats';
+import { TrendingUp, Target, Clock, Zap, LucideIcon, Calendar } from 'lucide-react';
 
 export default function StatsPage() {
     const [user, setUser] = useState<{ id: string } | null>(null);
@@ -22,7 +26,10 @@ export default function StatsPage() {
             const { data: userData, error } = await supabase.auth.getUser();
             
             if (error || !userData.user) {
-                console.error('No authenticated user found');
+                // User is not authenticated, we'll show demo stats
+                setUser(null);
+                setStats(null);
+                setLoading(false);
                 return;
             }
 
@@ -33,6 +40,9 @@ export default function StatsPage() {
             setStats(userStats);
         } catch (error) {
             console.error('Error loading stats:', error);
+            // On error, also show demo stats
+            setUser(null);
+            setStats(null);
         } finally {
             setLoading(false);
         }
@@ -46,12 +56,9 @@ export default function StatsPage() {
         );
     }
 
+    // Show demo stats for non-authenticated users
     if (!user) {
-        return (
-            <div className="flex items-center justify-center min-h-[50vh] text-neutral-600 dark:text-neutral-400">
-                Please log in to view your stats.
-            </div>
-        );
+        return <DemoStats />;
     }
 
     const StatCard = ({ 
@@ -93,12 +100,15 @@ export default function StatsPage() {
                 {/* Header */}
                 <div className="text-center mb-8">
                     <h1 className="text-3xl sm:text-4xl font-bold text-neutral-dark dark:text-neutral-light mb-2">
-                        Your Fitness Stats
+                        Your Fitness Journey
                     </h1>
                     <p className="text-neutral-600 dark:text-neutral-400 text-lg">
-                        Track your progress and stay motivated
+                        Track progress, celebrate achievements, stay motivated
                     </p>
                 </div>
+
+                {/* Progress Insights */}
+                <ProgressInsights userId={user.id} userStats={stats} />
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -128,15 +138,29 @@ export default function StatsPage() {
                     
                     <StatCard
                         title="Avg Duration"
-                        value={stats?.avgDuration ? `${stats.avgDuration}m` : '0m'}
+                        value={stats?.avgDuration ? `${Math.round(stats.avgDuration)}m` : '0m'}
                         subtitle="per workout"
                         icon={Clock}
                         color="bg-purple-600"
                     />
                 </div>
 
+                {/* Yearly Progress Overview */}
+                <YearlyProgress userId={user.id} />
+
+                {/* Achievement Badges */}
+                <AchievementBadges userId={user.id} userStats={stats} />
+
                 {/* Activity Heatmap */}
-                <ActivityHeatmap userId={user.id} />
+                <div className="bg-white dark:bg-neutral-800 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-700">
+                    <div className="flex items-center gap-2 mb-4">
+                        <Calendar className="w-5 h-5 text-primary" />
+                        <h3 className="text-xl font-bold text-neutral-dark dark:text-neutral-light">
+                            Activity Calendar
+                        </h3>
+                    </div>
+                    <ActivityHeatmap userId={user.id} />
+                </div>
             </div>
         </div>
     );
