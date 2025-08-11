@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
-import { X, User, Mail, Lock, Target, Users, Trophy } from 'lucide-react';
+import { X, User, Mail, Target, Users, Trophy } from 'lucide-react';
 import Button from './Button';
 
 interface AuthModalProps {
@@ -17,10 +17,8 @@ export default function AuthModal({
   isOpen, 
   onClose, 
   title = "Ready to Start Your Fitness Journey?", 
-  message = "Create an account to save your personalized workout plan and track your progress!",
-  showSignupFirst = true 
+  message = "Create an account to save your personalized workout plan and track your progress!"
 }: AuthModalProps) {
-  const [isSignup, setIsSignup] = useState(showSignupFirst);
   const router = useRouter();
 
   if (!isOpen) return null;
@@ -109,7 +107,7 @@ export default function AuthModal({
             className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3"
           >
             <User size={18} className="mr-2" />
-            Create Account - It's Free!
+            Create Account - It&apos;s Free!
           </Button>
           
           <div className="flex items-center gap-3">

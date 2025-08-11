@@ -1,14 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Button from '@/app/components/ui/Button';
 import Card from '@/app/components/ui/Card';
 import { CheckCircle, Crown } from 'lucide-react';
 
 export default function PaymentSuccessPage() {
-
-  const router = useRouter();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

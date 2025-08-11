@@ -28,7 +28,7 @@ export async function hasLoggedWorkoutToday(userId: string): Promise<boolean> {
       .single();
 
     return !!data;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -49,7 +49,7 @@ export async function getTodaysJournalEntry(userId: string): Promise<JournalEntr
 
     if (error) return null;
     return data;
-  } catch (error) {
+  } catch {
     return null;
   }
 }

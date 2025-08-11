@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { 
   TrendingUp, 
-  TrendingDown, 
   Heart, 
   Target, 
   Calendar,
@@ -20,7 +19,7 @@ interface Insight {
   title: string;
   message: string;
   type: 'positive' | 'motivational' | 'tip' | 'achievement';
-  icon: any;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
   color: string;
 }
 
@@ -62,7 +61,6 @@ export default function ProgressInsights({ userId, userStats }: ProgressInsights
       if (recentJournals && userStats) {
         // Analyze recent trends
         const last7Days = recentJournals.slice(0, 7);
-        const last14Days = recentJournals.slice(0, 14);
         
         // Streak insights
         if (userStats.currentStreak > 0) {

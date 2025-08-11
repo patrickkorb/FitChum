@@ -8,7 +8,6 @@ import {
   Zap, 
   Calendar,
   Award,
-  Users,
   Trophy,
   Star,
   Heart,
