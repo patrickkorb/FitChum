@@ -186,7 +186,7 @@ export default function Journal() {
                 .from('profiles')
                 .update({ 
                     current_streak: currentStreak,
-                    max_streak: maxStreak,
+                    longest_streak: maxStreak,
                     total_workouts: allEntries ? allEntries.length : 0
                 })
                 .eq('user_id', user.id);

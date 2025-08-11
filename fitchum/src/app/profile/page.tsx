@@ -161,9 +161,8 @@ export default function Profile() {
             // Get public URL
             const {
                 data: { publicUrl }
-            } = supabase.storage.from('avatars').getPublicUrl(filePath);
+            } = supabase.storage.from('profile-pictures').getPublicUrl(filePath);
 
-            console.log('Public URL:', publicUrl);
 
             // Update profile
             const { error: updateError } = await supabase

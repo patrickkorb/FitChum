@@ -129,7 +129,7 @@ export default function PlanOverview({ onEditPlan }: PlanOverviewProps) {
                     {todaysWorkout.workout_name}
                   </h3>
                   <p className="text-neutral-dark/70 dark:text-neutral-light/70">
-                    {todaysWorkout.workout_type} session
+                    {todaysWorkout.workout_name} session
                   </p>
                 </div>
                 <div className="text-primary font-bold text-lg">
@@ -139,7 +139,7 @@ export default function PlanOverview({ onEditPlan }: PlanOverviewProps) {
               
               <div className="bg-neutral-dark/5 dark:bg-neutral-light/5 p-4 rounded-lg text-center">
                 <p className="text-neutral-dark/70 dark:text-neutral-light/70">
-                  Get ready for your {todaysWorkout.workout_type.toLowerCase()} workout! 💪
+                  Get ready for your {todaysWorkout.workout_name} workout! 💪
                 </p>
               </div>
             </div>
