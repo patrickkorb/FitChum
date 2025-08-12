@@ -256,9 +256,11 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
   const rejectFriendRequest = async (requestId: string) => {
     try {
       console.log('🔴 ATTEMPTING TO CANCEL/REJECT REQUEST WITH ID:', requestId);
+      alert(`🔴 Trying to cancel request with ID: ${requestId}`);
       
       if (!requestId) {
         console.error('❌ No request ID provided');
+        alert('❌ No request ID provided!');
         return;
       }
 
@@ -272,6 +274,7 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
 
       if (!error) {
         console.log('✅ Request deleted successfully:', data);
+        alert(`✅ SUCCESS: Request deleted. Data: ${JSON.stringify(data)}`);
         
         // Refresh friend requests
         fetchFriendRequests();
@@ -285,6 +288,7 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
         onFriendsUpdate?.();
       } else {
         console.error('❌ Database error rejecting request:', error);
+        alert(`❌ ERROR: ${JSON.stringify(error)}`);
       }
     } catch (error) {
       console.error('❌ Error rejecting friend request:', error);
@@ -295,9 +299,11 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
   const removeFriend = async (friendshipId: string) => {
     try {
       console.log('🟡 ATTEMPTING TO REMOVE FRIEND WITH ID:', friendshipId);
+      alert(`🟡 Trying to remove friend with ID: ${friendshipId}`);
       
       if (!friendshipId) {
         console.error('❌ No friendship ID provided');
+        alert('❌ No friendship ID provided!');
         return;
       }
 
@@ -311,6 +317,7 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
 
       if (!error) {
         console.log('✅ Friend removed successfully:', data);
+        alert(`✅ SUCCESS: Friend removed. Data: ${JSON.stringify(data)}`);
         
         // Refresh friends list
         fetchFriends();
@@ -324,6 +331,7 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
         onFriendsUpdate?.();
       } else {
         console.error('❌ Database error removing friend:', error);
+        alert(`❌ ERROR: ${JSON.stringify(error)}`);
       }
     } catch (error) {
       console.error('❌ Error removing friend:', error);
