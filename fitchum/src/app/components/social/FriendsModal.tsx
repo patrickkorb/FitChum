@@ -285,7 +285,7 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
         console.error('❌ No friendship ID provided');
         return;
       }
-
+      alert(friendshipId);
       const { data, error } = await supabase
         .from('friendships')
         .delete()
