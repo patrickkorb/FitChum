@@ -49,34 +49,39 @@ export default function FriendsBar({ currentUserId }: FriendsBarProps) {
           return;
         }
 
-        // Fetch friends
+        // Fetch friends using the same approach as FriendsModal
         const { data: friendships, error: friendshipsError } = await supabase
           .from('friendships')
-          .select(`
-            requester_id,
-            addressee_id,
-            profiles!friendships_requester_id_fkey(user_id, username, profile_pic_url, current_streak),
-            profiles!friendships_addressee_id_fkey(user_id, username, profile_pic_url, current_streak)
-          `)
+          .select('id, requester_id, addressee_id')
           .or(`requester_id.eq.${currentUserId},addressee_id.eq.${currentUserId}`)
           .eq('status', 'accepted');
 
-        if (!friendshipsError && friendships) {
-          const friendsData: Friend[] = friendships.map(friendship => {
-            // Get the friend's profile (the other person in the relationship)
-            const friendProfile = friendship.requester_id === currentUserId 
-              ? friendship.profiles[1] // addressee profile
-              : friendship.profiles[0]; // requester profile
+        if (!friendshipsError && friendships && friendships.length > 0) {
+          // Get friend user IDs
+          const friendUserIds = friendships.map(friendship => 
+            friendship.requester_id === currentUserId 
+              ? friendship.addressee_id 
+              : friendship.requester_id
+          );
+
+          // Fetch friend profiles
+          const { data: profiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('user_id, username, profile_pic_url, current_streak')
+            .in('user_id', friendUserIds);
+
+          if (!profilesError && profiles) {
+            const friendsData: Friend[] = profiles.map(profile => ({
+              user_id: profile.user_id,
+              username: profile.username || `User ${profile.user_id.slice(-4)}`,
+              profile_pic_url: profile.profile_pic_url,
+              current_streak: profile.current_streak || 0
+            }));
             
-            return {
-              user_id: friendProfile.user_id,
-              username: friendProfile.username || `User ${friendProfile.user_id.slice(-4)}`,
-              profile_pic_url: friendProfile.profile_pic_url,
-              current_streak: friendProfile.current_streak || 0
-            };
-          });
-          
-          setFriends(friendsData);
+            setFriends(friendsData);
+          }
+        } else {
+          setFriends([]);
         }
 
         // Fetch pending requests count

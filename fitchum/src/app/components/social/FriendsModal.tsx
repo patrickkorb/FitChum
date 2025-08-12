@@ -101,20 +101,15 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
 
       // Map friendships with profiles
       const friendsData: Friend[] = friendships.map(friendship => {
-        console.log('🔵 Processing friendship:', friendship);
-        
         const friendUserId = friendship.requester_id === currentUserId 
           ? friendship.addressee_id 
           : friendship.requester_id;
         
         const friendProfile = profiles.find(p => p.user_id === friendUserId);
         
-        if (!friendProfile) {
-          console.log('❌ No profile found for user:', friendUserId);
-          return null;
-        }
+        if (!friendProfile) return null;
 
-        const friendData = {
+        return {
           user_id: friendProfile.user_id,
           username: friendProfile.username || `User ${friendProfile.user_id.slice(-4)}`,
           profile_pic_url: friendProfile.profile_pic_url,
@@ -122,9 +117,6 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
           total_workouts: friendProfile.total_workouts || 0,
           friendship_id: friendship.id
         };
-        
-        console.log('✅ Created friend data:', friendData);
-        return friendData;
       }).filter(Boolean) as Friend[];
       
       setFriends(friendsData);
@@ -255,12 +247,8 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
   // Reject/Cancel friend request
   const rejectFriendRequest = async (requestId: string) => {
     try {
-      console.log('🔴 ATTEMPTING TO CANCEL/REJECT REQUEST WITH ID:', requestId);
-      alert(`🔴 Trying to cancel request with ID: ${requestId}`);
-      
       if (!requestId) {
         console.error('❌ No request ID provided');
-        alert('❌ No request ID provided!');
         return;
       }
 
@@ -270,12 +258,8 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
         .eq('id', requestId)
         .select(); // Add select to see what was deleted
 
-      console.log('🔍 Delete result:', { data, error });
 
       if (!error) {
-        console.log('✅ Request deleted successfully:', data);
-        alert(`✅ SUCCESS: Request deleted. Data: ${JSON.stringify(data)}`);
-        
         // Refresh friend requests
         fetchFriendRequests();
         
@@ -288,7 +272,6 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
         onFriendsUpdate?.();
       } else {
         console.error('❌ Database error rejecting request:', error);
-        alert(`❌ ERROR: ${JSON.stringify(error)}`);
       }
     } catch (error) {
       console.error('❌ Error rejecting friend request:', error);
@@ -298,12 +281,8 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
   // Remove friend
   const removeFriend = async (friendshipId: string) => {
     try {
-      console.log('🟡 ATTEMPTING TO REMOVE FRIEND WITH ID:', friendshipId);
-      alert(`🟡 Trying to remove friend with ID: ${friendshipId}`);
-      
       if (!friendshipId) {
         console.error('❌ No friendship ID provided');
-        alert('❌ No friendship ID provided!');
         return;
       }
 
@@ -313,12 +292,8 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
         .eq('id', friendshipId)
         .select(); // Add select to see what was deleted
 
-      console.log('🔍 Remove friend result:', { data, error });
 
       if (!error) {
-        console.log('✅ Friend removed successfully:', data);
-        alert(`✅ SUCCESS: Friend removed. Data: ${JSON.stringify(data)}`);
-        
         // Refresh friends list
         fetchFriends();
         
@@ -331,7 +306,6 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
         onFriendsUpdate?.();
       } else {
         console.error('❌ Database error removing friend:', error);
-        alert(`❌ ERROR: ${JSON.stringify(error)}`);
       }
     } catch (error) {
       console.error('❌ Error removing friend:', error);
