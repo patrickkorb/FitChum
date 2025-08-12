@@ -15,6 +15,7 @@ export default function Profile() {
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [canceling, setCanceling] = useState(false);
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({
@@ -23,6 +24,9 @@ export default function Profile() {
         profile_pic_url: '',
         theme_preference: 'light' as 'light' | 'dark',
         subscription_plan: 'free' as 'free' | 'pro',
+        subscription_type: 'payment' as 'payment' | 'subscription' | null,
+        subscription_status: 'inactive' as 'active' | 'canceled' | 'inactive',
+        subscription_cancel_at: null as string | null,
     });
 
     const supabase = createClient();
@@ -47,7 +51,7 @@ export default function Profile() {
 
             const { data: profile, error: profileError } = await supabase
                 .from('profiles')
-                .select('*')
+                .select('username, email, profile_pic_url, theme_preference, subscription_plan, subscription_type, subscription_status, subscription_cancel_at')
                 .eq('user_id', user.id)
                 .single();
 
@@ -61,6 +65,9 @@ export default function Profile() {
                     profile_pic_url: profile.profile_pic_url || '',
                     theme_preference: (profile.theme_preference || 'light') as 'light' | 'dark',
                     subscription_plan: (profile.subscription_plan || 'free') as 'free' | 'pro',
+                    subscription_type: profile.subscription_type || null,
+                    subscription_status: profile.subscription_status || 'inactive',
+                    subscription_cancel_at: profile.subscription_cancel_at || null,
                 });
                 // Only set theme on initial load, don't override user's current theme choice
                 if (theme === 'system' || !theme) {
@@ -256,6 +263,39 @@ export default function Profile() {
         }
     }
 
+    // ❌ Subscription kündigen
+    async function handleCancelSubscription() {
+        setCanceling(true);
+        setError('');
+        setMessage('');
+
+        try {
+            const response = await fetch('/api/cancel-subscription', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                setMessage(result.message);
+                // Update local state to reflect cancellation
+                setFormData(prev => ({
+                    ...prev,
+                    subscription_status: 'canceled',
+                    subscription_cancel_at: result.cancel_at,
+                }));
+            } else {
+                setError(result.error || 'Failed to cancel subscription');
+            }
+        } catch (error) {
+            console.error('Error canceling subscription:', error);
+            setError('An error occurred while canceling subscription');
+        } finally {
+            setCanceling(false);
+        }
+    }
+
     // ❌ Account löschen
     async function handleDeleteAccount() {
         if (!showDeleteConfirm) {
@@ -438,18 +478,48 @@ export default function Profile() {
                             <label className="block text-sm font-medium text-neutral-dark dark:text-neutral-light mb-2">
                                 Abonnement
                             </label>
-                            <div className="flex items-center gap-2">
-                                <span className="px-3 py-2 rounded-lg bg-primary/10 text-primary font-medium">
-                                    {formData.subscription_plan === 'pro' ? 'Pro' : 'Free'}
-                                </span>
-                                {formData.subscription_plan === 'free' && (
-                                    <Button
-                                        onClick={() => router.push('/pricing')}
-                                        variant="outline"
-                                        size="sm"
-                                    >
-                                        Upgrade
-                                    </Button>
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-2">
+                                    <span className="px-3 py-2 rounded-lg bg-primary/10 text-primary font-medium">
+                                        {formData.subscription_plan === 'pro' ? 'Pro' : 'Free'}
+                                        {formData.subscription_plan === 'pro' && formData.subscription_type && (
+                                            <span className="ml-1 text-xs opacity-70">
+                                                ({formData.subscription_type === 'subscription' ? 'Monthly' : 'Lifetime'})
+                                            </span>
+                                        )}
+                                    </span>
+                                    {formData.subscription_plan === 'free' && (
+                                        <Button
+                                            onClick={() => router.push('/pricing')}
+                                            variant="outline"
+                                            size="sm"
+                                        >
+                                            Upgrade
+                                        </Button>
+                                    )}
+                                </div>
+                                
+                                {/* Subscription status and cancel option */}
+                                {formData.subscription_plan === 'pro' && formData.subscription_type === 'subscription' && (
+                                    <div className="space-y-2">
+                                        {formData.subscription_status === 'canceled' && formData.subscription_cancel_at && (
+                                            <div className="text-sm text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/20 px-3 py-2 rounded-lg">
+                                                Subscription canceled. Access ends on {new Date(formData.subscription_cancel_at).toLocaleDateString()}
+                                            </div>
+                                        )}
+                                        
+                                        {formData.subscription_status === 'active' && (
+                                            <Button
+                                                onClick={handleCancelSubscription}
+                                                variant="outline"
+                                                size="sm"
+                                                className="text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 dark:text-red-400 dark:border-red-600 dark:hover:bg-red-900/20"
+                                                disabled={canceling}
+                                            >
+                                                {canceling ? 'Canceling...' : 'Cancel Subscription'}
+                                            </Button>
+                                        )}
+                                    </div>
                                 )}
                             </div>
                         </div>
