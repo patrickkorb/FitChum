@@ -189,13 +189,20 @@ export default function Journal() {
                 }
             }
 
+            // Find the most recent workout date for last_workout_date
+            const lastWorkoutDate = allEntries && allEntries.length > 0 
+                ? allEntries[0].date + 'T00:00:00.000Z' 
+                : null;
+
             // Update user's streak and total workout count
             const { error: profileError } = await supabase
                 .from('profiles')
                 .update({ 
                     current_streak: currentStreak,
                     longest_streak: maxStreak,
-                    total_workouts: allEntries ? allEntries.length : 0
+                    total_workouts: allEntries ? allEntries.length : 0,
+                    last_workout_date: lastWorkoutDate,
+                    updated_at: new Date().toISOString()
                 })
                 .eq('user_id', user.id);
 
