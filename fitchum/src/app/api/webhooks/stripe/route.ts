@@ -35,11 +35,12 @@ export async function POST(req: NextRequest) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
 
-        if (session.mode === 'payment' && session.payment_status === 'paid') {
+        if ((session.mode === 'payment' && session.payment_status === 'paid') || 
+            (session.mode === 'subscription' && session.payment_status === 'paid')) {
           const userId = session.client_reference_id || session.metadata?.userId;
 
           if (userId) {
-            console.log(`Processing payment for user ${userId}`);
+            console.log(`Processing ${session.mode} for user ${userId}`);
             
             // Update user to Pro plan after successful payment
             const { error } = await supabase

@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://fitchumm.com'}/payment/success`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://fitchumm.com'}/payment/success?mode=${mode}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://fitchumm.com'}/pricing?canceled=true`,
       client_reference_id: userId,
       metadata: {

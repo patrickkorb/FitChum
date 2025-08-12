@@ -1,11 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Card from '@/app/components/ui/Card';
 import { CheckCircle, Crown } from 'lucide-react';
 
 export default function PaymentSuccessPage() {
   const [loading, setLoading] = useState(true);
+  const searchParams = useSearchParams();
+  const mode = searchParams.get('mode'); // 'payment' for lifetime, 'subscription' for monthly
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -41,7 +44,10 @@ export default function PaymentSuccessPage() {
         </h1>
         
         <p className="text-neutral-dark/70 dark:text-neutral-light/70">
-          Your payment was successful! You now have lifetime access to all Pro features.
+          {mode === 'subscription' 
+            ? 'Your payment was successful! You now have monthly access to all Pro features.'
+            : 'Your payment was successful! You now have lifetime access to all Pro features.'
+          }
         </p>
         
         <div className="space-y-3 text-left">
@@ -65,7 +71,10 @@ export default function PaymentSuccessPage() {
 
         
         <p className="text-xs text-neutral-dark/50 dark:text-neutral-light/50">
-          No recurring charges. You own Pro for life!
+          {mode === 'subscription' 
+            ? 'Your subscription will renew automatically each month. You can cancel anytime from your profile.'
+            : 'No recurring charges. You own Pro for life!'
+          }
         </p>
       </Card>
     </div>
