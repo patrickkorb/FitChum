@@ -7,12 +7,20 @@ import YearlyProgress from '@/app/components/stats/YearlyProgress';
 import AchievementBadges from '@/app/components/stats/AchievementBadges';
 import ProgressInsights from '@/app/components/stats/ProgressInsights';
 import DemoStats from '@/app/components/stats/DemoStats';
+// import ConfettiCelebration, { useConfetti } from '@/app/components/ui/Confetti';
+import { useStreakCelebration } from '@/app/hooks/useStreakCelebration';
 import { TrendingUp, Target, Clock, Zap, LucideIcon } from 'lucide-react';
 
 export default function StatsPage() {
     const [user, setUser] = useState<{ id: string } | null>(null);
     const [stats, setStats] = useState<UserStats | null>(null);
     const [loading, setLoading] = useState(true);
+    
+    // Use streak celebration hook
+    useStreakCelebration({ 
+        currentStreak: stats?.currentStreak || 0, 
+        isLoading: loading 
+    });
 
     const supabase = createClient();
 

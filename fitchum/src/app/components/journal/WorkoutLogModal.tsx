@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, CheckCircle2, Clock, MessageSquare, Star } from 'lucide-react';
 import Button from '../ui/Button';
+import ConfettiCelebration, { useConfetti } from '../ui/Confetti';
 import { getTodaysWorkout } from '@/lib/workoutPlan';
 import { logWorkout } from '@/lib/workoutLogger';
 import type { WorkoutSchedule } from '@/lib/supabase';
@@ -22,6 +23,7 @@ export default function WorkoutLogModal({ isOpen, onClose, onSuccess, userId }: 
   const [difficulty, setDifficulty] = useState<number>(0);
   const [todaysWorkout, setTodaysWorkout] = useState<WorkoutSchedule | null>(null);
   const [loading, setLoading] = useState(true);
+  const { trigger, type, celebrate, reset } = useConfetti();
 
   useEffect(() => {
     if (isOpen) {
@@ -52,6 +54,9 @@ export default function WorkoutLogModal({ isOpen, onClose, onSuccess, userId }: 
       await logWorkoutEntry();
       setIsCompleted(true);
       
+      // Trigger workout celebration confetti
+      celebrate('workout');
+      
       // Auto-close after 2 seconds if no additional details
       setTimeout(() => {
         if (!notes.trim() && !duration && difficulty === 0) {
@@ -70,6 +75,10 @@ export default function WorkoutLogModal({ isOpen, onClose, onSuccess, userId }: 
     setIsLogging(true);
     try {
       await logWorkoutEntry();
+      
+      // Trigger workout celebration confetti
+      celebrate('workout');
+      
       handleClose();
     } catch (error) {
       console.error('Error saving workout details:', error);
@@ -94,6 +103,7 @@ export default function WorkoutLogModal({ isOpen, onClose, onSuccess, userId }: 
 
   const handleClose = () => {
     setIsCompleted(false);
+    reset(); // Reset confetti state
     onClose();
   };
 
@@ -111,8 +121,9 @@ export default function WorkoutLogModal({ isOpen, onClose, onSuccess, userId }: 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white dark:bg-neutral-dark w-full max-w-md mx-auto rounded-2xl shadow-2xl transform transition-all duration-300 max-h-[90vh] overflow-y-auto">
+    <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="bg-white dark:bg-neutral-dark w-full max-w-md mx-auto rounded-2xl shadow-2xl transform transition-all duration-300 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-neutral-dark/10 dark:border-neutral-light/10">
           <h2 className="text-xl sm:text-2xl font-bold text-neutral-dark dark:text-neutral-light">
@@ -287,7 +298,14 @@ export default function WorkoutLogModal({ isOpen, onClose, onSuccess, userId }: 
             </>
           )}
         </div>
+        </div>
       </div>
-    </div>
+      
+      <ConfettiCelebration 
+        trigger={trigger}
+        type={type}
+        onComplete={reset}
+      />
+    </>
   );
 }

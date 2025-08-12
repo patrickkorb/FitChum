@@ -25,15 +25,23 @@ export async function getUserStats(userId: string): Promise<UserStats | null> {
       .from('journal_entries')
       .select('duration')
       .eq('user_id', userId)
-      .not('duration', 'is', null);
+      .not('duration', 'is', null)
+      .gt('duration', 0); // Only get entries with duration > 0
 
     if (journalError) throw journalError;
 
     // Calculate average duration
     let avgDuration = 0;
     if (journalEntries && journalEntries.length > 0) {
-      const totalDuration = journalEntries.reduce((sum, entry) => sum + (entry.duration || 0), 0);
-      avgDuration = Math.round(totalDuration / journalEntries.length);
+      // Filter out any entries with invalid durations and convert to numbers
+      const validDurations = journalEntries
+        .map(entry => Number(entry.duration))
+        .filter(duration => duration > 0);
+      
+      if (validDurations.length > 0) {
+        const totalDuration = validDurations.reduce((sum, duration) => sum + duration, 0);
+        avgDuration = totalDuration / validDurations.length;
+      }
     }
 
     return {

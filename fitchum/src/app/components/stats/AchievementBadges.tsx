@@ -1,7 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import AllAchievementsModal from './AllAchievementsModal';
+import Button from '../ui/Button';
+import ConfettiCelebration, { useConfetti } from '../ui/Confetti';
 import { 
   Award, 
   Flame, 
@@ -12,7 +15,8 @@ import {
   Star,
   Zap,
   Trophy,
-  Medal
+  Medal,
+  Eye
 } from 'lucide-react';
 
 interface Achievement {
@@ -40,6 +44,9 @@ interface AchievementBadgesProps {
 export default function AchievementBadges({ userId, userStats }: AchievementBadgesProps) {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAllModal, setShowAllModal] = useState(false);
+  const previousUnlockedCount = useRef<number>(0);
+  const { trigger, type, celebrate, reset } = useConfetti();
   
   const supabase = createClient();
 
@@ -243,6 +250,15 @@ export default function AchievementBadges({ userId, userStats }: AchievementBadg
         }
       ];
 
+      // Check if new achievements were unlocked
+      const currentUnlockedCount = allAchievements.filter(a => a.unlocked).length;
+      
+      // Only trigger confetti if we have achievements and this isn't the initial load
+      if (previousUnlockedCount.current > 0 && currentUnlockedCount > previousUnlockedCount.current) {
+        celebrate('achievement');
+      }
+      
+      previousUnlockedCount.current = currentUnlockedCount;
       setAchievements(allAchievements);
     } catch (error) {
       console.error('Error calculating achievements:', error);
@@ -273,16 +289,28 @@ export default function AchievementBadges({ userId, userStats }: AchievementBadg
   }
 
   return (
-    <div className="space-y-6">
-      {/* Unlocked Achievements */}
-      {unlockedAchievements.length > 0 && (
-        <div className="bg-white dark:bg-neutral-800 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-700">
-          <div className="flex items-center gap-2 mb-4">
-            <Trophy className="w-5 h-5 text-yellow-500" />
-            <h3 className="text-lg font-bold text-neutral-dark dark:text-neutral-light">
-              Achievements Unlocked ({unlockedAchievements.length})
-            </h3>
-          </div>
+    <>
+      <div className="space-y-6">
+        {/* Unlocked Achievements */}
+        {unlockedAchievements.length > 0 && (
+          <div className="bg-white dark:bg-neutral-800 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-700">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-yellow-500" />
+                <h3 className="text-lg font-bold text-neutral-dark dark:text-neutral-light">
+                  Achievements Unlocked ({unlockedAchievements.length})
+                </h3>
+              </div>
+              <Button
+                onClick={() => setShowAllModal(true)}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Eye size={16} />
+                <span className="hidden sm:inline">Show All</span>
+              </Button>
+            </div>
           
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {unlockedAchievements.map((achievement) => {
@@ -314,11 +342,24 @@ export default function AchievementBadges({ userId, userStats }: AchievementBadg
       {/* Next Achievements */}
       {nextAchievements.length > 0 && (
         <div className="bg-white dark:bg-neutral-800 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-700">
-          <div className="flex items-center gap-2 mb-4">
-            <Target className="w-5 h-5 text-primary" />
-            <h3 className="text-lg font-bold text-neutral-dark dark:text-neutral-light">
-              Next Achievements
-            </h3>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Target className="w-5 h-5 text-primary" />
+              <h3 className="text-lg font-bold text-neutral-dark dark:text-neutral-light">
+                Next Achievements
+              </h3>
+            </div>
+            {unlockedAchievements.length === 0 && (
+              <Button
+                onClick={() => setShowAllModal(true)}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Eye size={16} />
+                <span className="hidden sm:inline">Show All</span>
+              </Button>
+            )}
           </div>
           
           <div className="space-y-4">
@@ -362,6 +403,40 @@ export default function AchievementBadges({ userId, userStats }: AchievementBadg
           </div>
         </div>
       )}
+      
+      {/* Show All Button if no unlocked achievements */}
+      {unlockedAchievements.length === 0 && nextAchievements.length === 0 && (
+        <div className="bg-white dark:bg-neutral-800 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-700 text-center">
+          <Target className="w-12 h-12 mx-auto mb-4 text-neutral-400" />
+          <h3 className="text-lg font-bold text-neutral-dark dark:text-neutral-light mb-2">
+            Ready to Achieve?
+          </h3>
+          <p className="text-neutral-600 dark:text-neutral-400 mb-4">
+            Start working out to unlock your first achievements!
+          </p>
+          <Button
+            onClick={() => setShowAllModal(true)}
+            variant="primary"
+            className="flex items-center gap-2 mx-auto"
+          >
+            <Eye size={16} />
+            View All Achievements
+          </Button>
+        </div>
+      )}
     </div>
+    
+    <AllAchievementsModal
+      isOpen={showAllModal}
+      onClose={() => setShowAllModal(false)}
+      achievements={achievements}
+    />
+    
+    <ConfettiCelebration 
+      trigger={trigger}
+      type={type}
+      onComplete={reset}
+    />
+  </>
   );
 }
