@@ -10,6 +10,7 @@ const pricingOptions = {
   monthly: {
     name: 'Pro Monthly',
     price: 5,
+    mode: "subscription",
     period: '/month',
     priceId: 'price_1RuyKyHjVDpsMb5NvyqzNfMx', // You'll need to create this in Stripe
     billing: 'Billed monthly',

@@ -4,6 +4,7 @@ import { CirclePlus, Zap, CheckCircle2, Calendar, Trash2, AlertTriangle } from '
 import { useState, useEffect } from 'react';
 import { createClient } from "@/lib/supabase/client";
 import WorkoutLogModal from '@/app/components/journal/WorkoutLogModal';
+import AuthModal from '@/app/components/ui/AuthModal';
 import { hasLoggedWorkoutToday, getTodaysJournalEntry } from '@/lib/workoutLogger';
 import type { JournalEntry } from '@/lib/supabase';
 import Button from '@/app/components/ui/Button';
@@ -30,6 +31,7 @@ export default function Journal() {
     const [currentMessage, setCurrentMessage] = useState(0);
     const [isVisible, setIsVisible] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [showAuthModal, setShowAuthModal] = useState(false);
     const [user, setUser] = useState<{ id: string } | null>(null);
     const [hasLoggedToday, setHasLoggedToday] = useState(false);
     const [todaysEntry, setTodaysEntry] = useState<JournalEntry | null>(null);
@@ -85,6 +87,12 @@ export default function Journal() {
     };
 
     const handleOpenModal = () => {
+        if (!user) {
+            // Show auth modal for unauthorized users
+            setShowAuthModal(true);
+            return;
+        }
+        
         if (!hasLoggedToday) {
             setShowModal(true);
         }
@@ -339,7 +347,6 @@ export default function Journal() {
                             <button 
                                 className="bg-primary hover:cursor-pointer hover:bg-primary/90 text-white font-bold py-4 sm:py-6 px-8 sm:px-12 rounded-2xl text-lg sm:text-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 flex items-center gap-3 sm:gap-4 group w-full sm:w-auto max-w-sm"
                                 onClick={handleOpenModal}
-                                disabled={!user}
                             >
                                 <CirclePlus size={24} className="sm:size-8 group-hover:rotate-90 transition-transform duration-300" />
                                 <span className="truncate">Log Today&apos;s Workout</span>
@@ -381,6 +388,14 @@ export default function Journal() {
                     userId={user.id}
                 />
             )}
+
+            {/* Auth Modal for unauthorized users */}
+            <AuthModal 
+                isOpen={showAuthModal}
+                onClose={() => setShowAuthModal(false)}
+                title="Ready to Track Your Progress?"
+                message="Join thousands of fitness enthusiasts who use FitChum to stay motivated and accountable! Start logging your workouts today."
+            />
 
             {/* Delete Confirmation Modal */}
             {showDeleteConfirm && (
