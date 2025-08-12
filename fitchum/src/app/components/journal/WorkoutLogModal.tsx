@@ -23,7 +23,7 @@ export default function WorkoutLogModal({ isOpen, onClose, onSuccess, userId }: 
   const [difficulty, setDifficulty] = useState<number>(0);
   const [todaysWorkout, setTodaysWorkout] = useState<WorkoutSchedule | null>(null);
   const [loading, setLoading] = useState(true);
-  const { trigger, type, celebrate, reset } = useConfetti();
+  const { trigger, type, key, celebrate, reset } = useConfetti();
 
   useEffect(() => {
     if (isOpen) {
@@ -302,6 +302,7 @@ export default function WorkoutLogModal({ isOpen, onClose, onSuccess, userId }: 
       </div>
       
       <ConfettiCelebration 
+        key={key}
         trigger={trigger}
         type={type}
         onComplete={reset}

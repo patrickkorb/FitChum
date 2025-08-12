@@ -300,6 +300,7 @@ export async function getFriendRequests(userId: string): Promise<{
       .eq('addressee_id', userId)
       .eq('status', 'pending');
 
+    console.log('🔵 Fetched incoming requests:', incomingRequests);
     if (incomingError) {
       console.error('Error fetching incoming requests:', incomingError);
     }
@@ -311,6 +312,7 @@ export async function getFriendRequests(userId: string): Promise<{
       .eq('requester_id', userId)
       .eq('status', 'pending');
 
+    console.log('🟡 Fetched outgoing requests:', outgoingRequests);
     if (outgoingError) {
       console.error('Error fetching outgoing requests:', outgoingError);
     }

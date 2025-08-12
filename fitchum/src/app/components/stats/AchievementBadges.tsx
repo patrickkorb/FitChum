@@ -46,7 +46,7 @@ export default function AchievementBadges({ userId, userStats }: AchievementBadg
   const [loading, setLoading] = useState(true);
   const [showAllModal, setShowAllModal] = useState(false);
   const previousUnlockedCount = useRef<number>(0);
-  const { trigger, type, celebrate, reset } = useConfetti();
+  const { trigger, type, key, celebrate, reset } = useConfetti();
   
   const supabase = createClient();
 
@@ -433,6 +433,7 @@ export default function AchievementBadges({ userId, userStats }: AchievementBadg
     />
     
     <ConfettiCelebration 
+      key={key}
       trigger={trigger}
       type={type}
       onComplete={reset}

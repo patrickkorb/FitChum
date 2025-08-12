@@ -101,15 +101,20 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
 
       // Map friendships with profiles
       const friendsData: Friend[] = friendships.map(friendship => {
+        console.log('🔵 Processing friendship:', friendship);
+        
         const friendUserId = friendship.requester_id === currentUserId 
           ? friendship.addressee_id 
           : friendship.requester_id;
         
         const friendProfile = profiles.find(p => p.user_id === friendUserId);
         
-        if (!friendProfile) return null;
+        if (!friendProfile) {
+          console.log('❌ No profile found for user:', friendUserId);
+          return null;
+        }
 
-        return {
+        const friendData = {
           user_id: friendProfile.user_id,
           username: friendProfile.username || `User ${friendProfile.user_id.slice(-4)}`,
           profile_pic_url: friendProfile.profile_pic_url,
@@ -117,6 +122,9 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
           total_workouts: friendProfile.total_workouts || 0,
           friendship_id: friendship.id
         };
+        
+        console.log('✅ Created friend data:', friendData);
+        return friendData;
       }).filter(Boolean) as Friend[];
       
       setFriends(friendsData);
@@ -247,12 +255,24 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
   // Reject/Cancel friend request
   const rejectFriendRequest = async (requestId: string) => {
     try {
-      const { error } = await supabase
+      console.log('🔴 ATTEMPTING TO CANCEL/REJECT REQUEST WITH ID:', requestId);
+      
+      if (!requestId) {
+        console.error('❌ No request ID provided');
+        return;
+      }
+
+      const { data, error } = await supabase
         .from('friendships')
         .delete()
-        .eq('id', requestId);
+        .eq('id', requestId)
+        .select(); // Add select to see what was deleted
+
+      console.log('🔍 Delete result:', { data, error });
 
       if (!error) {
+        console.log('✅ Request deleted successfully:', data);
+        
         // Refresh friend requests
         fetchFriendRequests();
         
@@ -264,25 +284,33 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
         // Update parent component
         onFriendsUpdate?.();
       } else {
-        console.error('Database error rejecting request:', error);
+        console.error('❌ Database error rejecting request:', error);
       }
     } catch (error) {
-      console.error('Error rejecting friend request:', error);
+      console.error('❌ Error rejecting friend request:', error);
     }
   };
 
   // Remove friend
   const removeFriend = async (friendshipId: string) => {
     try {
-      console.log('Removing friend with friendship ID:', friendshipId);
+      console.log('🟡 ATTEMPTING TO REMOVE FRIEND WITH ID:', friendshipId);
       
-      const { error } = await supabase
+      if (!friendshipId) {
+        console.error('❌ No friendship ID provided');
+        return;
+      }
+
+      const { data, error } = await supabase
         .from('friendships')
         .delete()
-        .eq('id', friendshipId);
+        .eq('id', friendshipId)
+        .select(); // Add select to see what was deleted
+
+      console.log('🔍 Remove friend result:', { data, error });
 
       if (!error) {
-        console.log('Friend removed successfully');
+        console.log('✅ Friend removed successfully:', data);
         
         // Refresh friends list
         fetchFriends();
@@ -295,10 +323,10 @@ export default function FriendsModal({ isOpen, onClose, currentUserId, onFriends
         // Update parent component
         onFriendsUpdate?.();
       } else {
-        console.error('Database error removing friend:', error);
+        console.error('❌ Database error removing friend:', error);
       }
     } catch (error) {
-      console.error('Error removing friend:', error);
+      console.error('❌ Error removing friend:', error);
     }
   };
 
