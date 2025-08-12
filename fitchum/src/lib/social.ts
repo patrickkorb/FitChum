@@ -50,42 +50,16 @@ export async function updateUserStreak(userId: string, workoutType: string): Pro
     let newStreak = profile.current_streak || 0;
     let newLongestStreak = profile.longest_streak || 0;
     
-    // Calculate streak logic
+    // Simple streak calculation
     if (!lastWorkout) {
       // First workout ever
       newStreak = 1;
+    } else if (lastWorkout === today) {
+      // Already logged today, don't change streak
+      newStreak = profile.current_streak || 0;
     } else {
-      const lastWorkoutDate = new Date(lastWorkout);
-      const todayDate = new Date(today);
-      const daysDiff = Math.floor((todayDate.getTime() - lastWorkoutDate.getTime()) / (1000 * 60 * 60 * 24));
-      
-      if (daysDiff === 0) {
-        // Already logged today, don't change streak
-        return;
-      } else if (daysDiff === 1) {
-        // Consecutive day
-        newStreak = (profile.current_streak || 0) + 1;
-      } else if (daysDiff > 1) {
-        // Check if missed days were rest days
-        const missedStartDate = new Date(lastWorkoutDate);
-        missedStartDate.setDate(missedStartDate.getDate() + 1);
-        const yesterdayDate = new Date(todayDate);
-        yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-        
-        const wereRestDays = await checkRestDaysBetween(
-          userId,
-          missedStartDate.toISOString().split('T')[0],
-          yesterdayDate.toISOString().split('T')[0]
-        );
-        
-        if (wereRestDays) {
-          // All missed days were rest days, continue streak
-          newStreak = (profile.current_streak || 0) + 1;
-        } else {
-          // Some missed days were workout days, streak broken
-          newStreak = 1;
-        }
-      }
+      // New day - increment streak by 1
+      newStreak = (profile.current_streak || 0) + 1;
     }
     
     // Update longest streak if needed

@@ -60,10 +60,30 @@ export async function getTodaysJournalEntry(userId: string): Promise<JournalEntr
 export async function logWorkout(data: LogWorkoutData): Promise<void> {
   const today = new Date().toISOString().split('T')[0];
   
-  // Check if already logged today
-  const existingEntry = await hasLoggedWorkoutToday(data.userId);
+  // Check if already logged today - only prevent if it's a duplicate, not an update
+  const existingEntry = await getTodaysJournalEntry(data.userId);
   if (existingEntry) {
-    throw new Error('Workout already logged for today');
+    // Update existing entry instead of creating a new one
+    const { error: updateError } = await supabase
+      .from('journal_entries')
+      .update({
+        workout_type: data.workoutType,
+        workout_name: data.workoutName,
+        notes: data.notes?.trim() || null,
+        duration: data.duration || null,
+        difficulty: data.difficulty || null,
+        completed: true,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', existingEntry.id);
+
+    if (updateError) {
+      console.error('Error updating journal entry:', updateError);
+      throw new Error('Failed to update workout');
+    }
+
+    // Don't update streak again if already logged today
+    return;
   }
 
   // Create journal entry

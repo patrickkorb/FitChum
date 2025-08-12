@@ -12,7 +12,7 @@ const pricingOptions = {
     price: 5,
     mode: "subscription",
     period: '/month',
-    priceId: 'price_1RuyKyHjVDpsMb5NvyqzNfMx', // You'll need to create this in Stripe
+    priceId: 'price_1RvI3mHEPAM4GT14KLK6Rk5g', // Ersetze mit Live Price ID
     billing: 'Billed monthly',
     savings: null
   },
@@ -21,7 +21,7 @@ const pricingOptions = {
     price: 29,
     mode: "payment",
     period: 'once',
-    priceId: 'price_1RuyNBHjVDpsMb5NSXvNd37p', // You'll need to create this in Stripe
+    priceId: 'price_1RvI3THEPAM4GT14g9RyuxBP', // Ersetze mit Live Price ID
     billing: 'One-time payment',
     savings: 'Save €31 per year'
   }
