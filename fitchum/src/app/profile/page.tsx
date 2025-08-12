@@ -16,6 +16,7 @@ export default function Profile() {
     const [deleting, setDeleting] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [canceling, setCanceling] = useState(false);
+    const [showCancelConfirm, setShowCancelConfirm] = useState(false);
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({
@@ -265,9 +266,15 @@ export default function Profile() {
 
     // ❌ Subscription kündigen
     async function handleCancelSubscription() {
+        if (!showCancelConfirm) {
+            setShowCancelConfirm(true);
+            return;
+        }
+
         setCanceling(true);
         setError('');
         setMessage('');
+        setShowCancelConfirm(false);
 
         try {
             const response = await fetch('/api/cancel-subscription', {
@@ -318,20 +325,28 @@ export default function Profile() {
             return;
         }
 
-        const { error: profileError } = await supabase
-            .from('profiles')
-            .delete()
-            .eq('user_id', user.id);
+        try {
+            const response = await fetch('/api/delete-account', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: user.id }),
+            });
 
-        if (profileError) {
-            setError('Profil konnte nicht gelöscht werden.');
-            console.error(profileError);
+            const result = await response.json();
+
+            if (response.ok) {
+                // Sign out the user and redirect
+                await supabase.auth.signOut();
+                router.push('/auth/login?message=Account deleted successfully');
+            } else {
+                setError(result.error || 'Failed to delete account');
+                setDeleting(false);
+            }
+        } catch (error) {
+            console.error('Error deleting account:', error);
+            setError('An error occurred while deleting account');
             setDeleting(false);
-            return;
         }
-
-        await supabase.auth.signOut();
-        router.push('/account-deleted'); // Optional
     }
 
     // Loading state
@@ -509,15 +524,36 @@ export default function Profile() {
                                         )}
                                         
                                         {formData.subscription_status === 'active' && (
-                                            <Button
-                                                onClick={handleCancelSubscription}
-                                                variant="outline"
-                                                size="sm"
-                                                className="text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 dark:text-red-400 dark:border-red-600 dark:hover:bg-red-900/20"
-                                                disabled={canceling}
-                                            >
-                                                {canceling ? 'Canceling...' : 'Cancel Subscription'}
-                                            </Button>
+                                            <div className="space-y-2">
+                                                <Button
+                                                    onClick={handleCancelSubscription}
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 dark:text-red-400 dark:border-red-600 dark:hover:bg-red-900/20"
+                                                    disabled={canceling}
+                                                >
+                                                    {canceling ? 'Canceling...' : showCancelConfirm ? 'Confirm Cancellation' : 'Cancel Subscription'}
+                                                </Button>
+                                                
+                                                {showCancelConfirm && (
+                                                    <div className="text-sm text-neutral-dark/70 dark:text-neutral-light/70 bg-neutral-dark/5 dark:bg-neutral-light/5 px-3 py-2 rounded-lg space-y-2">
+                                                        <p className="font-medium text-red-600 dark:text-red-400">
+                                                            Are you sure you want to cancel your subscription?
+                                                        </p>
+                                                        <p>You will retain Pro access until the end of your current billing period.</p>
+                                                        <div className="flex gap-2">
+                                                            <Button
+                                                                onClick={() => setShowCancelConfirm(false)}
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="text-xs"
+                                                            >
+                                                                Keep Subscription
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
                                         )}
                                     </div>
                                 )}
