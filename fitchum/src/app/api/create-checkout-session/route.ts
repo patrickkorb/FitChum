@@ -13,14 +13,18 @@ export async function POST(req: NextRequest) {
     
     const userId = user.id;
 
-    const { priceId } = await req.json();
+    const { priceId, mode } = await req.json();
 
     if (!priceId) {
       return NextResponse.json({ error: 'Price ID is required' }, { status: 400 });
     }
 
+    if (!mode || !['payment', 'subscription'].includes(mode)) {
+      return NextResponse.json({ error: 'Valid mode is required (payment or subscription)' }, { status: 400 });
+    }
+
     const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
+      mode: mode as 'payment' | 'subscription',
       payment_method_types: ['card'],
       line_items: [
         {

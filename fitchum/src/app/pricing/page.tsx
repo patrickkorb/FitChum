@@ -19,6 +19,7 @@ const pricingOptions = {
   lifetime: {
     name: 'Pro Lifetime',
     price: 29,
+    mode: "payment",
     period: 'once',
     priceId: 'price_1RuyNBHjVDpsMb5NSXvNd37p', // You'll need to create this in Stripe
     billing: 'One-time payment',
@@ -79,6 +80,7 @@ export default function PricingPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           priceId: currentPlan.priceId,
+          mode: currentPlan.mode,
           userId: user.id,
         }),
       });
