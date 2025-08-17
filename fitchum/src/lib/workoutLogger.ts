@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/client';
 import type { JournalEntry } from './supabase';
+import { getTodayDateString, getWeekdayLowercase, getDateString, getDaysDifference } from './dateUtils';
 
 const supabase = createClient();
 
@@ -17,7 +18,7 @@ export interface LogWorkoutData {
  */
 export async function hasLoggedWorkoutToday(userId: string): Promise<boolean> {
   try {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayDateString();
     
     const { data } = await supabase
       .from('journal_entries')
@@ -37,7 +38,7 @@ export async function hasLoggedWorkoutToday(userId: string): Promise<boolean> {
  */
 export async function getTodaysJournalEntry(userId: string): Promise<JournalEntry | null> {
   try {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayDateString();
     
     const { data, error } = await supabase
       .from('journal_entries')
@@ -110,7 +111,7 @@ export async function updateUserStreak(userId: string): Promise<void> {
     const newCurrentStreak = await calculateCurrentStreak(userId);
     const newLongestStreak = Math.max(profile.longest_streak || 0, newCurrentStreak);
     const newTotalWorkouts = (profile.total_workouts || 0) + 1;
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayDateString();
 
     const { error } = await supabase
       .from('profiles')
@@ -177,8 +178,8 @@ export async function calculateCurrentStreak(userId: string): Promise<number> {
 
     // First, check for any missed workout days before today
     while (checkDate >= new Date('2020-01-01')) { // reasonable limit
-      const dateStr = checkDate.toISOString().split('T')[0];
-      const dayOfWeek = checkDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+      const dateStr = getDateString(checkDate);
+      const dayOfWeek = getWeekdayLowercase(checkDate);
 
       // If this is a scheduled workout day
       if (workoutDays.has(dayOfWeek)) {
@@ -348,8 +349,8 @@ async function calculateExistingStreak(userId: string): Promise<number> {
 
     // Start from most recent workout and work backwards
     while (true) {
-      const dateStr = checkDate.toISOString().split('T')[0];
-      const dayOfWeek = checkDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+      const dateStr = getDateString(checkDate);
+      const dayOfWeek = getWeekdayLowercase(checkDate);
 
       // If this is a scheduled workout day
       if (workoutDays.has(dayOfWeek)) {
@@ -367,8 +368,7 @@ async function calculateExistingStreak(userId: string): Promise<number> {
       checkDate.setDate(checkDate.getDate() - 1);
 
       // Safety check: don't go back more than 365 days
-      const daysDiff = Math.floor((today.getTime() - checkDate.getTime()) / (1000 * 60 * 60 * 24));
-      if (daysDiff > 365) break;
+      if (getDaysDifference(today, checkDate) > 365) break;
     }
 
     return currentStreak;
@@ -390,7 +390,7 @@ export async function logWorkoutActivity(userId: string, workoutName: string): P
         activity_type: 'workout_logged',
         activity_data: {
           workout_type: workoutName,
-          date: new Date().toISOString().split('T')[0]
+          date: getTodayDateString()
         }
       });
 
@@ -414,7 +414,7 @@ export async function logStreakMilestone(userId: string, streak: number): Promis
         activity_type: 'streak_milestone',
         activity_data: {
           streak: streak,
-          date: new Date().toISOString().split('T')[0]
+          date: getTodayDateString()
         }
       });
 

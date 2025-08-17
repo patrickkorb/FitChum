@@ -13,8 +13,9 @@ export async function POST() {
     const supabase = await createClient();
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('user_id, current_streak, longest_streak, last_workout_date')
-      .order('user_id');
+      .select('user_id, current_streak, longest_streak')
+      .order('current_streak DESC')
+      .limit(10);
     
     return NextResponse.json({
       success: true,
