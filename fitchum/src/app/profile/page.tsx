@@ -15,6 +15,8 @@ export default function Profile() {
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [canceling, setCanceling] = useState(false);
+    const [showCancelConfirm, setShowCancelConfirm] = useState(false);
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({
@@ -23,6 +25,9 @@ export default function Profile() {
         profile_pic_url: '',
         theme_preference: 'light' as 'light' | 'dark',
         subscription_plan: 'free' as 'free' | 'pro',
+        subscription_type: 'payment' as 'payment' | 'subscription' | null,
+        subscription_status: 'inactive' as 'active' | 'canceled' | 'inactive',
+        subscription_cancel_at: null as string | null,
     });
 
     const supabase = createClient();
@@ -47,7 +52,7 @@ export default function Profile() {
 
             const { data: profile, error: profileError } = await supabase
                 .from('profiles')
-                .select('*')
+                .select('username, email, profile_pic_url, theme_preference, subscription_plan, subscription_type, subscription_status, subscription_cancel_at')
                 .eq('user_id', user.id)
                 .single();
 
@@ -61,6 +66,9 @@ export default function Profile() {
                     profile_pic_url: profile.profile_pic_url || '',
                     theme_preference: (profile.theme_preference || 'light') as 'light' | 'dark',
                     subscription_plan: (profile.subscription_plan || 'free') as 'free' | 'pro',
+                    subscription_type: profile.subscription_type || null,
+                    subscription_status: profile.subscription_status || 'inactive',
+                    subscription_cancel_at: profile.subscription_cancel_at || null,
                 });
                 // Only set theme on initial load, don't override user's current theme choice
                 if (theme === 'system' || !theme) {
@@ -79,56 +87,114 @@ export default function Profile() {
         const file = event.target.files?.[0];
         if (!file) return;
 
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            setError('File size must be less than 5MB');
+            return;
+        }
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            setError('Please select an image file');
+            return;
+        }
+
         setLoading(true);
         setError('');
-        setMessage('');
+        setMessage('Uploading...');
 
-        const {
-            data: { user },
-            error: userError
-        } = await supabase.auth.getUser();
+        try {
+            const {
+                data: { user },
+                error: userError
+            } = await supabase.auth.getUser();
 
-        if (userError || !user) {
-            setError('Benutzer nicht gefunden.');
+            if (userError || !user) {
+                setError('User not found.');
+                setLoading(false);
+                return;
+            }
+
+            // Create unique filename
+            const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+            const timestamp = Date.now();
+            const filePath = `${user.id}/avatar-${timestamp}.${fileExt}`;
+
+            console.log('Uploading file to:', filePath);
+
+            // Check if bucket exists by trying to list
+            const { error: listError } = await supabase.storage.from('profile-pictures').list();
+            
+            if (listError) {
+                console.error('Storage bucket error:', listError);
+                // Fallback: try to use a direct URL approach
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const dataUrl = e.target?.result as string;
+                    const { error: updateError } = await supabase
+                        .from('profiles')
+                        .update({ profile_pic_url: dataUrl })
+                        .eq('user_id', user.id);
+
+                    if (updateError) {
+                        setError('Failed to save profile picture.');
+                        console.error(updateError);
+                    } else {
+                        setFormData((prev) => ({
+                            ...prev,
+                            profile_pic_url: dataUrl
+                        }));
+                        setMessage('Profile picture updated!');
+                    }
+                    setLoading(false);
+                };
+                reader.readAsDataURL(file);
+                return;
+            }
+
+            // Upload to Supabase storage
+            const { error: uploadError, data: uploadData } = await supabase.storage
+                .from('profile-pictures')
+                .upload(filePath, file, { upsert: true });
+
+            if (uploadError) {
+                console.error('Upload error:', uploadError);
+                setError(`Upload failed: ${uploadError.message}`);
+                setLoading(false);
+                return;
+            }
+
+            console.log('Upload successful:', uploadData);
+
+            // Get public URL
+            const {
+                data: { publicUrl }
+            } = supabase.storage.from('profile-pictures').getPublicUrl(filePath);
+
+
+            // Update profile
+            const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ profile_pic_url: publicUrl })
+                .eq('user_id', user.id);
+
+            if (updateError) {
+                setError('Failed to save profile picture to database.');
+                console.error('Database update error:', updateError);
+            } else {
+                setFormData((prev) => ({
+                    ...prev,
+                    profile_pic_url: publicUrl
+                }));
+                setMessage('Profile picture updated successfully!');
+            }
+
+        } catch (error) {
+            console.error('Unexpected error:', error);
+            setError('An unexpected error occurred. Please try again.');
+        } finally {
             setLoading(false);
-            return;
         }
-
-        const fileExt = file.name.split('.').pop();
-        const filePath = `${user.id}/avatar.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-            .from('avatars')
-            .upload(filePath, file, { upsert: true });
-
-        if (uploadError) {
-            setError('Fehler beim Hochladen des Bilds.');
-            console.error(uploadError);
-            setLoading(false);
-            return;
-        }
-
-        const {
-            data: { publicUrl }
-        } = supabase.storage.from('avatars').getPublicUrl(filePath);
-
-        const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ profile_pic_url: publicUrl })
-            .eq('user_id', user.id);
-
-        if (updateError) {
-            setError('Bild konnte nicht im Profil gespeichert werden.');
-            console.error(updateError);
-        } else {
-            setFormData((prev) => ({
-                ...prev,
-                profile_pic_url: publicUrl
-            }));
-            setMessage('Profilbild aktualisiert!');
-        }
-
-        setLoading(false);
     };
 
     // 🧑‍💼 Formularfeld ändern
@@ -194,7 +260,46 @@ export default function Profile() {
             setError('Abmeldung fehlgeschlagen.');
             setLoading(false);
         } else {
-            router.push('/login');
+            router.push('/auth/login');
+        }
+    }
+
+    // ❌ Subscription kündigen
+    async function handleCancelSubscription() {
+        if (!showCancelConfirm) {
+            setShowCancelConfirm(true);
+            return;
+        }
+
+        setCanceling(true);
+        setError('');
+        setMessage('');
+        setShowCancelConfirm(false);
+
+        try {
+            const response = await fetch('/api/cancel-subscription', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                setMessage(result.message);
+                // Update local state to reflect cancellation
+                setFormData(prev => ({
+                    ...prev,
+                    subscription_status: 'canceled',
+                    subscription_cancel_at: result.cancel_at,
+                }));
+            } else {
+                setError(result.error || 'Failed to cancel subscription');
+            }
+        } catch (error) {
+            console.error('Error canceling subscription:', error);
+            setError('An error occurred while canceling subscription');
+        } finally {
+            setCanceling(false);
         }
     }
 
@@ -220,20 +325,93 @@ export default function Profile() {
             return;
         }
 
-        const { error: profileError } = await supabase
-            .from('profiles')
-            .delete()
-            .eq('user_id', user.id);
+        try {
+            const response = await fetch('/api/delete-account', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: user.id }),
+            });
 
-        if (profileError) {
-            setError('Profil konnte nicht gelöscht werden.');
-            console.error(profileError);
+            const result = await response.json();
+
+            if (response.ok) {
+                // Sign out the user and redirect
+                await supabase.auth.signOut();
+                router.push('/auth/login?message=Account deleted successfully');
+            } else {
+                setError(result.error || 'Failed to delete account');
+                setDeleting(false);
+            }
+        } catch (error) {
+            console.error('Error deleting account:', error);
+            setError('An error occurred while deleting account');
             setDeleting(false);
-            return;
         }
+    }
 
-        await supabase.auth.signOut();
-        router.push('/account-deleted'); // Optional
+    // Loading state
+    if (loading) {
+        return (
+            <div className="max-w-2xl mx-auto space-y-6">
+                <div className="text-center mb-8">
+                    <h1 className="text-3xl font-bold text-neutral-dark dark:text-neutral-light mb-2">
+                        Profil
+                    </h1>
+                    <p className="text-neutral-dark/70 dark:text-neutral-light/70">
+                        Verwalte deine persönlichen Einstellungen
+                    </p>
+                </div>
+
+                <Card>
+                    <div className="animate-pulse space-y-6">
+                        {/* Profile Picture Skeleton */}
+                        <div className="text-center">
+                            <div className="w-24 h-24 rounded-full bg-neutral-dark/10 dark:bg-neutral-light/10 mx-auto"></div>
+                        </div>
+
+                        {/* Form Fields Skeleton */}
+                        <div className="space-y-4">
+                            <div>
+                                <div className="h-4 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded w-1/4 mb-2"></div>
+                                <div className="h-12 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded-xl"></div>
+                            </div>
+                            <div>
+                                <div className="h-4 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded w-1/4 mb-2"></div>
+                                <div className="h-12 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded-xl"></div>
+                            </div>
+                            <div>
+                                <div className="h-4 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded w-1/4 mb-2"></div>
+                                <div className="h-10 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded w-1/3"></div>
+                            </div>
+                        </div>
+
+                        {/* Theme Toggle Skeleton */}
+                        <div className="flex items-center justify-between p-4 bg-neutral-dark/5 dark:bg-neutral-light/5 rounded-xl">
+                            <div className="space-y-2">
+                                <div className="h-4 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded w-20"></div>
+                                <div className="h-3 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded w-32"></div>
+                            </div>
+                            <div className="w-11 h-6 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded-full"></div>
+                        </div>
+
+                        {/* Buttons Skeleton */}
+                        <div className="flex gap-3">
+                            <div className="flex-1 h-12 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded-xl"></div>
+                            <div className="h-12 w-24 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded-xl"></div>
+                        </div>
+
+                        {/* Delete Section Skeleton */}
+                        <div className="border-t border-neutral-dark/10 dark:border-neutral-light/10 pt-6">
+                            <div className="text-center space-y-3">
+                                <div className="h-5 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded w-32 mx-auto"></div>
+                                <div className="h-4 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded w-48 mx-auto"></div>
+                                <div className="h-10 bg-neutral-dark/10 dark:bg-neutral-light/10 rounded w-32 mx-auto"></div>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+            </div>
+        );
     }
 
     return (
@@ -315,18 +493,69 @@ export default function Profile() {
                             <label className="block text-sm font-medium text-neutral-dark dark:text-neutral-light mb-2">
                                 Abonnement
                             </label>
-                            <div className="flex items-center gap-2">
-                                <span className="px-3 py-2 rounded-lg bg-primary/10 text-primary font-medium">
-                                    {formData.subscription_plan === 'pro' ? 'Pro' : 'Free'}
-                                </span>
-                                {formData.subscription_plan === 'free' && (
-                                    <Button
-                                        onClick={() => router.push('/pricing')}
-                                        variant="outline"
-                                        size="sm"
-                                    >
-                                        Upgrade
-                                    </Button>
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-2">
+                                    <span className="px-3 py-2 rounded-lg bg-primary/10 text-primary font-medium">
+                                        {formData.subscription_plan === 'pro' ? 'Pro' : 'Free'}
+                                        {formData.subscription_plan === 'pro' && formData.subscription_type && (
+                                            <span className="ml-1 text-xs opacity-70">
+                                                ({formData.subscription_type === 'subscription' ? 'Monthly' : 'Lifetime'})
+                                            </span>
+                                        )}
+                                    </span>
+                                    {formData.subscription_plan === 'free' && (
+                                        <Button
+                                            onClick={() => router.push('/pricing')}
+                                            variant="outline"
+                                            size="sm"
+                                        >
+                                            Upgrade
+                                        </Button>
+                                    )}
+                                </div>
+                                
+                                {/* Subscription status and cancel option */}
+                                {formData.subscription_plan === 'pro' && formData.subscription_type === 'subscription' && (
+                                    <div className="space-y-2">
+                                        {formData.subscription_status === 'canceled' && formData.subscription_cancel_at && (
+                                            <div className="text-sm text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/20 px-3 py-2 rounded-lg">
+                                                Subscription canceled. Access ends on {new Date(formData.subscription_cancel_at).toLocaleDateString()}
+                                            </div>
+                                        )}
+                                        
+                                        {formData.subscription_status === 'active' && (
+                                            <div className="space-y-2">
+                                                <Button
+                                                    onClick={handleCancelSubscription}
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 dark:text-red-400 dark:border-red-600 dark:hover:bg-red-900/20"
+                                                    disabled={canceling}
+                                                >
+                                                    {canceling ? 'Canceling...' : showCancelConfirm ? 'Confirm Cancellation' : 'Cancel Subscription'}
+                                                </Button>
+                                                
+                                                {showCancelConfirm && (
+                                                    <div className="text-sm text-neutral-dark/70 dark:text-neutral-light/70 bg-neutral-dark/5 dark:bg-neutral-light/5 px-3 py-2 rounded-lg space-y-2">
+                                                        <p className="font-medium text-red-600 dark:text-red-400">
+                                                            Are you sure you want to cancel your subscription?
+                                                        </p>
+                                                        <p>You will retain Pro access until the end of your current billing period.</p>
+                                                        <div className="flex gap-2">
+                                                            <Button
+                                                                onClick={() => setShowCancelConfirm(false)}
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="text-xs"
+                                                            >
+                                                                Keep Subscription
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
                                 )}
                             </div>
                         </div>

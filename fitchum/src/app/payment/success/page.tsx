@@ -1,15 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Button from '@/app/components/ui/Button';
+import { useEffect, useState, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Card from '@/app/components/ui/Card';
 import { CheckCircle, Crown } from 'lucide-react';
 
-export default function PaymentSuccessPage() {
-
-  const router = useRouter();
+function PaymentSuccessContent() {
   const [loading, setLoading] = useState(true);
+  const searchParams = useSearchParams();
+  const mode = searchParams.get('mode'); // 'payment' for lifetime, 'subscription' for monthly
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -45,7 +44,10 @@ export default function PaymentSuccessPage() {
         </h1>
         
         <p className="text-neutral-dark/70 dark:text-neutral-light/70">
-          Your payment was successful! You now have lifetime access to all Pro features.
+          {mode === 'subscription' 
+            ? 'Your payment was successful! You now have monthly access to all Pro features.'
+            : 'Your payment was successful! You now have lifetime access to all Pro features.'
+          }
         </p>
         
         <div className="space-y-3 text-left">
@@ -66,19 +68,30 @@ export default function PaymentSuccessPage() {
             Priority support
           </div>
         </div>
-        
-        <Button 
-          onClick={() => router.push('/dashboard')}
-          variant="primary"
-          className="w-full"
-        >
-          Start Using Pro Features
-        </Button>
+
         
         <p className="text-xs text-neutral-dark/50 dark:text-neutral-light/50">
-          No recurring charges. You own Pro for life!
+          {mode === 'subscription' 
+            ? 'Your subscription will renew automatically each month. You can cancel anytime from your profile.'
+            : 'No recurring charges. You own Pro for life!'
+          }
         </p>
       </Card>
     </div>
+  );
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="col-span-4 flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-neutral-dark/70 dark:text-neutral-light/70">Loading...</p>
+        </div>
+      </div>
+    }>
+      <PaymentSuccessContent />
+    </Suspense>
   );
 }

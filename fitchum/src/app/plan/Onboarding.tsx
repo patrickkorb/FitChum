@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { createWorkoutPlan } from '@/lib/workoutPlan';
 import Button from '../components/ui/Button';
+import AuthModal from '../components/ui/AuthModal';
 import WorkoutSplitSelection, { WorkoutSplit } from '../components/onboarding/WorkoutSplitSelection';
 import FrequencySelection, { WorkoutFrequency } from '../components/onboarding/FrequencySelection';
 import DaySelection, { SelectedDays } from '../components/onboarding/DaySelection';
@@ -22,6 +23,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const totalSteps: number = 3;
   
   const supabase = createClient();
@@ -75,7 +77,10 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        throw new Error('User not authenticated');
+        // Show auth modal instead of alert
+        setShowAuthModal(true);
+        setIsSubmitting(false);
+        return;
       }
 
       const planData = {
@@ -94,7 +99,11 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       }
     } catch (error) {
       console.error('Error creating workout plan:', error);
-      alert('An error occurred while creating your workout plan. Please try again.');
+      if (error instanceof Error && error.message === 'User not authenticated') {
+        setShowAuthModal(true);
+      } else {
+        alert('An error occurred while creating your workout plan. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -131,8 +140,16 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   };
 
   return (
-    <div className="px-4 sm:px-8 py-4 sm:py-8">
-      <div className="max-w-4xl mx-auto">
+    <>
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        title="Almost There! 🎯"
+        message="Your personalized workout plan is ready! Create an account to save it and start your fitness journey."
+      />
+      
+      <div className="px-4 sm:px-8 py-4 sm:py-8">
+        <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-6 sm:mb-8">
           <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
@@ -270,7 +287,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             </div>
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

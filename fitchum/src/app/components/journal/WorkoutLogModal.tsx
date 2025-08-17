@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, CheckCircle2, Clock, MessageSquare, Star } from 'lucide-react';
 import Button from '../ui/Button';
+import ConfettiCelebration, { useConfetti } from '../ui/Confetti';
 import { getTodaysWorkout } from '@/lib/workoutPlan';
 import { logWorkout } from '@/lib/workoutLogger';
 import type { WorkoutSchedule } from '@/lib/supabase';
@@ -22,6 +23,7 @@ export default function WorkoutLogModal({ isOpen, onClose, onSuccess, userId }: 
   const [difficulty, setDifficulty] = useState<number>(0);
   const [todaysWorkout, setTodaysWorkout] = useState<WorkoutSchedule | null>(null);
   const [loading, setLoading] = useState(true);
+  const { trigger, type, key, celebrate, reset } = useConfetti();
 
   useEffect(() => {
     if (isOpen) {
@@ -52,6 +54,9 @@ export default function WorkoutLogModal({ isOpen, onClose, onSuccess, userId }: 
       await logWorkoutEntry();
       setIsCompleted(true);
       
+      // Trigger workout celebration confetti
+      celebrate('workout');
+      
       // Auto-close after 2 seconds if no additional details
       setTimeout(() => {
         if (!notes.trim() && !duration && difficulty === 0) {
@@ -70,6 +75,10 @@ export default function WorkoutLogModal({ isOpen, onClose, onSuccess, userId }: 
     setIsLogging(true);
     try {
       await logWorkoutEntry();
+      
+      // Trigger workout celebration confetti
+      celebrate('workout');
+      
       handleClose();
     } catch (error) {
       console.error('Error saving workout details:', error);
@@ -94,6 +103,7 @@ export default function WorkoutLogModal({ isOpen, onClose, onSuccess, userId }: 
 
   const handleClose = () => {
     setIsCompleted(false);
+    reset(); // Reset confetti state
     onClose();
   };
 
@@ -111,8 +121,9 @@ export default function WorkoutLogModal({ isOpen, onClose, onSuccess, userId }: 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white dark:bg-neutral-dark w-full max-w-md mx-auto rounded-2xl shadow-2xl transform transition-all duration-300 max-h-[90vh] overflow-y-auto">
+    <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="bg-white dark:bg-neutral-dark w-full max-w-md mx-auto rounded-2xl shadow-2xl transform transition-all duration-300 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-neutral-dark/10 dark:border-neutral-light/10">
           <h2 className="text-xl sm:text-2xl font-bold text-neutral-dark dark:text-neutral-light">
@@ -137,23 +148,43 @@ export default function WorkoutLogModal({ isOpen, onClose, onSuccess, userId }: 
             <>
               {/* Today's Workout Info */}
               {todaysWorkout && (
-                <div className="bg-primary/10 rounded-xl p-4 text-center">
-                  <h3 className="font-semibold text-primary text-lg mb-1">
-                    Today&apo;s Workout
+                <div className={`rounded-xl p-4 text-center ${todaysWorkout.workout_type.toLowerCase().includes('rest') ? 'bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-700' : 'bg-primary/10'}`}>
+                  <h3 className={`font-semibold text-lg mb-1 ${todaysWorkout.workout_type.toLowerCase().includes('rest') ? 'text-blue-600 dark:text-blue-400' : 'text-primary'}`}>
+                    {todaysWorkout.workout_type.toLowerCase().includes('rest') ? 'Rest Day' : "Today's Workout"}
                   </h3>
                   <p className="text-neutral-dark dark:text-neutral-light font-medium">
                     {todaysWorkout.workout_name}
                   </p>
-                  {todaysWorkout.workout_type === 'rest' && (
-                    <p className="text-neutral-dark/70 dark:text-neutral-light/70 text-sm mt-1">
-                      Rest day - but any activity counts!
-                    </p>
+                  {todaysWorkout.workout_type.toLowerCase().includes('rest') && (
+                    <div className="mt-3 space-y-2">
+                      <p className="text-blue-600 dark:text-blue-400 text-sm font-medium">
+                        🌙 Time to recover and recharge!
+                      </p>
+                      <p className="text-neutral-dark/70 dark:text-neutral-light/70 text-sm">
+                        Rest days are crucial for muscle recovery and growth. Your streak continues automatically - no logging needed!
+                      </p>
+                    </div>
                   )}
                 </div>
               )}
 
-              {/* Quick Log Button */}
-              {!isCompleted ? (
+              {/* Quick Log Button or Rest Day Message */}
+              {todaysWorkout?.workout_type.toLowerCase().includes('rest') ? (
+                <div className="text-center py-6">
+                  <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl">😴</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-blue-600 dark:text-blue-400 mb-2">Enjoy Your Rest Day!</h3>
+                  <p className="text-neutral-dark/70 dark:text-neutral-light/70 max-w-sm mx-auto">
+                    No workout logging needed today. Your streak continues automatically on rest days.
+                  </p>
+                  <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
+                    <p className="text-green-700 dark:text-green-400 text-sm font-medium">
+                      ✨ Streak Safe - Rest days don&apos;t break your streak!
+                    </p>
+                  </div>
+                </div>
+              ) : !isCompleted ? (
                 <div className="text-center">
                   <Button
                     onClick={handleQuickLog}
@@ -186,7 +217,8 @@ export default function WorkoutLogModal({ isOpen, onClose, onSuccess, userId }: 
                 </div>
               )}
 
-              {/* Optional Details */}
+              {/* Optional Details - Hidden on rest days */}
+              {!todaysWorkout?.workout_type.toLowerCase().includes('rest') && (
               <div className="space-y-4 border-t border-neutral-dark/10 dark:border-neutral-light/10 pt-6">
                 <h4 className="font-semibold text-neutral-dark dark:text-neutral-light flex items-center gap-2">
                   <MessageSquare size={18} />
@@ -262,10 +294,19 @@ export default function WorkoutLogModal({ isOpen, onClose, onSuccess, userId }: 
                   </Button>
                 )}
               </div>
+              )}
             </>
           )}
         </div>
+        </div>
       </div>
-    </div>
+      
+      <ConfettiCelebration 
+        key={key}
+        trigger={trigger}
+        type={type}
+        onComplete={reset}
+      />
+    </>
   );
 }

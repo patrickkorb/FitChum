@@ -35,21 +35,48 @@ export async function POST(req: NextRequest) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
 
-        if (session.mode === 'payment' && session.payment_status === 'paid') {
+        if ((session.mode === 'payment' && session.payment_status === 'paid') || 
+            (session.mode === 'subscription' && session.payment_status === 'paid')) {
           const userId = session.client_reference_id || session.metadata?.userId;
 
           if (userId) {
-            console.log(`Processing payment for user ${userId}`);
+            console.log(`Processing ${session.mode} for user ${userId}`);
+            
+            // Determine subscription type and prepare update data
+            const updateData: {
+              subscription_plan: 'pro';
+              subscription_status: 'active';
+              subscription_type: 'payment' | 'subscription';
+              updated_at: string;
+              stripe_customer_id?: string;
+              stripe_subscription_id?: string;
+              stripe_payment_id?: string;
+            } = {
+              subscription_plan: 'pro',
+              subscription_status: 'active',
+              subscription_type: session.mode, // 'payment' for lifetime, 'subscription' for monthly
+              updated_at: new Date().toISOString(),
+            };
+
+            // Add customer ID for all payments
+            if (session.customer) {
+              updateData.stripe_customer_id = session.customer as string;
+            }
+
+            // For subscription mode, store subscription ID
+            if (session.mode === 'subscription' && session.subscription) {
+              updateData.stripe_subscription_id = session.subscription as string;
+            }
+
+            // For payment mode, store payment intent
+            if (session.mode === 'payment' && session.payment_intent) {
+              updateData.stripe_payment_id = session.payment_intent as string;
+            }
             
             // Update user to Pro plan after successful payment
             const { error } = await supabase
               .from('profiles')
-              .update({
-                subscription_plan: 'pro',
-                stripe_payment_id: session.payment_intent as string,
-                subscription_status: 'active',
-                updated_at: new Date().toISOString(),
-              })
+              .update(updateData)
               .eq('user_id', userId);
 
             if (error) {
@@ -57,7 +84,7 @@ export async function POST(req: NextRequest) {
               return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
             }
 
-            console.log(`User ${userId} upgraded to Pro plan`);
+            console.log(`User ${userId} upgraded to Pro plan (${session.mode})`);
           } else {
             console.error('No user ID found in session');
           }
@@ -81,6 +108,50 @@ export async function POST(req: NextRequest) {
             .eq('user_id', userId);
 
           console.log(`Payment confirmed for user ${userId}`);
+        }
+        break;
+      }
+
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object as Stripe.Subscription;
+        
+        // Find user by subscription ID and downgrade them
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            subscription_plan: 'free',
+            subscription_status: 'canceled',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('stripe_subscription_id', subscription.id);
+
+        if (error) {
+          console.error('Error downgrading user after subscription deletion:', error);
+        } else {
+          console.log(`Subscription ${subscription.id} canceled and user downgraded`);
+        }
+        break;
+      }
+
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object as Stripe.Subscription;
+        
+        if (subscription.cancel_at_period_end) {
+          // Subscription is scheduled to cancel
+          const { error } = await supabase
+            .from('profiles')
+            .update({
+              subscription_status: 'canceled',
+              subscription_cancel_at: new Date(subscription.cancel_at! * 1000).toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq('stripe_subscription_id', subscription.id);
+
+          if (error) {
+            console.error('Error updating subscription cancellation:', error);
+          } else {
+            console.log(`Subscription ${subscription.id} scheduled for cancellation`);
+          }
         }
         break;
       }
