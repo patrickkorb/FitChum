@@ -25,9 +25,9 @@ export default function Profile() {
         profile_pic_url: '',
         theme_preference: 'light' as 'light' | 'dark',
         subscription_plan: 'free' as 'free' | 'pro',
-        subscription_type: 'payment' as 'payment' | 'subscription' | null,
         subscription_status: 'inactive' as 'active' | 'canceled' | 'inactive',
         subscription_cancel_at: null as string | null,
+        stripe_subscription_id: null as string | null,
     });
 
     const supabase = createClient();
@@ -52,7 +52,7 @@ export default function Profile() {
 
             const { data: profile, error: profileError } = await supabase
                 .from('profiles')
-                .select('username, email, profile_pic_url, theme_preference, subscription_plan, subscription_type, subscription_status, subscription_cancel_at')
+                .select('username, email, profile_pic_url, theme_preference, subscription_plan, subscription_status, subscription_cancel_at, stripe_subscription_id')
                 .eq('user_id', user.id)
                 .single();
 
@@ -66,7 +66,7 @@ export default function Profile() {
                     profile_pic_url: profile.profile_pic_url || '',
                     theme_preference: (profile.theme_preference || 'light') as 'light' | 'dark',
                     subscription_plan: (profile.subscription_plan || 'free') as 'free' | 'pro',
-                    subscription_type: profile.subscription_type || null,
+                    stripe_subscription_id: profile.stripe_subscription_id || null,
                     subscription_status: profile.subscription_status || 'inactive',
                     subscription_cancel_at: profile.subscription_cancel_at || null,
                 });
@@ -497,9 +497,9 @@ export default function Profile() {
                                 <div className="flex items-center gap-2">
                                     <span className="px-3 py-2 rounded-lg bg-primary/10 text-primary font-medium">
                                         {formData.subscription_plan === 'pro' ? 'Pro' : 'Free'}
-                                        {formData.subscription_plan === 'pro' && formData.subscription_type && (
+                                        {formData.subscription_plan === 'pro' && formData.stripe_subscription_id && (
                                             <span className="ml-1 text-xs opacity-70">
-                                                ({formData.subscription_type === 'subscription' ? 'Monthly' : 'Lifetime'})
+                                                (Monthly)
                                             </span>
                                         )}
                                     </span>
@@ -515,7 +515,7 @@ export default function Profile() {
                                 </div>
                                 
                                 {/* Subscription status and cancel option */}
-                                {formData.subscription_plan === 'pro' && formData.subscription_type === 'subscription' && (
+                                {formData.subscription_plan === 'pro' && formData.stripe_subscription_id && (
                                     <div className="space-y-2">
                                         {formData.subscription_status === 'canceled' && formData.subscription_cancel_at && (
                                             <div className="text-sm text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/20 px-3 py-2 rounded-lg">

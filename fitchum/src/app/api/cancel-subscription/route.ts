@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     // Get user's subscription info from database
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('stripe_customer_id, stripe_subscription_id, subscription_type')
+      .select('stripe_customer_id, stripe_subscription_id')
       .eq('user_id', user.id)
       .single();
 
@@ -22,13 +22,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    // Only allow cancellation for subscription (monthly) users, not lifetime
-    if (profile.subscription_type !== 'subscription') {
-      return NextResponse.json({ error: 'Only monthly subscriptions can be canceled' }, { status: 400 });
-    }
-
+    // Only allow cancellation if user has a subscription ID (recurring subscription)
     if (!profile.stripe_subscription_id) {
-      return NextResponse.json({ error: 'No active subscription found' }, { status: 400 });
+      return NextResponse.json({ error: 'No active subscription found to cancel' }, { status: 400 });
     }
 
     // Cancel the subscription in Stripe (at period end to allow access until paid period expires)

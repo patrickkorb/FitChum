@@ -42,19 +42,16 @@ export async function POST(req: NextRequest) {
           if (userId) {
             console.log(`Processing ${session.mode} for user ${userId}`);
             
-            // Determine subscription type and prepare update data
+            // Prepare update data for subscription
             const updateData: {
               subscription_plan: 'pro';
               subscription_status: 'active';
-              subscription_type: 'payment' | 'subscription';
               updated_at: string;
               stripe_customer_id?: string;
               stripe_subscription_id?: string;
-              stripe_payment_id?: string;
             } = {
               subscription_plan: 'pro',
               subscription_status: 'active',
-              subscription_type: session.mode, // 'payment' for lifetime, 'subscription' for monthly
               updated_at: new Date().toISOString(),
             };
 
@@ -68,10 +65,7 @@ export async function POST(req: NextRequest) {
               updateData.stripe_subscription_id = session.subscription as string;
             }
 
-            // For payment mode, store payment intent
-            if (session.mode === 'payment' && session.payment_intent) {
-              updateData.stripe_payment_id = session.payment_intent as string;
-            }
+            // Note: Both subscription and payment modes are treated as Pro subscription
             
             // Update user to Pro plan after successful payment
             const { error } = await supabase
