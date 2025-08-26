@@ -1,19 +1,14 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { 
-  TrendingUp, 
-  Target, 
-  Clock, 
-  Zap, 
-  Calendar,
-  Award,
+import {
+  TrendingUp,
+  Target,
+  Clock,
+  Zap,
   Trophy,
-  Star,
-  Heart,
   UserPlus,
-  Sparkles,
-  LucideIcon
+  LucideIcon, Sparkles
 } from 'lucide-react';
 import Button from '../ui/Button';
 
@@ -25,74 +20,7 @@ const demoStats = {
   avgDuration: 42
 };
 
-const demoInsights = [
-  {
-    title: '🔥 Amazing Streak!',
-    message: 'You\'re on fire with a 12-day streak! Keep the momentum going!',
-    type: 'positive' as const,
-    icon: Zap,
-    color: 'from-orange-400 to-red-500'
-  },
-  {
-    title: '💪 Consistent Progress',
-    message: '5 workouts this week shows your dedication to building a healthy habit!',
-    type: 'positive' as const,
-    icon: TrendingUp,
-    color: 'from-green-400 to-emerald-500'
-  },
-  {
-    title: '⏰ Quality Sessions',
-    message: 'Average 42 minutes per workout shows your commitment to quality training!',
-    type: 'positive' as const,
-    icon: Award,
-    color: 'from-indigo-400 to-purple-500'
-  }
-];
 
-const demoAchievements = [
-  {
-    title: 'On Fire',
-    description: 'Maintain a 3-day streak',
-    icon: Zap,
-    color: 'from-orange-500 to-red-500',
-    unlocked: true
-  },
-  {
-    title: 'Week Warrior',
-    description: 'Maintain a 7-day streak',
-    icon: Calendar,
-    color: 'from-green-500 to-emerald-600',
-    unlocked: true
-  },
-  {
-    title: 'Half Century',
-    description: 'Complete 50 total workouts',
-    icon: Trophy,
-    color: 'from-green-500 to-teal-500',
-    unlocked: true
-  },
-  {
-    title: 'Century Club',
-    description: 'Complete 100 total workouts',
-    icon: Award,
-    color: 'from-purple-500 to-pink-500',
-    unlocked: true
-  },
-  {
-    title: 'Time Keeper',
-    description: 'Average 30+ minutes per workout',
-    icon: Clock,
-    color: 'from-indigo-500 to-blue-600',
-    unlocked: true
-  },
-  {
-    title: 'Monthly Master',
-    description: 'Maintain a 30-day streak',
-    icon: Star,
-    color: 'from-purple-500 to-purple-600',
-    unlocked: false
-  }
-];
 
 // Demo monthly data for the year
 const demoMonthlyData = [
@@ -166,60 +94,11 @@ export default function DemoStats() {
             Your Fitness Journey
           </h1>
           <p className="text-neutral-600 dark:text-neutral-400 text-lg">
-            Track progress, celebrate achievements, stay motivated
+            Track progress, analyze patterns, stay motivated
           </p>
         </div>
 
 
-        {/* Demo Progress Insights */}
-        <div className="bg-white dark:bg-neutral-800 rounded-2xl p-4 sm:p-6 border border-neutral-200 dark:border-neutral-700 relative">
-          <div className="absolute top-4 right-4 bg-primary/10 text-primary px-2 py-1 rounded-full text-xs font-medium">
-            Demo Data
-          </div>
-          <div className="flex items-center gap-2 mb-4">
-            <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-pink-500" />
-            <h3 className="text-lg sm:text-xl font-bold text-neutral-dark dark:text-neutral-light">
-              Progress Insights
-            </h3>
-          </div>
-
-          <div className="space-y-3">
-            {demoInsights.map((insight, index) => {
-              const IconComponent = insight.icon;
-              
-              return (
-                <div
-                  key={index}
-                  className="group relative overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700 transition-all duration-200"
-                >
-                  <div className={`absolute inset-0 bg-gradient-to-r ${insight.color} opacity-5`}></div>
-                  
-                  <div className="relative p-3 sm:p-4">
-                    <div className="flex items-start gap-3">
-                      <div className={`flex-shrink-0 p-1.5 sm:p-2 rounded-lg bg-gradient-to-r ${insight.color}`}>
-                        <IconComponent className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <h4 className="font-semibold text-sm sm:text-base text-neutral-dark dark:text-neutral-light leading-tight">
-                            {insight.title}
-                          </h4>
-                          <div className="flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
-                            ✨
-                          </div>
-                        </div>
-                        <p className="text-neutral-600 dark:text-neutral-400 text-xs sm:text-sm leading-relaxed mt-1">
-                          {insight.message}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
 
         {/* Demo Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -335,105 +214,6 @@ export default function DemoStats() {
           </div>
         </div>
 
-        {/* Demo Achievement Badges */}
-        <div className="bg-white dark:bg-neutral-800 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-700 relative">
-          <div className="absolute top-4 right-4 bg-primary/10 text-primary px-2 py-1 rounded-full text-xs font-medium">
-            Demo Data
-          </div>
-          <div className="flex items-center gap-2 mb-4">
-            <Trophy className="w-5 h-5 text-yellow-500" />
-            <h3 className="text-lg font-bold text-neutral-dark dark:text-neutral-light">
-              Achievements Unlocked (5)
-            </h3>
-          </div>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-            {demoAchievements.filter(a => a.unlocked).map((achievement, index) => {
-              const IconComponent = achievement.icon;
-              return (
-                <div
-                  key={index}
-                  className="relative group cursor-pointer"
-                >
-                  <div className={`p-4 rounded-xl bg-gradient-to-br ${achievement.color} text-white transform transition-all duration-200 hover:scale-105 hover:shadow-lg`}>
-                    <div className="flex flex-col items-center text-center space-y-2">
-                      <IconComponent className="w-6 h-6" />
-                      <div>
-                        <h4 className="font-semibold text-sm">{achievement.title}</h4>
-                        <p className="text-xs opacity-90">{achievement.description}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 opacity-0 group-hover:opacity-100 group-hover:animate-pulse transition-opacity duration-300"></div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Next Achievement Preview */}
-          <div className="border-t border-neutral-200 dark:border-neutral-700 pt-4">
-            <h4 className="text-sm font-semibold text-neutral-dark dark:text-neutral-light mb-3">
-              Next Achievement
-            </h4>
-            <div className="flex items-center gap-4 p-4 rounded-xl border border-neutral-200 dark:border-neutral-700">
-              <div className="p-3 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 opacity-60">
-                <Star className="w-5 h-5 text-white" />
-              </div>
-              
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-1">
-                  <h4 className="font-semibold text-neutral-dark dark:text-neutral-light">
-                    Monthly Master
-                  </h4>
-                  <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                    12/30
-                  </span>
-                </div>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
-                  Maintain a 30-day streak
-                </p>
-                
-                <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
-                  <div
-                    className="h-2 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 transition-all duration-500"
-                    style={{ width: '40%' }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-
-
-        {/* Final CTA */}
-        {/* CTA Banner */}
-        <div className="bg-gradient-to-r from-primary to-secondary rounded-2xl p-6 text-white text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-white/10"></div>
-          <div className="relative">
-            <div className="flex items-center justify-center gap-2 mb-3">
-              <Trophy className="w-6 h-6" />
-              <h2 className="text-2xl font-bold">Start Your Fitness Journey Today!</h2>
-            </div>
-            <p className="text-white/90 mb-6 max-w-2xl mx-auto">
-              Join thousands of fitness enthusiasts tracking their progress, earning achievements, and staying motivated with FitChum.
-              Create your account to unlock personalized insights and connect with friends!
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
-              <Button
-                  onClick={handleSignUp}
-                  variant={"primary"}
-              >
-                <UserPlus className="w-5 h-5 mr-2" />
-                Create Free Account
-              </Button>
-              <div className="text-sm text-white/80">
-                ✨ Free forever • No credit card required
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

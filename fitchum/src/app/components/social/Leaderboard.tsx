@@ -8,6 +8,7 @@ import Button from '../ui/Button';
 
 interface LeaderboardProps {
   currentUserId?: string | null;
+  hideFriendsTab?: boolean;
 }
 
 type LeaderboardEntry = {
@@ -18,7 +19,7 @@ type LeaderboardEntry = {
   rank: number;
 };
 
-export default function Leaderboard({ currentUserId }: LeaderboardProps) {
+export default function Leaderboard({ currentUserId, hideFriendsTab = false }: LeaderboardProps) {
   const [activeTab, setActiveTab] = useState<'all' | 'friends'>('all');
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -182,32 +183,34 @@ export default function Leaderboard({ currentUserId }: LeaderboardProps) {
         )}
       </div>
 
-      <div className={`flex space-x-1 bg-neutral-dark/5 dark:bg-neutral-light/5 p-1 rounded-lg ${shouldUseFixedHeight ? 'flex-shrink-0' : ''}`}>
-        <button
-          onClick={() => handleTabChange('all')}
-          className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-            activeTab === 'all'
-              ? 'bg-white dark:bg-neutral-dark text-neutral-dark dark:text-neutral-light shadow'
-              : 'text-neutral-dark/70 dark:text-neutral-light/70'
-          }`}
-        >
-          All Users
-        </button>
-        <button
-          onClick={() => handleTabChange('friends')}
-          className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors relative ${
-            activeTab === 'friends'
-              ? 'bg-white dark:bg-neutral-dark text-neutral-dark dark:text-neutral-light shadow'
-              : 'text-neutral-dark/70 dark:text-neutral-light/70'
-          } ${!userHasPro ? 'opacity-60' : ''}`}
-          disabled={!userHasPro}
-        >
-          <span className="flex items-center gap-2 justify-center">
-            Friends
-            {!userHasPro && <Lock size={14} />}
-          </span>
-        </button>
-      </div>
+      {!hideFriendsTab && (
+        <div className={`flex space-x-1 bg-neutral-dark/5 dark:bg-neutral-light/5 p-1 rounded-lg ${shouldUseFixedHeight ? 'flex-shrink-0' : ''}`}>
+          <button
+            onClick={() => handleTabChange('all')}
+            className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+              activeTab === 'all'
+                ? 'bg-white dark:bg-neutral-dark text-neutral-dark dark:text-neutral-light shadow'
+                : 'text-neutral-dark/70 dark:text-neutral-light/70'
+            }`}
+          >
+            All Users
+          </button>
+          <button
+            onClick={() => handleTabChange('friends')}
+            className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors relative ${
+              activeTab === 'friends'
+                ? 'bg-white dark:bg-neutral-dark text-neutral-dark dark:text-neutral-light shadow'
+                : 'text-neutral-dark/70 dark:text-neutral-light/70'
+            } ${!userHasPro ? 'opacity-60' : ''}`}
+            disabled={!userHasPro}
+          >
+            <span className="flex items-center gap-2 justify-center">
+              Friends
+              {!userHasPro && <Lock size={14} />}
+            </span>
+          </button>
+        </div>
+      )}
 
       {!userHasPro && activeTab === 'friends' && (
         <div className="text-center py-8 px-4 bg-neutral-dark/5 dark:bg-neutral-light/5 rounded-lg border-2 border-dashed border-neutral-dark/20 dark:border-neutral-light/20">

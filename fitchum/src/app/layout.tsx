@@ -23,9 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${robotoCondensed.className} antialiased max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8`}
-      >
+      <body className={`${robotoCondensed.className} antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

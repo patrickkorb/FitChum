@@ -42,7 +42,7 @@ export default function AuthModal({
     {
       icon: Trophy,
       title: "Track Progress", 
-      description: "Monitor your streaks and achievements"
+      description: "Monitor your streaks and progress"
     },
     {
       icon: Users,

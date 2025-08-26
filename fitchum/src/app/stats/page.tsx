@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { getUserStats, UserStats } from '@/lib/userStats';
 import YearlyProgress from '@/app/components/stats/YearlyProgress';
-import AchievementBadges from '@/app/components/stats/AchievementBadges';
-import ProgressInsights from '@/app/components/stats/ProgressInsights';
 import DemoStats from '@/app/components/stats/DemoStats';
 // import ConfettiCelebration, { useConfetti } from '@/app/components/ui/Confetti';
 import { useStreakCelebration } from '@/app/hooks/useStreakCelebration';
@@ -110,12 +108,10 @@ export default function StatsPage() {
                         Your Fitness Journey
                     </h1>
                     <p className="text-neutral-600 dark:text-neutral-400 text-lg">
-                        Track progress, celebrate achievements, stay motivated
+                        Track progress, analyze patterns, stay motivated
                     </p>
                 </div>
 
-                {/* Progress Insights */}
-                <ProgressInsights userId={user.id} userStats={stats} />
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -154,9 +150,6 @@ export default function StatsPage() {
 
                 {/* Yearly Progress Overview */}
                 <YearlyProgress userId={user.id} />
-
-                {/* Achievement Badges */}
-                <AchievementBadges userId={user.id} userStats={stats} />
             </div>
         </div>
     );
