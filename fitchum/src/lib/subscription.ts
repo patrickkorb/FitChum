@@ -3,7 +3,6 @@ import { createClient } from '@/lib/supabase/client';
 export interface UserPlan {
   subscription_status: string;
   subscription_plan: string;
-  stripe_payment_id: string | null;
   trial_started_at: string | null;
   trial_ends_at: string | null;
   has_used_trial: boolean;
@@ -13,7 +12,7 @@ export async function getUserPlan(userId: string): Promise<UserPlan | null> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from('profiles')
-    .select('subscription_status, subscription_plan, stripe_payment_id, trial_started_at, trial_ends_at, has_used_trial')
+    .select('subscription_status, subscription_plan, trial_started_at, trial_ends_at, has_used_trial')
     .eq('user_id', userId)
     .single();
 
