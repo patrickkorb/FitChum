@@ -6,7 +6,6 @@ import { createClient } from '@/lib/supabase/client';
 import ConditionalNavigation from './ConditionalNavigation';
 import MobileNavigation from './MobileNavigation';
 import TrialWrapper from './trial/TrialWrapper';
-import TrialDebug from './debug/TrialDebug';
 
 interface ConditionalLayoutProps {
   children: React.ReactNode;
@@ -49,7 +48,6 @@ export default function ConditionalLayout({ children }: ConditionalLayoutProps) 
   // Main app layout - responsive with proper container wrapped in TrialWrapper
   return (
     <TrialWrapper currentUserId={userId}>
-      <TrialDebug currentUserId={userId} />
       <div className="min-h-screen max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Desktop Layout */}
         <div className="hidden lg:grid lg:grid-cols-5 lg:gap-4 lg:min-h-screen">
