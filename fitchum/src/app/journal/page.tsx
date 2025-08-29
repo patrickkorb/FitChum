@@ -3,7 +3,6 @@
 import { CirclePlus, Zap, CheckCircle2, Calendar, Trash2, AlertTriangle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { createClient } from "@/lib/supabase/client";
-import WorkoutLogModal from '@/app/components/journal/WorkoutLogModal';
 import AuthModal from '@/app/components/ui/AuthModal';
 import { hasLoggedWorkoutToday, getTodaysJournalEntry } from '@/lib/workoutLogger';
 import type { JournalEntry } from '@/lib/supabase';
@@ -92,7 +91,7 @@ export default function Journal() {
             setShowAuthModal(true);
             return;
         }
-        
+
         if (!hasLoggedToday) {
             setShowModal(true);
         }
@@ -352,7 +351,7 @@ export default function Journal() {
                     ) : (
                         <div className="flex flex-col items-center gap-6 sm:gap-8 w-full">
                             <button 
-                                className="bg-primary hover:cursor-pointer hover:bg-primary/90 text-white font-bold py-4 sm:py-6 px-8 sm:px-12 rounded-2xl text-lg sm:text-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 flex items-center gap-3 sm:gap-4 group w-full sm:w-auto max-w-sm"
+                                className="bg-primary hover:cursor-pointer hover:bg-primary/90 text-white font-bold py-4 sm:py-6 px-8 sm:px-12 rounded-full text-lg sm:text-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 flex items-center gap-3 sm:gap-4 group w-full sm:w-auto max-w-sm"
                                 onClick={handleOpenModal}
                             >
                                 <CirclePlus size={24} className="sm:size-8 group-hover:rotate-90 transition-transform duration-300" />
@@ -385,16 +384,6 @@ export default function Journal() {
                 </div>
             </div>
 
-
-            {/* Workout Log Modal */}
-            {user && (
-                <WorkoutLogModal
-                    isOpen={showModal}
-                    onClose={() => setShowModal(false)}
-                    onSuccess={handleWorkoutLogged}
-                    userId={user.id}
-                />
-            )}
 
             {/* Auth Modal for unauthorized users */}
             <AuthModal 

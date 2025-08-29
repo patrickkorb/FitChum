@@ -59,10 +59,10 @@ export default function LandingPage() {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Left Column */}
             <div className="text-center lg:text-left">
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-neutral-900 dark:text-white leading-tight mb-6">
-                Finally Stick to
+              <h1 className="text-5xl sm:text-6xl lg:text-6xl font-bold text-neutral-900 dark:text-white leading-tight mb-6">
+                Finally Achieve your
                 <span className="block bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text text-transparent">
-                  Your Workouts
+                  Dream Body
                 </span>
               </h1>
               <p className="text-xl sm:text-2xl text-neutral-600 dark:text-neutral-300 mb-8 leading-relaxed max-w-xl">
@@ -201,157 +201,14 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Free Features Section */}
-      <section className="w-full py-24 bg-white dark:bg-neutral-900">
-        <div className="max-w-5xl mx-auto px-6 lg:px-8 text-center">
-          <h2 className="text-4xl sm:text-5xl font-bold text-neutral-900 dark:text-white mb-6">
-            Everything You Need Is Free
-          </h2>
-          <p className="text-xl text-neutral-600 dark:text-neutral-300 mb-16">
-            Start tracking workouts immediately. No credit card required.
-          </p>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-            {[
-              {
-                icon: <Calendar className="w-8 h-8" />,
-                title: "Unlimited Logging",
-                description: "Track every workout, every day. No limits on entries or exercises."
-              },
-              {
-                icon: <Target className="w-8 h-8" />,
-                title: "Custom Plans",
-                description: "PPL, Upper/Lower, Full Body. Choose your split and training days."
-              },
-              {
-                icon: <Trophy className="w-8 h-8" />,
-                title: "Smart Streaks",
-                description: "Intelligent streak tracking that respects your rest days."
-              },
-              {
-                icon: <Users className="w-8 h-8" />,
-                title: "Global Leaderboard",
-                description: "See how you rank against other fitness enthusiasts worldwide."
-              },
-              {
-                icon: <BarChart3 className="w-8 h-8" />,
-                title: "Progress Analytics",
-                description: "Workout heatmaps, consistency charts, and progress tracking."
-              },
-              {
-                icon: <Heart className="w-8 h-8" />,
-                title: "Activity Feed",
-                description: "See community workouts and stay motivated by others' progress."
-              }
-            ].map((feature, index) => (
-              <div key={index} className="text-center p-6">
-                <div className="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center text-white mx-auto mb-4">
-                  {feature.icon}
-                </div>
-                <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-3">
-                  {feature.title}
-                </h3>
-                <p className="text-neutral-600 dark:text-neutral-300">
-                  {feature.description}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <Button 
-            onClick={handleGetStarted}
-            size="lg"
-            className="bg-green-500 hover:bg-green-600 text-white px-12 py-4 text-xl font-semibold rounded-xl"
-          >
-            Start Using FitChum Free
-            <ArrowRight className="ml-3 w-6 h-6" />
-          </Button>
-        </div>
-      </section>
-
-      {/* Pricing Section - Pro Features */}
-      <section className="w-full py-24 bg-neutral-50 dark:bg-neutral-800">
-        <div className="max-w-4xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold text-neutral-900 dark:text-white mb-6">
-              Upgrade to Pro
-            </h2>
-            <p className="text-xl text-neutral-600 dark:text-neutral-300">
-              Add social features and compete with friends.
-            </p>
-          </div>
-          
-          <div className="bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl overflow-hidden">
-            {/* Tab Header */}
-            <div className="flex">
-              <div className="flex-1 bg-green-500 text-white text-center py-6">
-                <h3 className="text-2xl font-bold">Monthly</h3>
-                <div className="text-4xl font-bold mt-2">€5</div>
-                <div className="text-green-100">per month</div>
-              </div>
-              <div className="flex-1 bg-gradient-to-r from-green-600 to-blue-600 text-white text-center py-6 relative">
-                <div className="absolute top-2 right-2 bg-yellow-400 text-yellow-900 px-2 py-1 rounded text-xs font-bold">
-                  BEST VALUE
-                </div>
-                <h3 className="text-2xl font-bold">Lifetime</h3>
-                <div className="text-4xl font-bold mt-2">€29</div>
-                <div className="text-white/80">one-time payment</div>
-              </div>
-            </div>
-
-            {/* Features */}
-            <div className="p-10">
-              <h4 className="text-xl font-bold text-neutral-900 dark:text-white mb-6 text-center">
-                Pro Features
-              </h4>
-              <ul className="space-y-4 mb-10 max-w-md mx-auto">
-                {[
-                  "Add & compete with friends",
-                  "Friends-only leaderboards",
-                  "Advanced progress analytics",
-                  "Priority support",
-                  "All future Pro features"
-                ].map((feature, index) => (
-                  <li key={index} className="flex items-center gap-3">
-                    <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0" />
-                    <span className="text-neutral-700 dark:text-neutral-300">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button 
-                  onClick={handleGetStarted}
-                  className="flex-1 py-4 text-lg rounded-xl bg-green-500 hover:bg-green-600 text-white"
-                >
-                  Get Monthly Pro
-                </Button>
-                <Button 
-                  onClick={handleGetStarted}
-                  className="flex-1 py-4 text-lg rounded-xl bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white"
-                >
-                  Get Lifetime Pro
-                </Button>
-              </div>
-              <p className="text-center text-neutral-500 dark:text-neutral-400 text-sm mt-4">
-                No credit card required to start • Cancel anytime
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Final CTA */}
       <section className="w-full py-24 bg-neutral-900 text-white">
         <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
           <h2 className="text-4xl sm:text-5xl font-bold mb-6">
-            Stop Making Excuses.<br />Start Building Habits.
+            Stop Making Excuses.<br />Start Building Habits. <br/>Become the person you want to be.
           </h2>
-          <p className="text-xl text-neutral-300 mb-10 max-w-2xl mx-auto">
-            Join the fitness app that actually helps you stay consistent. 
-            No complicated features, just results.
-          </p>
-          <div className="flex justify-center">
+          <div className="flex justify-center mt-12">
             <Button 
               onClick={handleGetStarted}
               size="lg"

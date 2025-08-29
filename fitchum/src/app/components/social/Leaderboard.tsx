@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { getUserPlan, isPro } from '@/lib/subscription';
-import { Trophy, Medal, Award, Crown, Lock } from 'lucide-react';
+import { Trophy, Medal, Award, Crown } from 'lucide-react';
 import Button from '../ui/Button';
 
 interface LeaderboardProps {
@@ -23,21 +22,10 @@ export default function Leaderboard({ currentUserId, hideFriendsTab = false }: L
   const [activeTab, setActiveTab] = useState<'all' | 'friends'>('all');
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userHasPro, setUserHasPro] = useState(false);
   const [currentUserRank, setCurrentUserRank] = useState<number | null>(null);
 
   const supabase = createClient();
 
-  useEffect(() => {
-    const checkProStatus = async () => {
-      if (!currentUserId) return;
-      
-      const userPlan = await getUserPlan(currentUserId);
-      setUserHasPro(isPro(userPlan));
-    };
-
-    checkProStatus();
-  }, [currentUserId]);
 
 
   const fetchGlobalLeaderboard = useCallback(async () => {
@@ -51,11 +39,31 @@ export default function Leaderboard({ currentUserId, hideFriendsTab = false }: L
 
       if (error) throw error;
 
-      const leaderboard: LeaderboardEntry[] = data?.map((profile, index) => ({
+      let leaderboard: LeaderboardEntry[] = data?.map((profile, index) => ({
         ...profile,
         username: profile.username || `User ${profile.user_id.slice(-4)}`,
         rank: index + 1
       })) || [];
+
+      // Add dummy users if leaderboard is empty or has less than 8 users
+      if (leaderboard.length < 8) {
+        const dummyUsers: LeaderboardEntry[] = [
+          { user_id: 'dummy-1', username: 'Alex Johnson', current_streak: 42, rank: 1 },
+          { user_id: 'dummy-2', username: 'Sarah Chen', current_streak: 35, rank: 2 },
+          { user_id: 'dummy-3', username: 'Mike Rodriguez', current_streak: 28, rank: 3 },
+          { user_id: 'dummy-4', username: 'Emma Wilson', current_streak: 21, rank: 4 },
+          { user_id: 'dummy-5', username: 'David Park', current_streak: 18, rank: 5 },
+          { user_id: 'dummy-6', username: 'Lisa Thompson', current_streak: 14, rank: 6 },
+          { user_id: 'dummy-7', username: 'Ryan Kumar', current_streak: 12, rank: 7 },
+          { user_id: 'dummy-8', username: 'Jessica Lee', current_streak: 9, rank: 8 },
+          { user_id: 'dummy-9', username: 'Chris Martinez', current_streak: 7, rank: 9 },
+          { user_id: 'dummy-10', username: 'Amanda Brown', current_streak: 5, rank: 10 }
+        ];
+
+        // Merge real users with dummy users, keeping real users at top if they have higher streaks
+        const allUsers = [...leaderboard, ...dummyUsers].sort((a, b) => b.current_streak - a.current_streak);
+        leaderboard = allUsers.map((user, index) => ({ ...user, rank: index + 1 })).slice(0, 15);
+      }
 
       setLeaderboardData(leaderboard);
       
@@ -135,36 +143,9 @@ export default function Leaderboard({ currentUserId, hideFriendsTab = false }: L
     }
   }, [activeTab, fetchGlobalLeaderboard, fetchFriendsLeaderboard]);
 
-  const getRankIcon = (rank: number) => {
-    switch (rank) {
-      case 1:
-        return <Crown className="text-yellow-500" size={24} />;
-      case 2:
-        return <Trophy className="text-gray-400" size={20} />;
-      case 3:
-        return <Medal className="text-amber-600" size={20} />;
-      default:
-        return <Award className="text-neutral-dark/50 dark:text-neutral-light/50" size={18} />;
-    }
-  };
 
-  const getRankColor = (rank: number) => {
-    switch (rank) {
-      case 1:
-        return 'bg-gradient-to-r from-yellow-400 to-yellow-600';
-      case 2:
-        return 'bg-gradient-to-r from-gray-300 to-gray-500';
-      case 3:
-        return 'bg-gradient-to-r from-amber-400 to-amber-600';
-      default:
-        return 'bg-neutral-dark/5 dark:bg-neutral-light/5';
-    }
-  };
 
   const handleTabChange = (tab: 'all' | 'friends') => {
-    if (tab === 'friends' && !userHasPro) {
-      return;
-    }
     setActiveTab(tab);
   };
 
@@ -197,39 +178,20 @@ export default function Leaderboard({ currentUserId, hideFriendsTab = false }: L
           </button>
           <button
             onClick={() => handleTabChange('friends')}
-            className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors relative ${
+            className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
               activeTab === 'friends'
                 ? 'bg-white dark:bg-neutral-dark text-neutral-dark dark:text-neutral-light shadow'
                 : 'text-neutral-dark/70 dark:text-neutral-light/70'
-            } ${!userHasPro ? 'opacity-60' : ''}`}
-            disabled={!userHasPro}
+            }`}
           >
-            <span className="flex items-center gap-2 justify-center">
-              Friends
-              {!userHasPro && <Lock size={14} />}
-            </span>
+            Friends
           </button>
         </div>
       )}
 
-      {!userHasPro && activeTab === 'friends' && (
-        <div className="text-center py-8 px-4 bg-neutral-dark/5 dark:bg-neutral-light/5 rounded-lg border-2 border-dashed border-neutral-dark/20 dark:border-neutral-light/20">
-          <Lock className="mx-auto mb-4 text-neutral-dark/50 dark:text-neutral-light/50" size={48} />
-          <h3 className="text-lg font-semibold text-neutral-dark dark:text-neutral-light mb-2">
-            Friends Leaderboard
-          </h3>
-          <p className="text-neutral-dark/70 dark:text-neutral-light/70 mb-4 max-w-md mx-auto">
-            Upgrade to Pro to see how you stack up against your friends and create custom challenges together.
-          </p>
-          <Button variant="primary" size="sm">
-            Upgrade to Pro
-          </Button>
-        </div>
-      )}
 
-      {(userHasPro || activeTab === 'all') && (
-        <div className={shouldUseFixedHeight ? "flex-1 min-h-0" : ""}>
-          <div className={`${shouldUseFixedHeight ? 'h-full overflow-y-auto' : ''} space-y-2`}>
+      <div className={shouldUseFixedHeight ? "flex-1 min-h-0" : ""}>
+        <div className={`${shouldUseFixedHeight ? 'h-full overflow-y-auto' : ''} space-y-2`}>
             {loading ? (
               <div className="space-y-3">
                 {[...Array(10)].map((_, i) => (
@@ -244,18 +206,20 @@ export default function Leaderboard({ currentUserId, hideFriendsTab = false }: L
               leaderboardData.map((entry) => (
                 <div
                   key={entry.user_id}
-                  className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition-all ${
+                  className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition-all hover:bg-neutral-dark/10 dark:hover:bg-neutral-light/10 ${
                     entry.user_id === currentUserId
                       ? 'ring-2 ring-primary bg-primary/10'
-                      : getRankColor(entry.rank)
-                  } ${entry.rank <= 3 ? 'shadow-md' : ''}`}
+                      : 'bg-neutral-dark/5 dark:bg-neutral-light/5'
+                  }`}
                 >
-                  <div className="flex items-center justify-center w-6 sm:w-8 flex-shrink-0">
-                    {getRankIcon(entry.rank)}
+                  <div className="flex items-center justify-center w-8 flex-shrink-0">
+                    <span className="text-sm font-semibold text-neutral-dark/70 dark:text-neutral-light/70">
+                      #{entry.rank}
+                    </span>
                   </div>
                   
                   <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-neutral-dark/10 dark:bg-neutral-light/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-neutral-dark/10 dark:bg-neutral-light/10 flex items-center justify-center overflow-hidden flex-shrink-0">
                       {entry.profile_pic_url ? (
                         <img 
                           src={entry.profile_pic_url} 
@@ -263,7 +227,7 @@ export default function Leaderboard({ currentUserId, hideFriendsTab = false }: L
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <span className="text-xs sm:text-sm font-semibold text-neutral-dark dark:text-neutral-light">
+                        <span className="text-sm font-semibold text-neutral-dark dark:text-neutral-light">
                           {entry.username.charAt(0).toUpperCase()}
                         </span>
                       )}
@@ -300,7 +264,6 @@ export default function Leaderboard({ currentUserId, hideFriendsTab = false }: L
             )}
           </div>
         </div>
-      )}
-    </div>
+      </div>
   );
 }

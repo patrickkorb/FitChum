@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { getUserPlan, isPro } from '@/lib/subscription';
-import { Users, UserPlus, Bell, Lock } from 'lucide-react';
+import { Users, UserPlus, Bell } from 'lucide-react';
 import Button from '../ui/Button';
 import FriendsModal from './FriendsModal';
 
@@ -21,7 +20,6 @@ type Friend = {
 export default function FriendsBar({ currentUserId }: FriendsBarProps) {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
-  const [userHasPro, setUserHasPro] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -33,21 +31,9 @@ export default function FriendsBar({ currentUserId }: FriendsBarProps) {
       return;
     }
 
-    const checkProStatus = async () => {
-      const userPlan = await getUserPlan(currentUserId);
-      setUserHasPro(isPro(userPlan));
-    };
-
     const fetchFriendsAndRequests = async () => {
       setLoading(true);
       try {
-        // Check pro status
-        await checkProStatus();
-
-        if (!userHasPro && !isPro(await getUserPlan(currentUserId))) {
-          setLoading(false);
-          return;
-        }
 
         // Fetch friends using the same approach as FriendsModal
         const { data: friendships, error: friendshipsError } = await supabase
@@ -101,7 +87,7 @@ export default function FriendsBar({ currentUserId }: FriendsBarProps) {
     };
 
     fetchFriendsAndRequests();
-  }, [currentUserId, userHasPro, supabase]);
+  }, [currentUserId, supabase]);
 
   // Real-time updates for friend requests
   useEffect(() => {
@@ -174,31 +160,6 @@ export default function FriendsBar({ currentUserId }: FriendsBarProps) {
     );
   }
 
-  if (!userHasPro) {
-    return (
-      <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg border border-primary/10">
-        <div className="flex items-center gap-3">
-          <Users size={20} className="text-primary" />
-          <div>
-            <h3 className="font-semibold text-neutral-dark dark:text-neutral-light">
-              Connect with Friends
-            </h3>
-            <p className="text-sm text-neutral-dark/70 dark:text-neutral-light/70">
-              Add friends and compete together
-            </p>
-          </div>
-        </div>
-        <Button 
-          variant="primary" 
-          size="sm"
-          className="flex items-center gap-2"
-        >
-          <Lock size={16} />
-          Upgrade to Pro
-        </Button>
-      </div>
-    );
-  }
 
   return (
     <>

@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { getUserPlan, isPro } from '@/lib/subscription';
-import { Dumbbell, Flame, Target, Clock, Lock } from 'lucide-react';
+import { Dumbbell, Flame, Target, Clock } from 'lucide-react';
 import Button from '../ui/Button';
 
 interface ActivityFeedProps {
@@ -25,20 +24,9 @@ export default function ActivityFeed({ currentUserId, hideFriendsTab = false }: 
   const [activeTab, setActiveTab] = useState<'all' | 'friends'>('all');
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userHasPro, setUserHasPro] = useState(false);
 
   const supabase = createClient();
 
-  useEffect(() => {
-    const checkProStatus = async () => {
-      if (!currentUserId) return;
-      
-      const userPlan = await getUserPlan(currentUserId);
-      setUserHasPro(isPro(userPlan));
-    };
-
-    checkProStatus();
-  }, [currentUserId]);
 
   const filterRestDayActivities = (activitiesData: ActivityItem[]) => {
     return activitiesData.filter(activity => {
@@ -266,9 +254,6 @@ export default function ActivityFeed({ currentUserId, hideFriendsTab = false }: 
   }, [activeTab, currentUserId, fetchGlobalActivity, fetchFriendsActivity]);
 
   const handleTabChange = (tab: 'all' | 'friends') => {
-    if (tab === 'friends' && !userHasPro) {
-      return;
-    }
     setActiveTab(tab);
   };
 
@@ -300,39 +285,20 @@ export default function ActivityFeed({ currentUserId, hideFriendsTab = false }: 
           </button>
           <button
             onClick={() => handleTabChange('friends')}
-            className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors relative ${
+            className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
               activeTab === 'friends'
                 ? 'bg-white dark:bg-neutral-dark text-neutral-dark dark:text-neutral-light shadow'
                 : 'text-neutral-dark/70 dark:text-neutral-light/70'
-            } ${!userHasPro ? 'opacity-60' : ''}`}
-            disabled={!userHasPro}
+            }`}
           >
-            <span className="flex items-center gap-2 justify-center">
-              Friends
-              {!userHasPro && <Lock size={14} />}
-            </span>
+            Friends
           </button>
         </div>
       )}
 
-      {!userHasPro && activeTab === 'friends' && (
-        <div className="text-center py-8 px-4 bg-neutral-dark/5 dark:bg-neutral-light/5 rounded-lg border-2 border-dashed border-neutral-dark/20 dark:border-neutral-light/20">
-          <Lock className="mx-auto mb-4 text-neutral-dark/50 dark:text-neutral-light/50" size={48} />
-          <h3 className="text-lg font-semibold text-neutral-dark dark:text-neutral-light mb-2">
-            Friends Activity Feed
-          </h3>
-          <p className="text-neutral-dark/70 dark:text-neutral-light/70 mb-4 max-w-md mx-auto">
-            Upgrade to Pro to see what your friends are up to and get motivated by their progress.
-          </p>
-          <Button variant="primary" size="sm">
-            Upgrade to Pro
-          </Button>
-        </div>
-      )}
 
-      {(userHasPro || activeTab === 'all') && (
-        <div className={shouldUseFixedHeight ? "flex-1 min-h-0" : ""}>
-          <div className={`${shouldUseFixedHeight ? 'h-full overflow-y-auto' : ''} space-y-3`}>
+      <div className={shouldUseFixedHeight ? "flex-1 min-h-0" : ""}>
+        <div className={`${shouldUseFixedHeight ? 'h-full overflow-y-auto' : ''} space-y-3`}>
             {loading ? (
               <div className="space-y-3">
                 {[...Array(8)].map((_, i) => (
@@ -393,7 +359,6 @@ export default function ActivityFeed({ currentUserId, hideFriendsTab = false }: 
             )}
           </div>
         </div>
-      )}
-    </div>
+      </div>
   );
 }
