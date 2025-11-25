@@ -1,5 +1,7 @@
 'use client';
 
+import Image from 'next/image';
+import { Flame, Plus } from 'lucide-react';
 import WorkoutCard from '../components/feed/WorkoutCard';
 
 // Dummy data for friends' workouts
@@ -21,8 +23,6 @@ const friendsWorkouts = [
     exercises: ['Squats', 'Leg Press', 'Lunges'],
     time: '3h ago',
     isCompleted: true,
-    achievement: 'New PR: 120kg Squat! 🎉',
-    streak: 5,
   },
   {
     id: '3',
@@ -60,7 +60,6 @@ const friendsWorkouts = [
     exercises: ['Pull-ups', 'Dumbbell Press', 'Cable Rows'],
     time: 'Yesterday',
     isCompleted: true,
-    streak: 7,
   },
 ];
 
@@ -96,12 +95,12 @@ export default function FeedPage() {
       <div className="sticky top-0 z-20 flex flex-col bg-background/80 dark:bg-background/80 backdrop-blur-lg">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
-            <span className="text-3xl">🔥</span>
+            <Flame className="h-8 w-8 text-accent-gold" />
             <span className="text-2xl font-bold text-accent-gold">125</span>
           </div>
           <h1 className="text-xl font-bold text-foreground">Activity Feed</h1>
-          <button className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-secondary text-white shadow-lg shadow-secondary/30 active:scale-95 transition-transform duration-150">
-            <span className="text-2xl">+</span>
+          <button className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-white shadow-lg shadow-secondary/30 active:scale-95 transition-transform duration-150">
+            <Plus className="h-6 w-6" />
           </button>
         </div>
       </div>
@@ -113,10 +112,12 @@ export default function FeedPage() {
           {/* 2nd Place - Left */}
           <div className="flex flex-col items-center">
             <div className="relative mb-2">
-              <img
+              <Image
                 alt={`Profile picture of ${leaderboard[0].name}`}
-                className={`h-16 w-16 rounded-full object-cover border-4 border-${leaderboard[0].color}`}
+                className={`rounded-full object-cover border-4 border-${leaderboard[0].color}`}
                 src={leaderboard[0].avatar}
+                width={64}
+                height={64}
               />
               <div className="absolute -bottom-2 flex h-7 w-7 items-center justify-center rounded-full bg-accent-silver border-2 border-card text-sm font-bold text-white">
                 2
@@ -129,10 +130,12 @@ export default function FeedPage() {
           {/* 1st Place - Center (Elevated) */}
           <div className="flex flex-col items-center -mt-4">
             <div className="relative mb-2">
-              <img
+              <Image
                 alt={`Profile picture of ${leaderboard[1].name}`}
-                className={`h-20 w-20 rounded-full object-cover border-4 border-${leaderboard[1].color}`}
+                className={`rounded-full object-cover border-4 border-${leaderboard[1].color}`}
                 src={leaderboard[1].avatar}
+                width={80}
+                height={80}
               />
               <div className="absolute -bottom-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-accent-gold border-2 border-card text-base font-bold text-white">
                 1
@@ -145,10 +148,12 @@ export default function FeedPage() {
           {/* 3rd Place - Right */}
           <div className="flex flex-col items-center">
             <div className="relative mb-2">
-              <img
+              <Image
                 alt={`Profile picture of ${leaderboard[2].name}`}
-                className={`h-16 w-16 rounded-full object-cover border-4 border-${leaderboard[2].color}`}
+                className={`rounded-full object-cover border-4 border-${leaderboard[2].color}`}
                 src={leaderboard[2].avatar}
+                width={64}
+                height={64}
               />
               <div className="absolute -bottom-2 flex h-7 w-7 items-center justify-center rounded-full bg-accent-bronze border-2 border-card text-sm font-bold text-white">
                 3

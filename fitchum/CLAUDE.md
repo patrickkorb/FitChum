@@ -331,3 +331,4 @@ If requirements are unclear, ask:
 ---
 
 **Remember:** Clean, maintainable, component-based architecture is the priority. If in doubt, break it down into smaller pieces!
+- Always use Lucid Icons instead of Emojis
