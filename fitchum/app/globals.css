@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* Primary brand color - Vibrant Green #00E599 */
+    --primary: 160 100% 45%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 160 100% 38%;
+
+    /* Secondary color - Purple #7A52F4 */
+    --secondary: 255 89% 64%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Accent colors */
+    --accent-gold: 45 100% 50%;      /* #FFC700 - for streaks/achievements */
+    --accent-silver: 0 0% 75%;       /* #C0C0C0 */
+    --accent-bronze: 30 50% 50%;     /* #CD7F32 */
+    --accent-red: 0 100% 65%;        /* #FF4D4D - for fire reactions */
+
+    /* Success color - same as primary */
+    --success: 160 100% 45%;
+    --success-foreground: 0 0% 100%;
+
+    /* Background colors */
+    --background: 0 0% 94%;           /* #F0F2F5 */
+    --foreground: 0 0% 11%;           /* #1C1C1E */
+
+    /* Muted colors for secondary content */
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 43%;     /* #6D6D72 */
+
+    /* Border colors */
+    --border: 220 13% 91%;            /* #E5E7EB */
+
+    /* Card backgrounds */
+    --card: 0 0% 100%;                /* #FFFFFF */
+    --card-foreground: 0 0% 11%;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      /* Keep accent colors bright in dark mode */
+      --primary: 160 100% 45%;
+      --primary-hover: 160 100% 38%;
+      --secondary: 255 89% 64%;
+      --accent-gold: 45 100% 50%;
+      --accent-red: 0 100% 65%;
+      --success: 160 100% 45%;
+
+      /* Dark backgrounds */
+      --background: 0 0% 4%;            /* #0A0A0A */
+      --foreground: 0 0% 90%;           /* #E5E5E5 */
+
+      --muted: 0 0% 11%;
+      --muted-foreground: 0 0% 56%;     /* #8E8E93 */
+
+      --border: 0 0% 23%;               /* #3A3A3C */
+
+      --card: 0 0% 11%;                 /* #1C1C1E */
+      --card-foreground: 0 0% 90%;
+    }
+  }
+}
+
+@theme inline {
+  /* Color definitions for Tailwind */
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-hover: hsl(var(--primary-hover));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-accent-gold: hsl(var(--accent-gold));
+  --color-accent-silver: hsl(var(--accent-silver));
+  --color-accent-bronze: hsl(var(--accent-bronze));
+  --color-accent-red: hsl(var(--accent-red));
+
+  --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
+
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-border: hsl(var(--border));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  /* Font definitions */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
