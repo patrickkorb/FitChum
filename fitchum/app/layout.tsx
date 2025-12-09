@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ConditionalNavigation from "./components/layout/ConditionalNavigation";
+import { NavbarProvider } from "./contexts/NavbarContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,12 +29,14 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <div className="flex min-h-screen">
-          <ConditionalNavigation />
-          <main className="flex-1 lg:pb-0 pb-20">
-            {children}
-          </main>
-        </div>
+        <NavbarProvider>
+          <div className="flex min-h-screen">
+            <ConditionalNavigation />
+            <main className="flex-1 lg:pb-0 pb-20">
+              {children}
+            </main>
+          </div>
+        </NavbarProvider>
       </body>
     </html>
   );
