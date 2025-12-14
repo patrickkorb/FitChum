@@ -146,3 +146,77 @@ export function validateNumberInput(value: string): number {
   if (isNaN(parsed) || parsed < 0) return 0;
   return Math.max(0, parsed);
 }
+
+export function calculateTotalVolume(workout: Workout): number {
+  return workout.exercises.reduce((total, exercise) => {
+    const exerciseVolume = exercise.sets
+      .filter((set) => set.completed)
+      .reduce((sum, set) => sum + set.currentReps * set.currentWeight, 0);
+    return total + exerciseVolume;
+  }, 0);
+}
+
+export function calculateCompletedSets(workout: Workout): number {
+  return workout.exercises.reduce(
+    (total, exercise) => total + exercise.sets.filter((set) => set.completed).length,
+    0
+  );
+}
+
+export function getWorkoutDuration(workout: Workout): number {
+  if (!workout.completedAt) return Date.now() - workout.startTime;
+  return workout.completedAt - workout.startTime;
+}
+
+export function formatDuration(milliseconds: number): string {
+  const totalSeconds = Math.floor(milliseconds / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+  return `${minutes}m`;
+}
+
+export function formatWorkoutDate(timestamp: number): string {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  const timeStr = date.toLocaleTimeString('de-DE', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  if (diffDays === 0) {
+    return `Heute, ${timeStr}`;
+  } else if (diffDays === 1) {
+    return `Gestern, ${timeStr}`;
+  } else if (diffDays < 7) {
+    const dayName = date.toLocaleDateString('de-DE', { weekday: 'long' });
+    return `${dayName}, ${timeStr}`;
+  } else {
+    return date.toLocaleDateString('de-DE', {
+      day: '2-digit',
+      month: 'short',
+      year: diffDays > 365 ? 'numeric' : undefined,
+    }) + `, ${timeStr}`;
+  }
+}
+
+export function formatWorkoutDateShort(timestamp: number): string {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return 'Heute';
+  if (diffDays === 1) return 'Gestern';
+
+  return date.toLocaleDateString('de-DE', {
+    day: '2-digit',
+    month: 'short',
+  });
+}

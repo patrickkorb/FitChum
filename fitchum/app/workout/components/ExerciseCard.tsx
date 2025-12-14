@@ -43,7 +43,7 @@ export default function ExerciseCard({
 
   return (
     <Card className="space-y-3 w-full">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between px-2">
         <h3 className="text-lg font-semibold text-foreground">
           {exercise.name}
         </h3>

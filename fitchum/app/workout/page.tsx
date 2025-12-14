@@ -7,9 +7,10 @@ import WorkoutStartScreen from './components/WorkoutStartScreen';
 import ActiveWorkoutView from './components/ActiveWorkoutView';
 import TemplateSelector from './components/TemplateSelector';
 import AutoCompleteNotification from './components/AutoCompleteNotification';
-import type { WorkoutTemplate } from '@/types/workout.types';
+import WorkoutSummary from './components/WorkoutSummary';
+import type { WorkoutTemplate, Workout } from '@/types/workout.types';
 
-type ViewMode = 'start' | 'template-select' | 'active';
+type ViewMode = 'start' | 'template-select' | 'active' | 'summary';
 
 export default function WorkoutPage() {
   const {
@@ -27,6 +28,7 @@ export default function WorkoutPage() {
 
   const [viewMode, setViewMode] = useState<ViewMode>('start');
   const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
+  const [completedWorkout, setCompletedWorkout] = useState<Workout | null>(null);
 
   const handleStartEmpty = () => {
     startWorkout();
@@ -52,9 +54,31 @@ export default function WorkoutPage() {
     setViewMode('start');
   };
 
+  const handleCompleteWorkout = () => {
+    if (workout) {
+      setCompletedWorkout(workout);
+      completeWorkout();
+      setViewMode('summary');
+    }
+  };
+
+  const handleCloseSummary = () => {
+    setCompletedWorkout(null);
+    setViewMode('start');
+  };
+
   if (wasAutoCompleted) {
     return (
       <AutoCompleteNotification onDismiss={dismissAutoCompleteNotification} />
+    );
+  }
+
+  if (viewMode === 'summary' && completedWorkout) {
+    return (
+      <WorkoutSummary
+        workout={completedWorkout}
+        onClose={handleCloseSummary}
+      />
     );
   }
 
@@ -66,7 +90,7 @@ export default function WorkoutPage() {
         onUpdateExercise={updateExercise}
         onDeleteExercise={deleteExercise}
         onSaveTemplate={saveAsTemplate}
-        onCompleteWorkout={completeWorkout}
+        onCompleteWorkout={handleCompleteWorkout}
       />
     );
   }
