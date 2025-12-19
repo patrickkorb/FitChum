@@ -2,7 +2,6 @@
 
 import { FileText, Trash2 } from 'lucide-react';
 import Card from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
 import type { WorkoutTemplate } from '@/types/workout.types';
 
 interface TemplateCardProps {
@@ -17,7 +16,7 @@ export default function TemplateCard({
   onDelete,
 }: TemplateCardProps) {
   return (
-    <Card className="cursor-pointer hover:border-primary transition-colors">
+    <Card className="cursor-pointer hover:border-primary transition-colors border border-border p-4">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <FileText size={20} className="text-primary" />
@@ -42,12 +41,8 @@ export default function TemplateCard({
 
       <div className="space-y-1" onClick={onSelect}>
         {template.exercises.map((ex, index) => (
-          <div
-            key={index}
-            className="flex items-center justify-between text-sm"
-          >
-            <span className="text-muted-foreground">{ex.name}</span>
-            <Badge variant="muted">{ex.defaultSets} Sets</Badge>
+          <div key={index} className="text-sm text-muted-foreground">
+            {ex.defaultSets} x {ex.name}
           </div>
         ))}
       </div>

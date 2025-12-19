@@ -8,7 +8,6 @@ import RestTimer from './RestTimer';
 import ExerciseCard from './ExerciseCard';
 import WorkoutControls from './WorkoutControls';
 import AddExerciseDialog from './AddExerciseDialog';
-import TemplateSaveDialog from './TemplateSaveDialog';
 import type { Workout, Exercise } from '@/types/workout.types';
 import { useRestTimer } from '../hooks/useRestTimer';
 import { useNavbar } from '@/app/contexts/NavbarContext';
@@ -18,8 +17,8 @@ interface ActiveWorkoutViewProps {
   onAddExercise: (name: string) => void;
   onUpdateExercise: (exerciseId: string, exercise: Exercise) => void;
   onDeleteExercise: (exerciseId: string) => void;
-  onSaveTemplate: (name: string) => void;
   onCompleteWorkout: () => void;
+  onCancelWorkout: () => void;
 }
 
 export default function ActiveWorkoutView({
@@ -27,11 +26,10 @@ export default function ActiveWorkoutView({
   onAddExercise,
   onUpdateExercise,
   onDeleteExercise,
-  onSaveTemplate,
   onCompleteWorkout,
+  onCancelWorkout,
 }: ActiveWorkoutViewProps) {
   const [showAddExercise, setShowAddExercise] = useState(false);
-  const [showSaveTemplate, setShowSaveTemplate] = useState(false);
   const { restTimer, startRestTimer, stopRestTimer, skipRestTimer } = useRestTimer();
   const { setNavbarVisible } = useNavbar();
 
@@ -56,8 +54,8 @@ export default function ActiveWorkoutView({
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      <div className="max-w-4xl mx-auto p-4">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-4xl mx-auto p-4 pb-20">
         <div className="flex items-center justify-between mb-6 sticky top-0 bg-background z-10 py-4">
           <WorkoutTimer startTime={workout.startTime} />
         </div>
@@ -94,6 +92,12 @@ export default function ActiveWorkoutView({
             Übung hinzufügen
           </Button>
         )}
+
+        <WorkoutControls
+          workout={workout}
+          onCompleteWorkout={onCompleteWorkout}
+          onCancelWorkout={onCancelWorkout}
+        />
       </div>
 
       {restTimer.active && (
@@ -104,23 +108,10 @@ export default function ActiveWorkoutView({
         />
       )}
 
-      <WorkoutControls
-        onSaveTemplate={() => setShowSaveTemplate(true)}
-        onCompleteWorkout={onCompleteWorkout}
-        hasExercises={workout.exercises.length > 0}
-      />
-
       {showAddExercise && (
         <AddExerciseDialog
           onAdd={onAddExercise}
           onClose={() => setShowAddExercise(false)}
-        />
-      )}
-
-      {showSaveTemplate && (
-        <TemplateSaveDialog
-          onSave={onSaveTemplate}
-          onClose={() => setShowSaveTemplate(false)}
         />
       )}
     </div>

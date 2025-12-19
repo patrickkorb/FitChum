@@ -36,7 +36,7 @@ export default function ExerciseDetailView({
       </button>
 
       {isExpanded && (
-        <div className="px-4 pb-3 space-y-2">
+        <div className="px-2 py-3 space-y-2">
           {exercise.sets.map((set) => (
             <div
               key={set.id}

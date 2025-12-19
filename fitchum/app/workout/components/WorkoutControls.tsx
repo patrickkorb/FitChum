@@ -1,40 +1,87 @@
 'use client';
 
-import { Save, CheckCircle } from 'lucide-react';
+import { useState } from 'react';
 import Button from '@/components/ui/Button';
+import ConfirmDialog from './ConfirmDialog';
+import type { Workout } from '@/types/workout.types';
 
 interface WorkoutControlsProps {
-  onSaveTemplate: () => void;
+  workout: Workout;
   onCompleteWorkout: () => void;
-  hasExercises: boolean;
+  onCancelWorkout: () => void;
 }
 
 export default function WorkoutControls({
-  onSaveTemplate,
+  workout,
   onCompleteWorkout,
-  hasExercises,
+  onCancelWorkout,
 }: WorkoutControlsProps) {
+  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+
+  // Check if cancel button should be visible
+  const hasExercises = workout.exercises.length > 0;
+  const workoutDuration = Date.now() - workout.startTime;
+  const isWithinFiveMinutes = workoutDuration < 300000; // 5 minutes in ms
+  const hasCompletedSets = workout.exercises.some((exercise) =>
+    exercise.sets.some((set) => set.completed)
+  );
+
+  const showCancelButton = isWithinFiveMinutes || !hasCompletedSets;
+
+  const handleCompleteConfirm = () => {
+    setShowCompleteConfirm(false);
+    onCompleteWorkout();
+  };
+
+  const handleCancelConfirm = () => {
+    setShowCancelConfirm(false);
+    onCancelWorkout();
+  };
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background p-4 shadow-lg">
-      <div className="max-w-4xl mx-auto flex flex-col gap-3">
+    <>
+      <div className="mt-8 mb-6 space-y-3">
         <Button
-            onClick={onCompleteWorkout}
-            variant="primary"
-            disabled={!hasExercises}
-            className="flex-1 flex flex-row justify-center items-center"
+          onClick={() => setShowCompleteConfirm(true)}
+          variant="primary"
+          disabled={!hasExercises}
+          className="w-full flex flex-row justify-center items-center"
         >
           Workout beenden
         </Button>
 
-        <Button
-          onClick={onSaveTemplate}
-          variant="outline"
-          disabled={!hasExercises}
-          className="flex-1"
-        >
-          Als Template speichern
-        </Button>
+        {showCancelButton && (
+          <Button
+            onClick={() => setShowCancelConfirm(true)}
+            variant="outline"
+            className="w-full flex flex-row justify-center items-center"
+          >
+            Workout abbrechen
+          </Button>
+        )}
       </div>
-    </div>
+
+      {showCompleteConfirm && (
+        <ConfirmDialog
+          title="Workout beenden"
+          message="Möchtest du das Workout wirklich beenden? Es wird in deinem Verlauf gespeichert."
+          confirmText="Beenden"
+          onConfirm={handleCompleteConfirm}
+          onCancel={() => setShowCompleteConfirm(false)}
+        />
+      )}
+
+      {showCancelConfirm && (
+        <ConfirmDialog
+          title="Workout abbrechen"
+          message="Möchtest du das Workout wirklich abbrechen? Alle Daten gehen verloren."
+          confirmText="Abbrechen"
+          onConfirm={handleCancelConfirm}
+          onCancel={() => setShowCancelConfirm(false)}
+          isDanger
+        />
+      )}
+    </>
   );
 }

@@ -1,16 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useWorkout } from './hooks/useWorkout';
 import { getWorkoutTemplates, deleteTemplate } from '@/lib/localStorage';
 import WorkoutStartScreen from './components/WorkoutStartScreen';
 import ActiveWorkoutView from './components/ActiveWorkoutView';
-import TemplateSelector from './components/TemplateSelector';
 import AutoCompleteNotification from './components/AutoCompleteNotification';
 import WorkoutSummary from './components/WorkoutSummary';
 import type { WorkoutTemplate, Workout } from '@/types/workout.types';
 
-type ViewMode = 'start' | 'template-select' | 'active' | 'summary';
+type ViewMode = 'start' | 'active' | 'summary';
 
 export default function WorkoutPage() {
   const {
@@ -22,6 +21,7 @@ export default function WorkoutPage() {
     updateExercise,
     deleteExercise,
     completeWorkout,
+    cancelWorkout,
     saveAsTemplate,
     dismissAutoCompleteNotification,
   } = useWorkout();
@@ -30,14 +30,13 @@ export default function WorkoutPage() {
   const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
   const [completedWorkout, setCompletedWorkout] = useState<Workout | null>(null);
 
+  useEffect(() => {
+    setTemplates(getWorkoutTemplates());
+  }, []);
+
   const handleStartEmpty = () => {
     startWorkout();
     setViewMode('active');
-  };
-
-  const handleSelectTemplate = () => {
-    setTemplates(getWorkoutTemplates());
-    setViewMode('template-select');
   };
 
   const handleTemplateSelected = (template: WorkoutTemplate) => {
@@ -50,10 +49,6 @@ export default function WorkoutPage() {
     setTemplates(getWorkoutTemplates());
   };
 
-  const handleBackToStart = () => {
-    setViewMode('start');
-  };
-
   const handleCompleteWorkout = () => {
     if (workout) {
       setCompletedWorkout(workout);
@@ -62,8 +57,15 @@ export default function WorkoutPage() {
     }
   };
 
+  const handleCancelWorkout = () => {
+    cancelWorkout();
+    setTemplates(getWorkoutTemplates());
+    setViewMode('start');
+  };
+
   const handleCloseSummary = () => {
     setCompletedWorkout(null);
+    setTemplates(getWorkoutTemplates());
     setViewMode('start');
   };
 
@@ -89,19 +91,8 @@ export default function WorkoutPage() {
         onAddExercise={addExercise}
         onUpdateExercise={updateExercise}
         onDeleteExercise={deleteExercise}
-        onSaveTemplate={saveAsTemplate}
         onCompleteWorkout={handleCompleteWorkout}
-      />
-    );
-  }
-
-  if (viewMode === 'template-select') {
-    return (
-      <TemplateSelector
-        templates={templates}
-        onSelectTemplate={handleTemplateSelected}
-        onDeleteTemplate={handleDeleteTemplate}
-        onBack={handleBackToStart}
+        onCancelWorkout={handleCancelWorkout}
       />
     );
   }
@@ -109,7 +100,9 @@ export default function WorkoutPage() {
   return (
     <WorkoutStartScreen
       onStartEmpty={handleStartEmpty}
-      onSelectTemplate={handleSelectTemplate}
+      templates={templates}
+      onSelectTemplate={handleTemplateSelected}
+      onDeleteTemplate={handleDeleteTemplate}
     />
   );
 }

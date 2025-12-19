@@ -41,9 +41,9 @@ export default function WorkoutDetailModal({
   return (
     <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-start justify-center overflow-y-auto p-4">
       <div className="w-full max-w-2xl my-8">
-        <Card className="space-y-0 overflow-hidden">
+        <Card className="space-y-0 overflow-hidden shadow-xl border border-border">
           {/* Header */}
-          <div className="sticky top-0 bg-card z-10 border-b border-border px-4 py-4 flex items-center justify-between">
+          <div className="sticky top-0 z-10 border-b border-border px-4 py-4 flex items-center justify-between">
             <h2 className="text-xl font-bold text-foreground">
               Workout Details
             </h2>
@@ -57,7 +57,7 @@ export default function WorkoutDetailModal({
           </div>
 
           {/* Workout Info */}
-          <div className="px-4 py-4 border-b border-border">
+          <div className="px-4 py-4">
             {templateName && (
               <h3 className="text-2xl font-bold text-foreground mb-2">
                 {templateName}
@@ -107,7 +107,7 @@ export default function WorkoutDetailModal({
           </div>
 
           {/* Footer */}
-          <div className="px-4 py-4 bg-muted/30">
+          <div className="px-4 py-4">
             <Button onClick={onClose} className="w-full">
               Schließen
             </Button>

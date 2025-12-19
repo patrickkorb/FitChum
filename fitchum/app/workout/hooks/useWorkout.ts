@@ -104,6 +104,14 @@ export function useWorkout() {
     setIsStarted(false);
   }, [workout]);
 
+  const cancelWorkout = useCallback(() => {
+    if (!workout) return;
+
+    saveActiveWorkout(null);
+    setWorkout(null);
+    setIsStarted(false);
+  }, [workout]);
+
   const saveAsWorkoutTemplate = useCallback(
     (name: string) => {
       if (!workout) return;
@@ -127,6 +135,7 @@ export function useWorkout() {
     updateExercise,
     deleteExercise,
     completeWorkout: completeCurrentWorkout,
+    cancelWorkout,
     saveAsTemplate: saveAsWorkoutTemplate,
     dismissAutoCompleteNotification,
   };
