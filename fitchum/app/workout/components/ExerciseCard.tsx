@@ -44,7 +44,7 @@ export default function ExerciseCard({
   return (
     <Card className="space-y-3 w-full">
       <div className="flex items-center justify-between px-2">
-        <h3 className="text-lg font-semibold text-foreground">
+        <h3 className="text-lg font-semibold text-primary">
           {exercise.name}
         </h3>
         <button
@@ -83,6 +83,7 @@ export default function ExerciseCard({
               }
               onDelete={() => handleDeleteSet(set.id)}
               onBulkUpdate={(updates) => handleSetUpdate(set.id, updates)}
+              canDelete={exercise.sets.length > 1}
             />
           );
         })}

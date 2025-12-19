@@ -48,7 +48,8 @@ export default function ActiveWorkoutView({
       (set) => set.completed && set.completedAt && Date.now() - set.completedAt < 1000
     );
 
-    if (hasCompletedSet && !restTimer.active) {
+    // Start or restart the timer when a set is completed (even if timer is already running)
+    if (hasCompletedSet) {
       startRestTimer(exerciseId);
     }
   };

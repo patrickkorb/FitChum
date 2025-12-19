@@ -1,31 +1,32 @@
 'use client';
 
+import { Home, Dumbbell, BarChart3, Bell, User } from 'lucide-react';
 import NavElement from './NavElement';
 
 const navItems = [
   {
     href: '/feed',
-    icon: '🏠',
+    icon: <Home size={20} />,
     label: 'Feed',
   },
   {
     href: '/workout',
-    icon: '💪',
+    icon: <Dumbbell size={20} />,
     label: 'Workout',
   },
   {
     href: '/verlauf',
-    icon: '📊',
+    icon: <BarChart3 size={20} />,
     label: 'Verlauf',
   },
   {
     href: '/benachrichtigungen',
-    icon: '🔔',
+    icon: <Bell size={20} />,
     label: 'Benachrichtigungen',
   },
   {
     href: '/profil',
-    icon: '👤',
+    icon: <User size={20} />,
     label: 'Profil',
   },
 ];

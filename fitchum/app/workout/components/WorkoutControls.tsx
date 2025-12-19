@@ -44,9 +44,9 @@ export default function WorkoutControls({
       <div className="mt-8 mb-6 space-y-3">
         <Button
           onClick={() => setShowCompleteConfirm(true)}
-          variant="primary"
+          variant="ghost"
           disabled={!hasExercises}
-          className="w-full flex flex-row justify-center items-center"
+          className="w-full text-primary flex flex-row justify-center items-center"
         >
           Workout beenden
         </Button>
@@ -54,8 +54,8 @@ export default function WorkoutControls({
         {showCancelButton && (
           <Button
             onClick={() => setShowCancelConfirm(true)}
-            variant="outline"
-            className="w-full flex flex-row justify-center items-center"
+            variant="ghost"
+            className="w-full text-red-500 flex flex-row justify-center items-center"
           >
             Workout abbrechen
           </Button>

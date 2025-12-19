@@ -26,7 +26,7 @@ export default function NavElement({ href, icon, label, isMobile = false }: NavE
             : 'text-muted-foreground hover:text-foreground'
         )}
       >
-        <span className="text-xl">{icon}</span>
+        {icon}
         <span className="text-xs font-medium">{label}</span>
       </Link>
     );
@@ -42,7 +42,7 @@ export default function NavElement({ href, icon, label, isMobile = false }: NavE
           : 'text-foreground hover:bg-muted'
       )}
     >
-      <span className="text-xl">{icon}</span>
+      {icon}
       <span className="font-medium">{label}</span>
     </Link>
   );

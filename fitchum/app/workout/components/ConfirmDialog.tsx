@@ -17,7 +17,7 @@ export default function ConfirmDialog({
   title,
   message,
   confirmText,
-  cancelText = 'Abbrechen',
+  cancelText = 'Doch nicht',
   onConfirm,
   onCancel,
   isDanger = false,

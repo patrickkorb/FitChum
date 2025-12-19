@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
-import Button from '@/components/ui/Button';
 import { formatTimeRemaining } from '@/lib/workoutUtils';
 
 interface RestTimerProps {
@@ -41,67 +40,38 @@ export default function RestTimer({
   }, [timeRemaining, onComplete]);
 
   const progress = ((duration - timeRemaining) / duration) * 100;
-  const circumference = 2 * Math.PI * 140;
-  const strokeDashoffset = circumference - (progress / 100) * circumference;
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center p-4">
-      <button
-        onClick={onSkip}
-        className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground transition-colors"
-        aria-label="Skip rest timer"
-      >
-        <X size={32} />
-      </button>
-
-      <div className="flex flex-col items-center gap-8">
-        <h2 className="text-2xl font-semibold text-foreground">
-          Rest Time
-        </h2>
-
-        <div className="relative w-80 h-80 flex items-center justify-center">
-          <svg
-            className="transform -rotate-90 w-full h-full"
-            viewBox="0 0 300 300"
-          >
-            <circle
-              cx="150"
-              cy="150"
-              r="140"
-              stroke="currentColor"
-              strokeWidth="12"
-              fill="none"
-              className="text-muted"
+    <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-up">
+      <div className="bg-primary text-primary-foreground shadow-lg">
+        <div className="max-w-4xl mx-auto px-4 py-3">
+          {/* Progress bar */}
+          <div className="mb-2 h-1.5 bg-primary-foreground/20 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-primary-foreground transition-all duration-1000 ease-linear rounded-full"
+              style={{ width: `${progress}%` }}
             />
-            <circle
-              cx="150"
-              cy="150"
-              r="140"
-              stroke="currentColor"
-              strokeWidth="12"
-              fill="none"
-              strokeDasharray={circumference}
-              strokeDashoffset={strokeDashoffset}
-              className="text-primary transition-all duration-1000 ease-linear"
-              strokeLinecap="round"
-            />
-          </svg>
+          </div>
 
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-8xl font-mono font-bold text-primary">
-              {formatTimeRemaining(timeRemaining)}
+          <div className="flex items-center justify-between gap-4">
+            {/* Timer info */}
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium">Rest Time</span>
+              <span className="text-2xl font-mono font-bold">
+                {formatTimeRemaining(timeRemaining)}
+              </span>
             </div>
+
+            {/* Skip button */}
+            <button
+              onClick={onSkip}
+              className="p-1.5 hover:bg-primary-foreground/10 rounded-lg transition-colors"
+              aria-label="Skip rest timer"
+            >
+              <X size={20} />
+            </button>
           </div>
         </div>
-
-        <Button
-          onClick={onSkip}
-          variant="outline"
-          size="lg"
-          className="px-12"
-        >
-          Skip Rest
-        </Button>
       </div>
     </div>
   );
