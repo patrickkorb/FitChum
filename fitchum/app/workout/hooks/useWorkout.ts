@@ -16,14 +16,12 @@ import {
   createTemplateFromWorkout,
   isWorkoutExpired,
 } from '@/lib/workoutUtils';
-import { useWorkoutPersistence } from './useWorkoutPersistence';
 
 export function useWorkout() {
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [isStarted, setIsStarted] = useState(false);
   const [wasAutoCompleted, setWasAutoCompleted] = useState(false);
 
-  useWorkoutPersistence(workout);
 
   useEffect(() => {
     const storage = getWorkoutStorage();

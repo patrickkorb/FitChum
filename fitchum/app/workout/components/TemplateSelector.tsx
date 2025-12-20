@@ -9,6 +9,8 @@ interface TemplateSelectorProps {
   templates: WorkoutTemplate[];
   onSelectTemplate: (template: WorkoutTemplate) => void;
   onDeleteTemplate: (templateId: string) => void;
+  onRenameTemplate: (templateId: string, newName: string) => void;
+  onEditTemplate: (template: WorkoutTemplate) => void;
   onBack: () => void;
 }
 
@@ -16,6 +18,8 @@ export default function TemplateSelector({
   templates,
   onSelectTemplate,
   onDeleteTemplate,
+  onRenameTemplate,
+  onEditTemplate,
   onBack,
 }: TemplateSelectorProps) {
   return (
@@ -52,6 +56,8 @@ export default function TemplateSelector({
                 template={template}
                 onSelect={() => onSelectTemplate(template)}
                 onDelete={() => onDeleteTemplate(template.id)}
+                onRename={(newName) => onRenameTemplate(template.id, newName)}
+                onEdit={() => onEditTemplate(template)}
               />
             ))}
           </div>

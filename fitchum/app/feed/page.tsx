@@ -1,187 +1,190 @@
 'use client';
 
-import Image from 'next/image';
-import { Flame, Plus } from 'lucide-react';
-import WorkoutCard from '../components/feed/WorkoutCard';
+import React, { useState } from 'react';
+import { Users } from 'lucide-react';
+import FriendListItem from '@/components/feed/FriendListItem';
+import WorkoutDetailModal from '@/components/feed/WorkoutDetailModal';
+import { WorkoutData } from '@/components/feed/FriendListItem';
 
-// Dummy data for friends' workouts
-const friendsWorkouts = [
+// Dummy data for today's friend workouts
+const friendsWorkouts: WorkoutData[] = [
   {
     id: '1',
+    userId: 'user-1',
     userName: 'Max Mustermann',
     userAvatar: 'https://i.pravatar.cc/150?img=12',
     workoutType: 'Push Day',
-    exercises: ['Bench Press', 'Shoulder Press', 'Tricep Dips'],
-    time: '2h ago',
-    isCompleted: true,
+    exercises: ['Bench Press 4x8', 'Incline DB Press 3x10', 'Shoulder Press 3x12', 'Tricep Dips 3x12'],
+    status: 'live',
   },
   {
     id: '2',
+    userId: 'user-2',
     userName: 'Sarah Schmidt',
     userAvatar: 'https://i.pravatar.cc/150?img=5',
     workoutType: 'Leg Day',
-    exercises: ['Squats', 'Leg Press', 'Lunges'],
-    time: '3h ago',
-    isCompleted: true,
+    exercises: ['Squats 5x5', 'Leg Press 4x10', 'Lunges 3x12', 'Leg Curls 3x15'],
+    status: 'live',
   },
   {
     id: '3',
+    userId: 'user-3',
     userName: 'Tom Weber',
     userAvatar: 'https://i.pravatar.cc/150?img=33',
     workoutType: 'Pull Day',
-    exercises: ['Deadlifts', 'Pull-ups', 'Barbell Rows'],
-    time: 'Today',
-    isCompleted: false,
+    exercises: ['Deadlifts', 'Pull-ups', 'Barbell Rows', 'Face Pulls'],
+    status: 'pending',
   },
   {
     id: '4',
-    userName: 'Lisa Müller',
-    userAvatar: 'https://i.pravatar.cc/150?img=9',
-    workoutType: 'Rest Day',
-    exercises: [],
-    time: 'Today',
-    isCompleted: false,
-    isRestDay: true,
-  },
-  {
-    id: '5',
+    userId: 'user-4',
     userName: 'Anna Fischer',
     userAvatar: 'https://i.pravatar.cc/150?img=20',
     workoutType: 'Cardio & Abs',
-    exercises: ['Running 5km', 'Planks', 'Mountain Climbers'],
-    time: 'Today',
-    isCompleted: false,
+    exercises: ['Running 5km', 'Planks 3x60s', 'Mountain Climbers', 'Leg Raises'],
+    status: 'pending',
   },
   {
-    id: '6',
+    id: '5',
+    userId: 'user-5',
     userName: 'Chris Klein',
     userAvatar: 'https://i.pravatar.cc/150?img=68',
     workoutType: 'Upper Body',
-    exercises: ['Pull-ups', 'Dumbbell Press', 'Cable Rows'],
-    time: 'Yesterday',
-    isCompleted: true,
-  },
-];
-
-// Leaderboard data
-const leaderboard = [
-  {
-    rank: 2,
-    name: 'Sarah S.',
-    avatar: 'https://i.pravatar.cc/150?img=5',
-    workouts: 5,
-    color: 'accent-silver',
+    exercises: ['Pull-ups 4x8', 'DB Press 3x10', 'Cable Rows 3x12', 'Face Pulls 3x15'],
+    status: 'completed',
+    completedTime: '2h ago',
+    pr: {
+      exercise: 'Pull-ups',
+      value: '25 reps',
+    },
   },
   {
-    rank: 1,
-    name: 'Chris K.',
-    avatar: 'https://i.pravatar.cc/150?img=68',
-    workouts: 7,
-    color: 'accent-gold',
+    id: '6',
+    userId: 'user-6',
+    userName: 'Lisa Müller',
+    userAvatar: 'https://i.pravatar.cc/150?img=9',
+    workoutType: 'Full Body',
+    exercises: ['Squats', 'Bench Press', 'Rows', 'Overhead Press'],
+    status: 'completed',
+    completedTime: '4h ago',
   },
   {
-    rank: 3,
-    name: 'Max M.',
-    avatar: 'https://i.pravatar.cc/150?img=12',
-    workouts: 4,
-    color: 'accent-bronze',
+    id: '7',
+    userId: 'user-7',
+    userName: 'Kevin Schmidt',
+    userAvatar: 'https://i.pravatar.cc/150?img=15',
+    workoutType: 'Legs & Core',
+    exercises: ['Front Squats 4x6', 'RDL 3x10', 'Leg Extensions 3x12', 'Ab Wheel 3x10'],
+    status: 'completed',
+    completedTime: '5h ago',
+    pr: {
+      exercise: 'Front Squat',
+      value: '120kg',
+    },
   },
 ];
 
 export default function FeedPage() {
+  const [selectedWorkout, setSelectedWorkout] = useState<WorkoutData | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Sort workouts: live → pending → completed (by time)
+  const sortedWorkouts = [...friendsWorkouts].sort((a, b) => {
+    const statusOrder = { live: 0, pending: 1, completed: 2 };
+    if (a.status !== b.status) {
+      return statusOrder[a.status] - statusOrder[b.status];
+    }
+    return 0;
+  });
+
+  const handleWorkoutClick = (workout: WorkoutData) => {
+    setSelectedWorkout(workout);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setTimeout(() => setSelectedWorkout(null), 300); // Delay cleanup for animation
+  };
+
+  const handlePush = () => {
+    console.log('Push notification sent!');
+  };
+
+  const handleReact = (reactionType: string) => {
+    console.log('Reaction:', reactionType);
+  };
+
+  // Count by status for stats
+  const liveCount = friendsWorkouts.filter((w) => w.status === 'live').length;
+  const pendingCount = friendsWorkouts.filter((w) => w.status === 'pending').length;
+  const completedCount = friendsWorkouts.filter((w) => w.status === 'completed').length;
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Sticky Header with Streak */}
-      <div className="sticky top-0 z-20 flex flex-col bg-background/80 dark:bg-background/80 backdrop-blur-lg">
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <div className="flex items-center gap-2">
-            <Flame className="h-8 w-8 text-accent-gold" />
-            <span className="text-2xl font-bold text-accent-gold">125</span>
-          </div>
-          <h1 className="text-xl font-bold text-foreground">Activity Feed</h1>
-          <button className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-white shadow-lg shadow-secondary/30 active:scale-95 transition-transform duration-150">
-            <Plus className="h-6 w-6" />
-          </button>
-        </div>
-      </div>
-
-      {/* Leaderboard Section */}
-      <div className="p-4">
-        <h2 className="text-lg font-semibold mb-3 text-foreground px-1">Weekly Leaderboard</h2>
-        <div className="grid grid-cols-3 gap-3">
-          {/* 2nd Place - Left */}
-          <div className="flex flex-col items-center">
-            <div className="relative mb-2">
-              <Image
-                alt={`Profile picture of ${leaderboard[0].name}`}
-                className={`rounded-full object-cover border-4 border-${leaderboard[0].color}`}
-                src={leaderboard[0].avatar}
-                width={64}
-                height={64}
-              />
-              <div className="absolute -bottom-2 flex h-7 w-7 items-center justify-center rounded-full bg-accent-silver border-2 border-card text-sm font-bold text-white">
-                2
-              </div>
-            </div>
-            <p className="font-semibold text-sm truncate">{leaderboard[0].name}</p>
-            <p className="text-xs font-medium text-muted-foreground">{leaderboard[0].workouts} workouts</p>
+    <div className="min-h-screen bg-background pb-20 overflow-x-hidden max-w-[100vw]">
+      {/* Header */}
+      <div className="sticky top-0 z-10 border-b border-border backdrop-blur-lg bg-card/80 overflow-hidden max-w-full w-full">
+        <div className="px-4 py-4 max-w-full overflow-hidden">
+          <div className="flex items-center justify-between mb-3 gap-2 min-w-0">
+            <h1 className="text-xl font-bold text-foreground truncate min-w-0">Today&apos;s Activity</h1>
+            <Users className="h-5 w-5 text-muted-foreground flex-shrink-0" />
           </div>
 
-          {/* 1st Place - Center (Elevated) */}
-          <div className="flex flex-col items-center -mt-4">
-            <div className="relative mb-2">
-              <Image
-                alt={`Profile picture of ${leaderboard[1].name}`}
-                className={`rounded-full object-cover border-4 border-${leaderboard[1].color}`}
-                src={leaderboard[1].avatar}
-                width={80}
-                height={80}
-              />
-              <div className="absolute -bottom-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-accent-gold border-2 border-card text-base font-bold text-white">
-                1
-              </div>
+          {/* Stats */}
+          <div className="flex items-center gap-2 text-xs flex-wrap">
+            <div className="flex items-center gap-1.5 whitespace-nowrap">
+              <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
+              <span className="text-muted-foreground">
+                {liveCount} live
+              </span>
             </div>
-            <p className="font-bold text-base truncate">{leaderboard[1].name}</p>
-            <p className="text-sm font-medium text-muted-foreground">{leaderboard[1].workouts} workouts</p>
-          </div>
-
-          {/* 3rd Place - Right */}
-          <div className="flex flex-col items-center">
-            <div className="relative mb-2">
-              <Image
-                alt={`Profile picture of ${leaderboard[2].name}`}
-                className={`rounded-full object-cover border-4 border-${leaderboard[2].color}`}
-                src={leaderboard[2].avatar}
-                width={64}
-                height={64}
-              />
-              <div className="absolute -bottom-2 flex h-7 w-7 items-center justify-center rounded-full bg-accent-bronze border-2 border-card text-sm font-bold text-white">
-                3
-              </div>
+            <div className="flex items-center gap-1.5 whitespace-nowrap">
+              <div className="w-2 h-2 rounded-full bg-accent-gold flex-shrink-0" />
+              <span className="text-muted-foreground">
+                {pendingCount} pending
+              </span>
             </div>
-            <p className="font-semibold text-sm truncate">{leaderboard[2].name}</p>
-            <p className="text-xs font-medium text-muted-foreground">{leaderboard[2].workouts} workouts</p>
+            <div className="flex items-center gap-1.5 whitespace-nowrap">
+              <div className="w-2 h-2 rounded-full bg-muted-foreground flex-shrink-0" />
+              <span className="text-muted-foreground">
+                {completedCount} done
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Feed Content */}
-      <div className="flex flex-col gap-4 p-4 pt-2">
-        {friendsWorkouts.map((workout) => (
-          <WorkoutCard key={workout.id} workout={workout} />
+      {/* Feed List */}
+      <div className="px-1 py-4 space-y-2">
+        {sortedWorkouts.map((workout) => (
+          <FriendListItem
+            key={workout.id}
+            workout={workout}
+            onClick={() => handleWorkoutClick(workout)}
+            onPush={handlePush}
+            onReact={handleReact}
+          />
         ))}
       </div>
 
       {/* Empty State */}
       {friendsWorkouts.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-6xl mb-4">💪</p>
-          <h3 className="text-lg font-semibold mb-2">No workouts yet</h3>
+        <div className="text-center py-12 px-4">
+          <Users className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="text-lg font-semibold mb-2 text-foreground">No friends yet</h3>
           <p className="text-muted-foreground">
             Add friends to see their workouts here
           </p>
         </div>
       )}
+
+      {/* Workout Detail Modal */}
+      <WorkoutDetailModal
+        workout={selectedWorkout}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onReact={handleReact}
+      />
     </div>
   );
 }

@@ -69,6 +69,21 @@ export default function WorkoutPage() {
     setViewMode('start');
   };
 
+  const handleReplaceExercise = (exerciseId: string, newName: string) => {
+    if (!workout) return;
+
+    const exerciseToReplace = workout.exercises.find(ex => ex.id === exerciseId);
+    if (!exerciseToReplace) return;
+
+    // Create updated exercise with new name but keep existing sets
+    const updatedExercise: Exercise = {
+      ...exerciseToReplace,
+      name: newName,
+    };
+
+    updateExercise(exerciseId, updatedExercise);
+  };
+
   const handleCloseSummary = () => {
     setCompletedWorkout(null);
     setTemplates(getWorkoutTemplates());
@@ -109,6 +124,16 @@ export default function WorkoutPage() {
 
   const handleDeleteTemplateExercise = (exerciseId: string) => {
     setTemplateExercises(templateExercises.filter((ex) => ex.id !== exerciseId));
+  };
+
+  const handleReplaceTemplateExercise = (exerciseId: string, newName: string) => {
+    setTemplateExercises(
+      templateExercises.map((ex) =>
+        ex.id === exerciseId
+          ? { ...ex, name: newName }
+          : ex
+      )
+    );
   };
 
   const handleSaveTemplate = () => {
@@ -199,6 +224,7 @@ export default function WorkoutPage() {
         onAddExercise={handleAddTemplateExercise}
         onUpdateExercise={handleUpdateTemplateExercise}
         onDeleteExercise={handleDeleteTemplateExercise}
+        onReplaceExercise={handleReplaceTemplateExercise}
         onSaveTemplate={handleSaveTemplate}
         onCancel={handleCancelTemplateCreation}
         onNameChange={setTemplateName}
@@ -214,6 +240,7 @@ export default function WorkoutPage() {
         onAddExercise={addExercise}
         onUpdateExercise={updateExercise}
         onDeleteExercise={deleteExercise}
+        onReplaceExercise={handleReplaceExercise}
         onCompleteWorkout={handleCompleteWorkout}
         onCancelWorkout={handleCancelWorkout}
       />

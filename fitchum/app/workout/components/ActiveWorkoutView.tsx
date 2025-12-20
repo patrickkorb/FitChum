@@ -17,6 +17,7 @@ interface ActiveWorkoutViewProps {
   onAddExercise: (name: string) => void;
   onUpdateExercise: (exerciseId: string, exercise: Exercise) => void;
   onDeleteExercise: (exerciseId: string) => void;
+  onReplaceExercise: (exerciseId: string, newName: string) => void;
   onCompleteWorkout: () => void;
   onCancelWorkout: () => void;
 }
@@ -26,10 +27,12 @@ export default function ActiveWorkoutView({
   onAddExercise,
   onUpdateExercise,
   onDeleteExercise,
+  onReplaceExercise,
   onCompleteWorkout,
   onCancelWorkout,
 }: ActiveWorkoutViewProps) {
   const [showAddExercise, setShowAddExercise] = useState(false);
+  const [replacingExerciseId, setReplacingExerciseId] = useState<string | null>(null);
   const { restTimer, startRestTimer, stopRestTimer, skipRestTimer } = useRestTimer();
   const { setNavbarVisible } = useNavbar();
 
@@ -52,6 +55,21 @@ export default function ActiveWorkoutView({
     if (hasCompletedSet) {
       startRestTimer(exerciseId);
     }
+  };
+
+  const handleReplaceExercise = (exerciseId: string) => {
+    setReplacingExerciseId(exerciseId);
+    setShowAddExercise(true);
+  };
+
+  const handleAddOrReplaceExercise = (name: string) => {
+    if (replacingExerciseId) {
+      onReplaceExercise(replacingExerciseId, name);
+      setReplacingExerciseId(null);
+    } else {
+      onAddExercise(name);
+    }
+    setShowAddExercise(false);
   };
 
   return (
@@ -79,6 +97,7 @@ export default function ActiveWorkoutView({
                 exercise={exercise}
                 onUpdate={(updated) => handleExerciseUpdate(exercise.id, updated)}
                 onDelete={() => onDeleteExercise(exercise.id)}
+                onReplace={() => handleReplaceExercise(exercise.id)}
               />
             ))}
           </div>
@@ -111,8 +130,11 @@ export default function ActiveWorkoutView({
 
       {showAddExercise && (
         <AddExerciseDialog
-          onAdd={onAddExercise}
-          onClose={() => setShowAddExercise(false)}
+          onAdd={handleAddOrReplaceExercise}
+          onClose={() => {
+            setShowAddExercise(false);
+            setReplacingExerciseId(null);
+          }}
         />
       )}
     </div>

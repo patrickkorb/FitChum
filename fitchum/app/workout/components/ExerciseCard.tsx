@@ -1,8 +1,9 @@
 'use client';
 
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, MoreVertical, RefreshCw } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+import DropdownMenu from '@/components/ui/DropdownMenu';
 import ExerciseInput from './ExerciseInput';
 import type { Exercise, Set } from '@/types/workout.types';
 import { addSetToExercise, removeSetFromExercise, updateSetInExercise } from '@/lib/workoutUtils';
@@ -12,12 +13,14 @@ export interface ExerciseCardProps {
   exercise: Exercise;
   onUpdate: (exercise: Exercise) => void;
   onDelete: () => void;
+  onReplace?: () => void;
 }
 
 export default function ExerciseCard({
   exercise,
   onUpdate,
   onDelete,
+  onReplace,
 }: ExerciseCardProps) {
   const handleAddSet = () => {
     const updatedExercise = addSetToExercise(exercise);
@@ -41,19 +44,41 @@ export default function ExerciseCard({
     return getPreviousExerciseData(exercise.name, setNumber);
   };
 
+  const menuItems = [
+    ...(onReplace
+      ? [
+          {
+            label: 'Übung ersetzen',
+            onClick: onReplace,
+            icon: <RefreshCw size={16} />,
+          },
+        ]
+      : []),
+    {
+      label: 'Übung löschen',
+      onClick: onDelete,
+      icon: <Trash2 size={16} />,
+      destructive: true,
+    },
+  ];
+
   return (
     <Card className="space-y-3 w-full">
       <div className="flex items-center justify-between px-2">
         <h3 className="text-lg font-semibold text-primary">
           {exercise.name}
         </h3>
-        <button
-          onClick={onDelete}
-          className="p-2 text-muted-foreground hover:text-red-500 transition-colors"
-          aria-label={`Delete ${exercise.name}`}
-        >
-          <Trash2 size={20} />
-        </button>
+        <DropdownMenu
+          trigger={
+            <button
+              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label={`Options for ${exercise.name}`}
+            >
+              <MoreVertical size={20} />
+            </button>
+          }
+          items={menuItems}
+        />
       </div>
 
       <div className="space-y-2">

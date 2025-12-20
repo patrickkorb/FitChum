@@ -20,14 +20,13 @@ export default function NavElement({ href, icon, label, isMobile = false }: NavE
       <Link
         href={href}
         className={cn(
-          'flex flex-col items-center justify-center gap-1 py-2 px-3 transition-colors',
+          'flex flex-col items-center justify-center gap-1 py-4 px-3 transition-colors',
           isActive
             ? 'text-primary'
             : 'text-muted-foreground hover:text-foreground'
         )}
       >
         {icon}
-        <span className="text-xs font-medium">{label}</span>
       </Link>
     );
   }

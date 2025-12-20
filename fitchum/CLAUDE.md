@@ -2,7 +2,7 @@
 
 ## App Concept: FitChumm
 
-**FitChum** is a social fitness app inspired by BeReal's authentic, community-driven approach. The core mission is to motivate people to go to the gym through social accountability and friendly competition.
+**FitChumm** is a social fitness app inspired by BeReal's authentic, community-driven approach. The core mission is to motivate people to go to the gym through social accountability and friendly competition.
 
 ### Core Features:
 1. **Daily Workout Feed** - See what your friends are training today in real-time

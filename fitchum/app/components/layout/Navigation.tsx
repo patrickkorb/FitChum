@@ -36,7 +36,7 @@ export default function Navigation() {
     <aside className="hidden lg:flex flex-col w-64 h-screen border-r border-border bg-background sticky top-0">
       <div className="p-6">
         <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-          FitChum
+          FitChumm
         </h1>
       </div>
 

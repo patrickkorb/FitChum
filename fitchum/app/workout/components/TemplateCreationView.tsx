@@ -14,6 +14,7 @@ interface TemplateCreationViewProps {
   onAddExercise: (name: string) => void;
   onUpdateExercise: (exerciseId: string, exercise: Exercise) => void;
   onDeleteExercise: (exerciseId: string) => void;
+  onReplaceExercise: (exerciseId: string, newName: string) => void;
   onSaveTemplate: () => void;
   onCancel: () => void;
   onNameChange: (name: string) => void;
@@ -26,12 +27,14 @@ export default function TemplateCreationView({
   onAddExercise,
   onUpdateExercise,
   onDeleteExercise,
+  onReplaceExercise,
   onSaveTemplate,
   onCancel,
   onNameChange,
   isEditMode = false,
 }: TemplateCreationViewProps) {
   const [showAddExercise, setShowAddExercise] = useState(false);
+  const [replacingExerciseId, setReplacingExerciseId] = useState<string | null>(null);
   const { setNavbarVisible } = useNavbar();
 
   useEffect(() => {
@@ -44,6 +47,21 @@ export default function TemplateCreationView({
 
   const handleExerciseUpdate = (exerciseId: string, exercise: Exercise) => {
     onUpdateExercise(exerciseId, exercise);
+  };
+
+  const handleReplaceExercise = (exerciseId: string) => {
+    setReplacingExerciseId(exerciseId);
+    setShowAddExercise(true);
+  };
+
+  const handleAddOrReplaceExercise = (name: string) => {
+    if (replacingExerciseId) {
+      onReplaceExercise(replacingExerciseId, name);
+      setReplacingExerciseId(null);
+    } else {
+      onAddExercise(name);
+    }
+    setShowAddExercise(false);
   };
 
   const canSave = exercises.length > 0 && templateName.trim().length > 0;
@@ -82,6 +100,7 @@ export default function TemplateCreationView({
                 exercise={exercise}
                 onUpdate={(updated) => handleExerciseUpdate(exercise.id, updated)}
                 onDelete={() => onDeleteExercise(exercise.id)}
+                onReplace={() => handleReplaceExercise(exercise.id)}
               />
             ))}
           </div>
@@ -123,8 +142,11 @@ export default function TemplateCreationView({
 
       {showAddExercise && (
         <AddExerciseDialog
-          onAdd={onAddExercise}
-          onClose={() => setShowAddExercise(false)}
+          onAdd={handleAddOrReplaceExercise}
+          onClose={() => {
+            setShowAddExercise(false);
+            setReplacingExerciseId(null);
+          }}
         />
       )}
     </div>

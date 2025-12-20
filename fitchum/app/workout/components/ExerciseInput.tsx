@@ -258,7 +258,7 @@ export default function ExerciseInput({
           <input
             ref={weightInputRef}
             type="number"
-            inputMode="numeric"
+            inputMode="text"
             min="0"
             step="0.5"
             value={currentWeight || ''}

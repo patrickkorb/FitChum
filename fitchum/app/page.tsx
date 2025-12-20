@@ -36,7 +36,7 @@ export default function Home() {
         {/* Logo or App Name */}
         <div className="space-y-2">
           <h1 className="text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            FitChum
+            FitChumm
           </h1>
           <p className="text-xl text-muted-foreground">
             Coming Soon
@@ -89,7 +89,7 @@ export default function Home() {
               You&apos;re on the list!
             </h2>
             <p className="text-muted-foreground">
-              We&apos;ll notify you when FitChum launches
+              We&apos;ll notify you when FitChumm launches
             </p>
             <Button
               variant="outline"
