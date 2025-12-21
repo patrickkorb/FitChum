@@ -22,12 +22,28 @@ export default function Home() {
 
     setIsSubmitting(true);
 
-    // Simulate API call (replace with actual API endpoint later)
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      const response = await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to join waitlist');
+      }
+
       setIsSubmitted(true);
       setEmail('');
-    }, 1000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -46,13 +62,13 @@ export default function Home() {
         {!isSubmitted ? (
           <div className="space-y-6">
             <p className="text-foreground/80">
-              Join the waitlist to be notified when we launch
+              Tritt der Warteliste bei und werde benachrichtigt sobald die App veröffentlicht wird!
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <Input
                 type="email"
-                placeholder="Enter your email"
+                placeholder="Deine Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 error={error}
@@ -64,7 +80,7 @@ export default function Home() {
                 isLoading={isSubmitting}
                 className="w-full"
               >
-                {isSubmitting ? 'Joining...' : 'Join Waitlist'}
+                {isSubmitting ? 'Trete bei...' : 'Beitreten'}
               </Button>
             </form>
           </div>
@@ -86,23 +102,23 @@ export default function Home() {
               </svg>
             </div>
             <h2 className="text-2xl font-semibold text-foreground">
-              You&apos;re on the list!
+              Du bist auf der Liste!
             </h2>
             <p className="text-muted-foreground">
-              We&apos;ll notify you when FitChumm launches
+              Wir benachrichtigen dich sobald die App Live geht
             </p>
             <Button
               variant="outline"
               onClick={() => setIsSubmitted(false)}
-              className="mt-4"
+              className="mt-4 w-full"
             >
-              Add another email
+              Füge eine andere Email hinzu
             </Button>
           </div>
         )}
 
         <p className="text-sm text-muted-foreground pt-8">
-          Your fitness journey starts here
+          Dein Fitness Abenteuer beginnt hier
         </p>
       </div>
     </div>
