@@ -21,6 +21,23 @@ interface ResultScreenProps {
   isVisible: boolean;
 }
 
+function getCookie(name: string): string | undefined {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift();
+}
+
+function trackGoal(goalName: string) {
+  const visitorId = getCookie('datafast_visitor_id');
+  if (!visitorId) return;
+
+  fetch('/api/track', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ visitorId, name: goalName }),
+  }).catch(() => {});
+}
+
 export default function ResultScreen({ answers, isVisible }: ResultScreenProps) {
   const getPersonalizedHeadline = () => {
     const age = answers.age as string;
@@ -210,6 +227,7 @@ export default function ResultScreen({ answers, isVisible }: ResultScreenProps) 
             size="xl"
             className="w-full flex items-center justify-center gap-2 mb-4"
             onClick={() => {
+              trackGoal('click_kaufen_bauchfettkiller');
               window.open('https://www.checkout-ds24.com/product/627581?voucher=bauchfettkiller149&aff=patrickkorb&cam=CAMPAIGNKEY', '_blank');
             }}
           >
@@ -258,7 +276,7 @@ export default function ResultScreen({ answers, isVisible }: ResultScreenProps) 
                 size="md"
                 className="w-full"
                 onClick={() => {
-                  // TODO: Replace with actual Digistore24 link for Hafer Challenge
+                  trackGoal('click_hafer_challenge');
                   window.open('https://www.checkout-ds24.com/product/547409?voucher=challenge27&aff=patrickkorb&cam=CAMPAIGNKEY', '_blank');
                 }}
               >

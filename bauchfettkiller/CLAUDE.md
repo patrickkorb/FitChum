@@ -255,8 +255,8 @@ import Link from 'next/link';
 **Images:**
 ```tsx
 import Image from 'next/image';
-// ✅ DO: <Image src="/logo.png" alt="Logo" width={200} height={50} />
-// ❌ DON'T: <img src="/logo.png" alt="Logo" />
+// ✅ DO: <Image src="/favicon.ico" alt="Logo" width={200} height={50} />
+// ❌ DON'T: <img src="/favicon.ico" alt="Logo" />
 ```
 
 **Scripts:**
