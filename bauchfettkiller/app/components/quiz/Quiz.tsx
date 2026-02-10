@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { quizQuestions } from '../../data/quizQuestions';
 import { QuizAnswers } from '../../types/quiz.types';
 import ProgressBar from '../ui/ProgressBar';
@@ -10,10 +10,28 @@ import ResultScreen from './ResultScreen';
 
 type QuizPhase = 'questions' | 'analysis' | 'result';
 
+function getCookie(name: string): string | undefined {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift();
+}
+
+function trackGoal(goalName: string) {
+  const visitorId = getCookie('datafast_visitor_id');
+  if (!visitorId) return;
+
+  fetch('/api/track', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ visitorId, name: goalName }),
+  }).catch(() => {});
+}
+
 export default function Quiz() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<QuizAnswers>({});
   const [phase, setPhase] = useState<QuizPhase>('questions');
+  const quizCompletedRef = useRef(false);
 
   const handleAnswer = useCallback((answer: string | string[]) => {
     const question = quizQuestions[currentQuestion];
@@ -26,6 +44,10 @@ export default function Quiz() {
     if (currentQuestion < quizQuestions.length - 1) {
       setCurrentQuestion((prev) => prev + 1);
     } else {
+      if (!quizCompletedRef.current) {
+        quizCompletedRef.current = true;
+        trackGoal('quiz_completed');
+      }
       setPhase('analysis');
     }
   }, [currentQuestion]);
